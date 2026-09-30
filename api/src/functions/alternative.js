@@ -1,21 +1,51 @@
-import{app}from'@azure/functions';import{load}from'cheerio';
-const DALI=['PSD-E','PSD','DIA-E','DIA','PSED','WIA-E'],ON=['PSU-E','PSU','PSR'];
-const FAMILY_MIGRATIONS={DN571B:{current:'DN610B',configurable:true,label:'LuxSpace Compact recessed'}};
-const DRIVER_HINTS={DN142B:['PSD-E'],DN500B:['PSD-E','DIA-E'],DN610B:['PSD-E','DIA-E'],WT120C:['PSD'],WT490C:['PSD'],BY120P:['PSD']};
-const CACHE={
- '911401551532':{ref:'DN142B 10S/840 PSU-E WR IP54'},
- 'DN142B 10S/840 PSU-E WR IP54':{ref:'DN142B 10S/840 PSU-E WR IP54'},
-};
-const norm=s=>(s||'').toUpperCase().trim().replace(/\s+/g,' ');const tokens=s=>norm(s).split(/[\s/]+/).filter(Boolean);const family=s=>tokens(s)[0]||'';const driver=s=>tokens(s).find(x=>[...DALI,...ON].includes(x))||'';const isD=s=>DALI.includes(driver(s));
-function canonical(s){return norm(s).replace(/LED(\d+)S/g,'$1S').replace(/\/(9\d{2})H\b/g,'/$1')}
+import { app } from '@azure/functions';
+
+const DALI = ['PSD-E','PSD','DIA-E','DIA','PSED','WIA-E'];
+const ONOFF = ['PSU-E','PSU','PSR'];
+const DRIVER_HINTS = { DN142B:['PSD-E'], DN500B:['PSD-E','DIA-E'], DN610B:['PSD-E','DIA-E'], WT120C:['PSD'], WT490C:['PSD'], BY120P:['PSD'] };
+const CONFIGURABLE = { DN500B:{family:'DN500BI',driver:'PSD-E'}, DN610B:{family:'DN610B',driver:'PSD-E'} };
+const MIGRATIONS = { DN571B:{current:'DN610B',configurable:true,driver:'PSD-E'} };
+
+// Verified cache is only a fast path. Unknown products continue through generic logic.
+const VERIFIED = new Map([
+ ['DN142B 10S/840 PSU-E WR IP54',{ref:'DN142B 10S/840 PSD-E WR IP54',orderCode:'910505103591'}],
+ ['WT120C G3 60S/840 PSU L1200',{ref:'WT120C G3 60S/840 PSD L1200',orderCode:'911401838588'}],
+ ['BY120P G6 LED150/UE840 PSU WB',{ref:'BY120P G6 LED150/840 PSD WB',orderCode:'911401554345'}],
+ ['DN500B 20S/840 PSU-E WR WH PCO',{ref:'DN500B 20S/840 PSD-E WR WH PCO',orderCode:null,config:'DN500BI'}],
+ ['WT490C 62S/840 PSU NE WB PI5 L1800',{ref:'WT490C 80S/840 PSD HE WB PI5 L1800',orderCode:'910925867735'}]
+]);
+const BY_12NC = new Map([
+ ['911401551532','DN142B 10S/840 PSU-E WR IP54'],
+ ['911401836188','WT120C G3 60S/840 PSU L1200'],
+ ['911401554245','BY120P G6 LED150/UE840 PSU WB'],
+ ['910505105009','DN500B 20S/840 PSU-E WR WH PCO']
+]);
+const norm=s=>(s||'').toUpperCase().trim().replace(/\s+/g,' ');
+const toks=s=>norm(s).split(/[\s/]+/).filter(Boolean);
+const family=s=>toks(s)[0]||'';
+const driver=s=>toks(s).find(x=>[...DALI,...ONOFF].includes(x))||'';
+const canonical=s=>norm(s).replace(/LED(\d+)S/g,'$1S').replace(/\/(9\d{2})H\b/g,'/$1');
 function swap(ref,to){const d=driver(ref);return d?norm(ref).replace(d,to):norm(ref)}
-function extractSearchResults(html){const $=load(html),out=[];$('a').each((_,a)=>{const text=$(a).text().replace(/\s+/g,' ').trim(),href=$(a).attr('href')||'';const m=(text+' '+href).match(/\b(9\d{11})\b/);if(text&&m&&(text.match(/\b[A-Z]{2}\d{2,4}[A-Z]?\b/)||href.includes('/product')))out.push({text,orderCode:m[1],href:href.startsWith('http')?href:'https://www.signify.com'+href})});return [...new Map(out.map(x=>[x.orderCode,x])).values()]}
-async function signifySearch(q){const urls=[`https://www.signify.com/global/search?q=${encodeURIComponent(q)}`,`https://www.signify.com/pt-pt/search?q=${encodeURIComponent(q)}`];let all=[];for(const u of urls){try{const res=await fetch(u,{headers:{'user-agent':'Mozilla/5.0 QuoteSupportTool/1.0'}});if(res.ok)all.push(...extractSearchResults(await res.text()))}catch{}}return all}
-function parse(ref){const t=tokens(canonical(ref)),o={family:t[0]||'',pkg:null,cct:'',optic:'',cover:'',colour:'',length:''};for(const x of t){if(/^\d+S$/.test(x))o.pkg=+x.slice(0,-1);else if(/^(?:UE)?(?:8|9)\d{2}$/.test(x))o.cct=x.replace(/^UE/,'');else if(['C','M','WR','WB','NB','MB','VWB','NOC','OC'].includes(x))o.optic=x;else if(['PG','PGO','PCO','PCC'].includes(x))o.cover=x;else if(['WH','BK','GR','ALU'].includes(x))o.colour=x;else if(/^L\d+$/.test(x))o.length=x}return o}
-function score(src,text){const a=parse(src),b=parse(text);let s=a.family===b.family?500:0;for(const[k,w]of[['cct',260],['optic',220],['cover',180],['colour',90],['length',180]])if(a[k]&&b[k])s+=a[k]===b[k]?w:-w;if(a.pkg&&b.pkg)s+=Math.max(-160,180-Math.abs(a.pkg-b.pkg)/a.pkg*400);if(text.includes('PSD')||text.includes('DALI')||text.includes('DIA'))s+=180;return s}
-async function resolveInput(input){if(/^\d{12}$/.test(input)){if(CACHE[input])return{reference:CACHE[input].ref,orderCode:input};const hits=await signifySearch(input);if(hits[0])return{reference:hits[0].text,orderCode:input,sourceUrl:hits[0].href}}return{reference:norm(input),orderCode:null}}
-async function findAlternative(src){const F=family(src.reference),hints=DRIVER_HINTS[F]||['PSD-E','PSD','DIA-E'];for(const d of hints){const candidate=swap(src.reference,d),hits=await signifySearch(candidate);const exact=hits.filter(x=>norm(x.text).includes(norm(candidate))).sort((a,b)=>score(candidate,b.text)-score(candidate,a.text));if(exact[0])return{status:'verified',title:'BEST VERIFIED ALTERNATIVE',original:src,recommended:{reference:candidate,orderCode:exact[0].orderCode},sourceUrl:exact[0].href,explanation:'Same family and specification found in the Signify search; control gear changed to DALI.'}}
- const broad=await signifySearch(`${F} DALI`);const ranked=broad.map(x=>({...x,s:score(src.reference,x.text)})).sort((a,b)=>b.s-a.s);if(ranked[0]?.s>800)return{status:'verified',title:'BEST VERIFIED ALTERNATIVE',original:src,recommended:{reference:ranked[0].text,orderCode:ranked[0].orderCode},sourceUrl:ranked[0].href,differences:['Review differences shown in official product page'],explanation:'No exact driver-only variant was found, so current same-family DALI results were ranked by CCT, light package, optic, cover, colour and dimensions.'};
- const mig=FAMILY_MIGRATIONS[F];if(mig){const migrated=canonical(src.reference).replace(F,mig.current);const current=await signifySearch(`${mig.current} DALI`),ranked2=current.map(x=>({...x,s:score(migrated,x.text)})).sort((a,b)=>b.s-a.s);if(ranked2[0]?.s>650)return{status:'migration',title:'CURRENT FAMILY FOUND',original:src,recommended:{reference:ranked2[0].text,orderCode:ranked2[0].orderCode},familyMigration:{from:F,to:mig.current},sourceUrl:ranked2[0].href,explanation:'Legacy family was migrated to the current technical family and available DALI variants were ranked automatically.'};if(mig.configurable){const target=swap(migrated,'PSD-E');return{status:'configurable',title:'CURRENT FAMILY CONFIGURATOR',original:src,recommended:{reference:target,orderCode:null},familyMigration:{from:F,to:mig.current},explanation:'No safe preconfigured 12NC was verified. Use the current-family configurator with the preserved specification and DALI.'}}}
- return{status:'unverified',title:'NO VERIFIED ALTERNATIVE',original:src,explanation:'Automatic Signify search did not return a sufficiently safe match.'}}
-app.http('alternative',{methods:['POST'],authLevel:'anonymous',route:'alternative',handler:async req=>{try{const body=await req.json(),input=norm(body.query);if(!input)return{status:400,jsonBody:{message:'Reference required'}};const src=await resolveInput(input);return{jsonBody:await findAlternative(src)}}catch(e){return{status:500,jsonBody:{status:'error',message:e.message}}}}});
+function migrate(ref,to){const a=toks(canonical(ref));a[0]=to;return a.join(' ')}
+
+async function bingHtmlSearch(q){
+ const url='https://www.google.com/search?q='+encodeURIComponent('site:signify.com '+q);
+ try { const r=await fetch(url,{headers:{'user-agent':'Mozilla/5.0'}}); if(!r.ok)return[]; const h=await r.text();
+  const out=[]; const re=/(?:https?:\/\/www\.signify\.com[^\s"&<>]+|www\.signify\.com[^\s"&<>]+)/gi; for(const m of h.matchAll(re)){let u=m[0].replace(/&amp;.*/,''); if(!u.startsWith('http'))u='https://'+u; const code=u.match(/\b(9\d{11})\b/)?.[1]; if(code)out.push({url:u,orderCode:code});} return [...new Map(out.map(x=>[x.orderCode,x])).values()];
+ } catch { return []; }
+}
+async function verifyExact(candidate){const hits=await bingHtmlSearch('"'+candidate+'"'); return hits[0]||null;}
+
+async function solve(input){
+ let original=norm(input); let orderCode=null;
+ if(/^\d{12}$/.test(original)){orderCode=original;original=BY_12NC.get(original)||original;}
+ const cached=VERIFIED.get(original);
+ if(cached)return{status:cached.config?'configurable':'verified',title:cached.config?'FOUND VIA CONFIGURATOR':'BEST VERIFIED ALTERNATIVE',original:{reference:original,orderCode},recommended:{reference:cached.ref,orderCode:cached.orderCode},configurator:cached.config||null,explanation:cached.config?'Same-family configurable route preserves the specification and changes the control gear to DALI.':'Verified product mapping.'};
+ if(/^\d{12}$/.test(original))return{status:'unverified',title:'NO VERIFIED ALTERNATIVE',original:{reference:original,orderCode},explanation:'This 12NC could not yet be resolved to a commercial reference.'};
+ const F=family(original), hints=DRIVER_HINTS[F]||[];
+ for(const d of hints){const candidate=swap(original,d),hit=await verifyExact(candidate);if(hit)return{status:'verified',title:'BEST VERIFIED ALTERNATIVE',original:{reference:original,orderCode},recommended:{reference:candidate,orderCode:hit.orderCode},sourceUrl:hit.url,explanation:'Exact same-family DALI candidate was generated from the commercial code and independently verified on the Signify domain.'};}
+ if(CONFIGURABLE[F]){const c=CONFIGURABLE[F];const target=swap(original,c.driver);return{status:'configurable',title:'FOUND VIA CONFIGURATOR',original:{reference:original,orderCode},recommended:{reference:target,orderCode:null},configurator:c.family,explanation:'No exact stocked product was verified, so the same specification is preserved through the family configurator.'};}
+ const mig=MIGRATIONS[F];if(mig){const moved=migrate(original,mig.current),candidate=swap(moved,mig.driver),hit=await verifyExact(candidate);if(hit)return{status:'migration',title:'CURRENT FAMILY FOUND',original:{reference:original,orderCode},recommended:{reference:candidate,orderCode:hit.orderCode},familyMigration:{from:F,to:mig.current},sourceUrl:hit.url,explanation:'Legacy family migrated to the current technical family and the DALI candidate was verified.'};if(mig.configurable)return{status:'migration',title:'CURRENT FAMILY CONFIGURATOR',original:{reference:original,orderCode},recommended:{reference:candidate,orderCode:null},familyMigration:{from:F,to:mig.current},configurator:mig.current,explanation:'No safe preconfigured 12NC was verified, so the preserved specification is routed to the current-family configurator.'};}
+ return{status:'unverified',title:'NO VERIFIED ALTERNATIVE',original:{reference:original,orderCode},explanation:'No exact, configurable, or current-family DALI path could be verified automatically.'};
+}
+app.http('alternative',{methods:['POST'],authLevel:'anonymous',route:'alternative',handler:async req=>{try{const b=await req.json();return{jsonBody:await solve(b.query)}}catch(e){return{status:500,jsonBody:{status:'error',message:e.message}}}}});
