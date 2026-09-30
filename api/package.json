@@ -1,10 +1,1 @@
-{
-  "type": "module",
-  "dependencies": {
-    "@azure/functions": "^4.5.0"
-  },
-  "main": "src/functions/*.js",
-  "engines": {
-    "node": ">=20"
-  }
-}
+{"type":"module","main":"src/functions/*.js","engines":{"node":">=20"},"dependencies":{"@azure/functions":"^4.5.0"}}
