@@ -1,4 +1,5 @@
 import { ConfiguratorApiClient, ConfiguratorApiError } from "./configurator-api.js";
+import { QuoteApiClient, QuoteApiError } from "./quote-api.js";
 import { assessCandidate, canValidateFamilyMigration, rankCandidates } from "./matcher.js";
 import { controlSearchTerms, displayControl, normalizeText, oppositeControl, parseReference } from "./normalization.js";
 import { ProductApiClient, ProductApiError } from "./product-api.js";
@@ -331,11 +332,33 @@ async function collectMigrationCandidates(productClient, parsed, originalProduct
   return products.filter((product) => product.controlClass === parsed.targetControlClass && product.family !== parsed.family);
 }
 
-export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient() } = {}) {
+export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient(), quoteClient = null } = {}) {
   return async function engine(query) {
     const parsed = parseReference(query);
     if (!parsed.input) return { httpStatus: 400, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Introduza uma referência Signify ou um 12NC." };
     try {
+      // Prefer the same Quote APIs used by the production Quote UI for configurable
+      // products. They return the configurator identity and real assignments, so no
+      // family/configurator exception table or brute-force bootstrap is needed.
+      try {
+        const quoteResult = quoteClient ? await quoteClient.findAlternative(parsed.input) : null;
+        if (quoteResult?.validated) {
+          const configured = { description: quoteResult.description, orderCode: quoteResult.orderCode || "", is12nc: false, family: quoteResult.family, parsed: parseReference(quoteResult.description), controlClass: quoteResult.controlClass, configuratorId: quoteResult.configuratorId, url: "", source: { system: "SIGNIFY_QUOTE_API" } };
+          return {
+            status: "VERIFIED_CONFIGURABLE_PRODUCT", statusLabel: RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT, resultType: "VERIFIED_CONFIGURABLE_PRODUCT", compatibility: "CONFIGURABLE_CLOSEST",
+            original: { input: parsed.input, description: parsed.reference, family: parsed.family, control: displayControl(parsed.controlClass) },
+            recommended: { description: configured.description, orderCode: null, productCode: null, family: configured.family, control: displayControl(configured.controlClass), configuratorId: quoteResult.configuratorId, configurationId: null },
+            currentFamily: configured.family, familyMigration: parsed.family && configured.family !== parsed.family ? { fromFamily: parsed.family, toFamily: configured.family, source: "Signify Quote Product API" } : null,
+            changes: [], preserved: [], validation: { verified:true, source:"Signify Quote APIs", method:"Product search assignments + getFromExistingConfigurationWithStatus", checkedAt:new Date().toISOString() },
+            message:"A configuração foi validada pelo mesmo fluxo de configuração usado pelo Signify Quote."
+          };
+        }
+      } catch (quoteError) {
+        // Quote endpoints may require environment-specific access. Preserve all
+        // existing standard-product behaviour by falling back to the catalogue path.
+        if (!(quoteError instanceof QuoteApiError)) throw quoteError;
+      }
+
       const originalProduct = await resolveOriginal(productClient, parsed);
       const officialParsed = originalProduct ? parseReference(originalProduct.description) : null;
       const effectiveControl = originalProduct?.controlClass !== "UNKNOWN" ? originalProduct?.controlClass : officialParsed?.controlClass;
@@ -455,4 +478,4 @@ export function createEngine({ productClient = new ProductApiClient(), configura
   };
 }
 
-export const engine = createEngine();
+export const engine = createEngine({ quoteClient: new QuoteApiClient() });

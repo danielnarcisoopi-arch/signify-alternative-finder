@@ -1,0 +1,121 @@
+import { normalizeControlCode, normalizeText, oppositeControl, parseReference } from './normalization.js';
+
+const DEFAULT_BASE = 'https://www.quote.signify.com/api';
+
+export class QuoteApiError extends Error {
+  constructor(code, message, details = {}) { super(message); this.name = 'QuoteApiError'; this.code = code; this.details = details; }
+}
+
+function assignmentMap(assignments = []) {
+  return new Map(assignments.filter(Boolean).map(a => [normalizeText(a.variableName), { ...a }]));
+}
+function setAssignment(map, variableName, valueName) {
+  const key = normalizeText(variableName);
+  const old = map.get(key) || { variableName, updatedValues: null, isDefault: false, exclusion: false, isLive: false };
+  map.set(key, { ...old, variableName: old.variableName || variableName, valueName });
+}
+function selectedValue(response, variableName) {
+  const list = response?.materialBomConfiguration?.root?.configuration?.newAssignments || [];
+  return list.find(a => normalizeText(a.variableName) === normalizeText(variableName))?.valueName || '';
+}
+function catalogCode(response) { return String(selectedValue(response, 'CATALOGCODE1') || '').trim(); }
+function validResponse(response) {
+  const root = response?.materialBomConfiguration?.root?.configuration;
+  const status = response?.bomStatus?.configurationStatus;
+  return Boolean((root?.valid ?? status?.valid) && (root?.complete ?? status?.complete) && !(root?.hasConflict ?? status?.hasConflict));
+}
+function configurableId(item) {
+  const raw = String(item?.materialName || item?.productModelName || '').trim();
+  const first = raw.split('_')[0];
+  return /^[A-Z]{1,8}\d{2,5}[A-Z]{0,4}I$/i.test(first) ? normalizeText(first) : '';
+}
+function materialNumber(item) { return String(item?.name || item?.externalId || '').trim(); }
+function normalizePackage(v) { return normalizeText(v).replace(/^LED/, ''); }
+function colorBase(v) { return normalizeText(v).replace(/^(UE|HE|NE)/, '').replace(/(UE|HE|NE|H)$/, ''); }
+
+function scoreSeed(item, parsed) {
+  const assignments = assignmentMap(item?.assignments || []);
+  let score = configurableId(item) ? 100 : 0;
+  const desc = parseReference(item?.description || '');
+  if (parsed.family && desc.family === parsed.family) score += 120;
+  if (parsed.packageCanonical && normalizePackage(desc.packageCanonical) === normalizePackage(parsed.packageCanonical)) score += 40;
+  if (parsed.colorCode && colorBase(desc.colorCode) === colorBase(parsed.colorCode)) score += 30;
+  for (const feature of parsed.features || []) {
+    if ([...assignments.values()].some(a => normalizeText(a.valueName) === normalizeText(feature))) score += 8;
+  }
+  return score;
+}
+
+export class QuoteApiClient {
+  constructor({ fetchImpl = globalThis.fetch, baseUrl = process.env.SIGNIFY_QUOTE_API_BASE || DEFAULT_BASE, timeoutMs = Number(process.env.SIGNIFY_API_TIMEOUT_MS || 12000), salesOrganization = process.env.SIGNIFY_SALES_ORG || 'PT02', distributionChannel = process.env.SIGNIFY_DISTRIBUTION_CHANNEL || '05', salesAreaId = process.env.SIGNIFY_SALES_AREA_ID || 'PT02/05/01', salesAreaName = process.env.SIGNIFY_SALES_AREA_NAME || 'CSU Portugal', plant = process.env.SIGNIFY_CONFIG_PLANT || 'PL06', usage = process.env.SIGNIFY_CONFIG_USAGE || '5' } = {}) {
+    this.fetchImpl = fetchImpl; this.baseUrl = baseUrl.replace(/\/$/, ''); this.timeoutMs = timeoutMs;
+    this.salesOrganization = salesOrganization; this.distributionChannel = distributionChannel; this.salesAreaId = salesAreaId; this.salesAreaName = salesAreaName; this.plant = plant; this.usage = usage;
+  }
+  async request(url, options = {}) {
+    const controller = new AbortController(); const timer = setTimeout(() => controller.abort(), this.timeoutMs);
+    try {
+      const r = await this.fetchImpl(url, { ...options, headers: { Accept: 'application/json', ...(options.body ? {'Content-Type':'application/json'} : {}), ...(options.headers || {}) }, signal: controller.signal });
+      const text = await r.text();
+      if (!r.ok) throw new QuoteApiError('HTTP_ERROR', `Quote API HTTP ${r.status}`, { status:r.status, body:text.slice(0,500) });
+      return text ? JSON.parse(text) : {};
+    } catch (e) {
+      if (e instanceof QuoteApiError) throw e;
+      throw new QuoteApiError(e?.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR', 'Quote API unavailable', { cause:String(e) });
+    } finally { clearTimeout(timer); }
+  }
+  async search(query, pageSize = 12) {
+    const u = new URL(`${this.baseUrl}/products/search`);
+    Object.entries({ query, page:0, pageSize, configurable:false, language:'en-GB', salesOrganization:this.salesOrganization, distributionChannel:this.distributionChannel, soldTo:'null', shipTo:'null' }).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+    return this.request(u);
+  }
+  async validate(payload) { return this.request(`${this.baseUrl}/material/getFromExistingConfigurationWithStatus`, { method:'POST', body:JSON.stringify(payload) }); }
+
+  async findAlternative(input) {
+    const parsedInput = parseReference(input);
+    const search = await this.search(input);
+    const items = Array.isArray(search?.items) ? search.items : [];
+    const configurable = items.filter(i => i?.isConfigurable && configurableId(i) && Array.isArray(i?.assignments) && i.assignments.length);
+    if (!configurable.length) return null;
+    const seed = configurable.sort((a,b)=>scoreSeed(b,parsedInput)-scoreSeed(a,parsedInput))[0];
+    const seedParsed = parseReference(seed.description || '');
+    const sourceControl = parsedInput.controlClass !== 'UNKNOWN' ? parsedInput.controlClass : seedParsed.controlClass;
+    const targetControl = oppositeControl(sourceControl);
+    if (targetControl === 'UNKNOWN') return null;
+
+    const map = assignmentMap(seed.assignments);
+    if (parsedInput.packageCanonical) setAssignment(map, 'PLM_LAMPFAM', normalizePackage(parsedInput.packageCanonical));
+    if (parsedInput.colorCode) setAssignment(map, 'PLM_COLLAMP', colorBase(parsedInput.colorCode));
+    // Keep the current-family efficacy/board assignment returned by the API. This
+    // naturally maps retired legacy suffixes (e.g. H) to the current family value.
+    const driverKey = [...map.keys()].find(k => /PLM_TRAFO|TRAFO|DRIVER|CONTROL/.test(k));
+    if (!driverKey) return null;
+    const driverVariable = map.get(driverKey).variableName;
+    const currentDriver = map.get(driverKey).valueName;
+    const external = /-E$/i.test(currentDriver) || /-E$/i.test(parsedInput.driver);
+    const controls = targetControl === 'DALI'
+      ? (external ? ['PSD-E','DIA-E','PSD','DIA','PSED-E','PSED'] : ['PSD','DIA','PSED','PSD-E','DIA-E'])
+      : (external ? ['PSU-E','PSU'] : ['PSU','PSU-E']);
+
+    for (const targetDriver of controls) {
+      const attempt = new Map([...map].map(([k,v])=>[k,{...v}]));
+      setAssignment(attempt, driverVariable, targetDriver);
+      const configId = configurableId(seed);
+      const payload = {
+        name: configId, plant: this.plant, usage: this.usage, languages:['en-GB','en'],
+        rootConfiguration: { existingAssignments:[...attempt.values()], itemId:'', materialName:materialNumber(seed), configurableMaterialName:configId, bomItemAssignments:[] },
+        salesAreaName:this.salesAreaName, salesAreaId:this.salesAreaId, soldTo:null, shipTo:null,
+        environment:{ rootEnvironment:{ salesArea:{ salesOrganization:this.salesOrganization, distributionChannel:this.distributionChannel }, salesDocumentType:'ZQU' }, materialEnvironment:[] }
+      };
+      let response;
+      try { response = await this.validate(payload); } catch (e) { if (e?.details?.status >= 500) continue; throw e; }
+      if (!validResponse(response)) continue;
+      const finalDriver = selectedValue(response, driverVariable);
+      if (normalizeControlCode(finalDriver) !== targetControl) continue;
+      const description = catalogCode(response);
+      if (!description) continue;
+      const finalParsed = parseReference(description);
+      return { validated:true, configuratorId:configId, description, orderCode:'', controlClass:targetControl, family:finalParsed.family, response, seed, targetDriver:finalDriver };
+    }
+    return null;
+  }
+}
