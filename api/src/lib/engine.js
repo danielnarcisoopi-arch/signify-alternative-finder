@@ -95,7 +95,7 @@ function standardResponse(parsed, originalProduct, assessment, alternatives = []
   };
 }
 
-function noResult(parsed, { message, reason, originalProduct = null, configurators = [], configuratorAttempts = [], inspected = 0, familyMigration = null } = {}) {
+function noResult(parsed, { message, reason, originalProduct = null, configurators = [], configuratorAttempts = [], inspected = 0, familyMigration = null, diagnostics = null } = {}) {
   const attemptById = new Map(configuratorAttempts.map((attempt) => [attempt.id, attempt]));
   for (const id of configurators) {
     if (!attemptById.has(id)) attemptById.set(id, { id, validated: false, reason: "NOT_ATTEMPTED" });
@@ -114,6 +114,7 @@ function noResult(parsed, { message, reason, originalProduct = null, configurato
     },
     recommended: null,
     familyMigration,
+    diagnostics,
     reason,
     message,
     configurators: [...attemptById.values()],
@@ -490,6 +491,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         configurators,
         configuratorAttempts,
         inspected: sameFamily.products.length + migrationCandidates.length + successorDiscovery.candidates.length,
+        diagnostics: successorDiscovery.diagnostics || null,
         reason: successorDiscovery.validated
           ? "SUCCESSOR_FOUND_CONFIGURATION_NOT_VALIDATED"
           : successorDiscovery.reason === "SUCCESSOR_CANDIDATES_AMBIGUOUS"

@@ -249,6 +249,66 @@ export function configuratorCarrier(rankedFamily) {
   };
 }
 
+
+function diagnosticRecursiveValues(value, keyPattern, results = []) {
+  if (Array.isArray(value)) { value.forEach((entry) => diagnosticRecursiveValues(entry, keyPattern, results)); return results; }
+  if (!value || typeof value !== "object") return results;
+  for (const [key, entry] of Object.entries(value)) {
+    if (keyPattern.test(key)) results.push(entry);
+    diagnosticRecursiveValues(entry, keyPattern, results);
+  }
+  return results;
+}
+
+function diagnosticProduct(product) {
+  if (!product) return null;
+  const raw = product.raw || {};
+  const assignments = diagnosticRecursiveValues(raw, /assignments|existingAssignments/i)
+    .flatMap((value) => Array.isArray(value) ? value : [])
+    .filter((assignment) => {
+      const variable = normalizeText(assignment?.variableName || assignment?.name || assignment?.characteristic || "");
+      return /(?:^|_)(?:PLM_)?PFC$|(?:^|_)(?:PLM_)?PFAM$|(?:^|_)(?:PLM_)?TRAFO$|(?:^|_)(?:PLM_)?LAMPFAM$|(?:^|_)(?:PLM_)?COLLAMP$/.test(variable);
+    })
+    .slice(0, 12)
+    .map((assignment) => ({
+      variableName: assignment?.variableName || assignment?.name || assignment?.characteristic || "",
+      valueName: assignment?.valueName || assignment?.value || assignment?.valueText || "",
+    }));
+  return {
+    query: product.source?.query || "",
+    description: product.description || "",
+    materialName: raw.materialName || raw.material_name || "",
+    productModelName: raw.productModelName || raw.product_model_name || "",
+    isConfigurable: raw.isConfigurable ?? raw.is_configurable ?? null,
+    parsedFamily: product.parsed?.family || "",
+    extractedFamily: product.family || "",
+    configuratorId: product.configuratorId || "",
+    familyFromConfigurator: familyCodeFromConfiguratorId(product.configuratorId),
+    controlClass: product.controlClass || "UNKNOWN",
+    assignments,
+  };
+}
+
+function discoveryDiagnostics(ranked, queries) {
+  return {
+    queries,
+    candidates: ranked.slice(0, 12).map((candidate) => ({
+      code: candidate.code,
+      score: candidate.score,
+      validated: candidate.validated,
+      samePrefix: candidate.samePrefix,
+      hasConfigurator: candidate.hasConfigurator,
+      exactInputEvidence: candidate.exactInputEvidence,
+      queryEvidence: candidate.queryEvidence,
+      nameSimilarity: candidate.nameSimilarity,
+      technicalScore: candidate.technicalScore,
+      technicalComparable: candidate.technicalComparable,
+      configuratorId: candidate.family?.configuratorId || candidate.products.find((p) => p.configuratorId)?.configuratorId || "",
+      products: candidate.products.slice(0, 5).map(diagnosticProduct),
+    })),
+  };
+}
+
 export async function discoverSuccessorFamilies(productClient, parsed, legacyFamily) {
   const effectiveLegacyFamily = legacyFamily || { code: parsed.family, name: "", raw: null };
   const queries = buildQueries(parsed, effectiveLegacyFamily);
@@ -283,6 +343,7 @@ export async function discoverSuccessorFamilies(productClient, parsed, legacyFam
     candidate: validated ? top : null,
     candidates: ranked,
     queries,
+    diagnostics: discoveryDiagnostics(ranked, queries),
     evidence: validated ? {
       oldFamily: parsed.family || legacyFamily.code,
       currentFamily: top.code,
