@@ -13,7 +13,7 @@ test('discovers DN610BI from Product API data and validates legacy DN571B -> DAL
  const calls=[]; const client=new QuoteApiClient({fetchImpl:async(url,opt={})=>{calls.push([String(url),opt]); if(String(url).includes('/products/search')) return response({items:[seed()]}); const p=JSON.parse(opt.body); return response(validFromPayload(p));}});
  const r=await client.findAlternative('DN571B LED40S/930H PSU-E C WH PGO');
  assert.equal(r.configuratorId,'DN610BI'); assert.equal(r.description,'DN610B 40S/930UE PSD-E C WH PGO');
- const payload=JSON.parse(calls.find(c=>c[0].includes('getFromExisting'))[1].body); assert.equal(payload.rootConfiguration.configurableMaterialName,'DN610BI'); assert.equal(payload.rootConfiguration.existingAssignments.find(a=>a.variableName==='PLM_TRAFO').valueName,'PSD-E');
+ const validations=calls.filter(c=>c[0].includes('getFromExisting')); assert.ok(validations.length>=2); const initial=JSON.parse(validations[0][1].body); const payload=JSON.parse(validations[1][1].body); assert.equal(initial.rootConfiguration.existingAssignments.find(a=>a.variableName==='PLM_TRAFO').valueName,'PSU-E'); assert.equal(payload.rootConfiguration.configurableMaterialName,'DN610BI'); assert.equal(payload.rootConfiguration.existingAssignments.find(a=>a.variableName==='PLM_TRAFO').valueName,'PSD-E');
 });
 
 test('inverse current configurable DALI -> PSU uses same generic flow', async()=>{

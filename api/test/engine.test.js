@@ -247,7 +247,7 @@ test("accepts SM350C description plus 12NC and returns PSU with SM350CI", async 
 
 test("uses the complete reference for official discovery and does not brute-force unrelated configurators", async () => {
   const calls = [];
-  const direct = product("DN610B 20S/840UE PSU-E C WH PGO", "", "ON_OFF");
+  const direct = apiProduct("DN610B 20S/840UE PSU-E C WH PGO", "", "FK_LP_DIMMING_CONTROLS_NO");
   direct.family = "DN610B";
   direct.configuratorId = "ZX999I";
   const productClient = {
