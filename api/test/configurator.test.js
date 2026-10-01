@@ -28,9 +28,9 @@ test("discovers and applies a selectable DALI option without fixed variable name
     },
     {
       configId: "session-1",
-      commercialDescription: "DN500B 20S/840 DIA-E WR WH PCO",
+      commercialDescription: "DN500B 20S/840 PSD-E WR WH PCO",
       options: [
-        { variableName: "Electrical_and_Control.DynamicDriver", valueName: "DIA-E", state: "userSelected" },
+        { variableName: "Electrical_and_Control.DynamicDriver", valueName: "PSD-E", state: "userSelected" },
       ],
     },
   ];
@@ -54,9 +54,9 @@ test("discovers and applies a selectable DALI option without fixed variable name
     },
   });
   assert.equal(result.validated, true);
-  assert.equal(result.description, "DN500B 20S/840 DIA-E WR WH PCO");
+  assert.equal(result.description, "DN500B 20S/840 PSD-E WR WH PCO");
   assert.equal(result.orderCode, "");
-  assert.equal(bodies[1].newAssignment.assignment.valueName, "DIA-E");
+  assert.equal(bodies[1].newAssignment.assignment.valueName, "PSD-E");
 });
 
 test("does not validate when an official configurator session cannot be bootstrapped", async () => {
@@ -168,4 +168,94 @@ test("bootstraps DN610BI and selects the closest tunable-white range plus DIA-E"
   assert.deepEqual(result.appliedRequirements, ["package", "color", "feature-0", "feature-1", "feature-2"]);
   assert.equal(bodies[1].newAssignment.assignment.valueName, "TW927-965");
   assert.equal(bodies.at(-1).newAssignment.assignment.valueName, "DIA-E");
+});
+
+
+test("preserves the current-family UE marker and selects 40S 930 PSD-E generically", async () => {
+  const responses = [
+    {
+      configId: "dn610-session",
+      options: [
+        { variableName: "Product.PLM_PFC", valueName: "DN610B", state: "selected" },
+        { variableName: "Product.PLM_LAMPFAM", valueName: "20S", state: "selected" },
+        { variableName: "Product.PLM_LAMPFAM", valueName: "40S", state: "selectable" },
+        { variableName: "Product.PLM_LED_BOARD_TYPE", valueName: "UE", state: "selected" },
+        { variableName: "Product.PLM_COLLAMP", valueName: "840", state: "selected" },
+        { variableName: "Product.PLM_COLLAMP", valueName: "930", state: "selectable" },
+        { variableName: "Product.PLM_TRAFO", valueName: "PSU-E", state: "selected" },
+        { variableName: "Product.PLM_TRAFO", valueName: "PSD-E", state: "selectable" },
+        { variableName: "Product.PLM_TRAFO", valueName: "DIA-E", state: "selectable" },
+        { variableName: "Product.PLM_OPTGRP", valueName: "C", state: "selected" },
+        { variableName: "Product.PLM_CLR", valueName: "WH", state: "selected" },
+        { variableName: "Product.PLM_CVR", valueName: "PGO", state: "selected" },
+      ],
+    },
+    {
+      configId: "dn610-session",
+      options: [
+        { variableName: "Product.PLM_LAMPFAM", valueName: "40S", state: "userSelected" },
+        { variableName: "Product.PLM_LED_BOARD_TYPE", valueName: "UE", state: "selected" },
+        { variableName: "Product.PLM_COLLAMP", valueName: "840", state: "selected" },
+        { variableName: "Product.PLM_COLLAMP", valueName: "930", state: "selectable" },
+        { variableName: "Product.PLM_TRAFO", valueName: "PSU-E", state: "selected" },
+        { variableName: "Product.PLM_TRAFO", valueName: "PSD-E", state: "selectable" },
+        { variableName: "Product.PLM_TRAFO", valueName: "DIA-E", state: "selectable" },
+        { variableName: "Product.PLM_OPTGRP", valueName: "C", state: "selected" },
+        { variableName: "Product.PLM_CLR", valueName: "WH", state: "selected" },
+        { variableName: "Product.PLM_CVR", valueName: "PGO", state: "selected" },
+      ],
+    },
+    {
+      configId: "dn610-session",
+      options: [
+        { variableName: "Product.PLM_LAMPFAM", valueName: "40S", state: "userSelected" },
+        { variableName: "Product.PLM_LED_BOARD_TYPE", valueName: "UE", state: "selected" },
+        { variableName: "Product.PLM_COLLAMP", valueName: "930", state: "userSelected" },
+        { variableName: "Product.PLM_TRAFO", valueName: "PSU-E", state: "selected" },
+        { variableName: "Product.PLM_TRAFO", valueName: "PSD-E", state: "selectable" },
+        { variableName: "Product.PLM_TRAFO", valueName: "DIA-E", state: "selectable" },
+        { variableName: "Product.PLM_OPTGRP", valueName: "C", state: "selected" },
+        { variableName: "Product.PLM_CLR", valueName: "WH", state: "selected" },
+        { variableName: "Product.PLM_CVR", valueName: "PGO", state: "selected" },
+      ],
+    },
+    {
+      configId: "dn610-session",
+      commercialDescription: "DN610B 40S/930UE PSD-E C WH PGO",
+      options: [
+        { variableName: "Product.PLM_LAMPFAM", valueName: "40S", state: "userSelected" },
+        { variableName: "Product.PLM_LED_BOARD_TYPE", valueName: "UE", state: "selected" },
+        { variableName: "Product.PLM_COLLAMP", valueName: "930", state: "userSelected" },
+        { variableName: "Product.PLM_TRAFO", valueName: "PSD-E", state: "userSelected" },
+        { variableName: "Product.PLM_OPTGRP", valueName: "C", state: "selected" },
+        { variableName: "Product.PLM_CLR", valueName: "WH", state: "selected" },
+        { variableName: "Product.PLM_CVR", valueName: "PGO", state: "selected" },
+      ],
+    },
+  ];
+  const bodies = [];
+  const client = new ConfiguratorApiClient({
+    fetchImpl: async (_url, options) => {
+      bodies.push(JSON.parse(options.body));
+      return jsonResponse(responses.shift());
+    },
+  });
+  const requirements = {
+    ...parseReference("DN571B LED40S/930H PSU-E C WH PGO"),
+    efficiency: "UE",
+  };
+  const result = await client.validateControlChange({
+    configuratorId: "CURRENT-CONFIG",
+    familyCode: "CURRENT-FAMILY",
+    sourceControlClass: "ON_OFF",
+    targetControlClass: "DALI",
+    requirements,
+    seed: {
+      configId: "dn610-session",
+      existingAssignments: [{ variableName: "Product.PLM_TRAFO", valueName: "PSU-E" }],
+    },
+  });
+  assert.equal(result.validated, true);
+  assert.equal(result.description, "DN610B 40S/930UE PSD-E C WH PGO");
+  assert.equal(bodies.at(-1).newAssignment.assignment.valueName, "PSD-E");
 });

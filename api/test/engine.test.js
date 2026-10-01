@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { createEngine } from "../src/lib/engine.js";
 import { createProduct } from "../src/lib/product-api.js";
+import { parseReference } from "../src/lib/normalization.js";
 
 function apiProduct(description, sku, controlKey) {
   return createProduct({
@@ -64,7 +65,7 @@ test("returns a configurable-only product in a dynamically discovered successor 
   const configuratorClient = {
     validateControlChange: async ({ configuratorId, requirements }) => ({
       validated: true,
-      description: "DN610B 40S/TW927-965 DIA-E C WH PGO",
+      description: "DN610B 40S/930UE PSD-E C WH PGO",
       orderCode: "",
       configuratorId,
       configId: "official-session",
@@ -79,7 +80,7 @@ test("returns a configurable-only product in a dynamically discovered successor 
   assert.equal(result.recommended.orderCode, null);
   assert.equal(result.familyMigration.oldFamily, "DN571B");
   assert.equal(result.familyMigration.currentFamily, "DN610B");
-  assert.equal(result.recommended.description, "DN610B 40S/TW927-965 DIA-E C WH PGO");
+  assert.equal(result.recommended.description, "DN610B 40S/930UE PSD-E C WH PGO");
   assert.equal(result.familyMigration.discoveryMode, "UNIQUE_TECHNICAL_SIGNATURE");
 });
 
@@ -170,3 +171,51 @@ for (const regression of [
     assert.equal(result.recommended.orderCode, regression.orderCode);
   });
 }
+
+test("carries current-family efficiency metadata into successor configuration without family hardcodes", async () => {
+  const parsedCarrier = parseReference("ZX200B 20S/840UE PSU-E C WH PGO");
+  const carrier = {
+    description: "ZX200B 20S/840UE PSU-E C WH PGO",
+    orderCode: "",
+    is12nc: false,
+    family: "ZX200B",
+    familyIds: [],
+    familyName: "ExampleSpace Compact",
+    configuratorId: "ZX200BI",
+    configuratorSeed: { configId: "seed", existingAssignments: [{ variableName: "driver", valueName: "PSU-E" }] },
+    parsed: parsedCarrier,
+    controlClass: "ON_OFF",
+    source: { query: "ZX100B LED40S/930H PSU-E C WH PGO" },
+  };
+  const productClient = {
+    searchProducts: async ({ query }) => query === "ZX100B LED40S/930H PSU-E C WH PGO"
+      ? { products: [carrier], families: [] }
+      : { products: [], families: [] },
+    searchFacets: async ({ query }) => ({
+      products: [],
+      families: query === "ZX100B LED40S/930H PSU-E C WH PGO" ? [{
+        code: "ZX200B", name: "ExampleSpace Compact", configuratorId: "ZX200BI", source: { query },
+      }] : [],
+    }),
+    resolveFamilyMetadata: async () => ({ code: "ZX100B", name: "", raw: null }),
+    verifyStandardProduct: async () => null,
+  };
+  let receivedRequirements = null;
+  const configuratorClient = {
+    validateControlChange: async ({ configuratorId, requirements }) => {
+      receivedRequirements = requirements;
+      return {
+        validated: true,
+        description: "ZX200B 40S/930UE PSD-E C WH PGO",
+        orderCode: "",
+        configuratorId,
+        configId: "configured",
+      };
+    },
+  };
+  const engine = createEngine({ productClient, configuratorClient });
+  const result = await engine("ZX100B LED40S/930H PSU-E C WH PGO");
+  assert.equal(receivedRequirements.efficiency, "UE");
+  assert.equal(result.recommended.configuratorId, "ZX200BI");
+  assert.equal(result.recommended.description, "ZX200B 40S/930UE PSD-E C WH PGO");
+});

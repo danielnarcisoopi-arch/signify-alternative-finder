@@ -49,3 +49,11 @@ test("preserves the SM350C technical signature", () => {
   assert.equal(parsed.length, "L1500");
   assert.deepEqual(parsed.features, ["PCS", "WH"]);
 });
+
+
+test("recognizes trailing current-generation efficiency markers", () => {
+  const parsed = parseReference("ZX200B 40S/930UE PSD-E C WH PGO");
+  assert.equal(parsed.colorCode, "930");
+  assert.equal(parsed.efficiency, "UE");
+  assert.equal(parsed.colorSuffix, "");
+});

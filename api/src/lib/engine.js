@@ -206,7 +206,13 @@ async function tryConfigurators(configuratorClient, parsed, products, options = 
       seed: product.configuratorSeed,
       sourceControlClass: parsed.controlClass,
       targetControlClass: parsed.targetControlClass,
-      requirements: parsed,
+      requirements: {
+        ...parsed,
+        // If a legacy reference has no modern efficiency/board marker, preserve
+        // the marker exposed by the official current-family carrier returned by
+        // the Product API (for example UE). This is data-driven, not family-specific.
+        efficiency: parsed.efficiency || product.parsed?.efficiency || "",
+      },
     });
     const attempt = {
       id: product.configuratorId,

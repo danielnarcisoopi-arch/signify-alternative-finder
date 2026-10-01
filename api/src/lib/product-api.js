@@ -217,6 +217,7 @@ export function createProduct(item, evidence = {}) {
       system: "SIGNIFY_PRODUCT_API",
       locale: evidence.locale || DEFAULT_LOCALE,
       endpoint: evidence.endpoint || "",
+      query: evidence.query || "",
     },
   };
 }

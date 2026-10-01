@@ -141,13 +141,27 @@ function findRequirementOption(options, requirement) {
 
 function controlPreference(assignment, requirements, selected) {
   const value = normalizeText(assignment.valueName);
+  const source = normalizeText(requirements?.driver);
   let score = 0;
-  if (/^DIA-E$/.test(value)) score += 100;
-  else if (/^DIA$/.test(value)) score += 80;
-  else if (/^PSD-E$/.test(value)) score += 70;
-  else if (/^PSED$/.test(value)) score += 60;
-  else if (/^PSD/.test(value)) score += 50;
-  if (normalizeText(requirements?.driver).endsWith("-E") && value.endsWith("-E")) score += 20;
+
+  // Preserve the control technology lineage where the configurator offers it.
+  // A PSU/PSR source maps naturally to the PSD family for DALI; DIA remains
+  // preferable for tunable-white configurations where the configurator requires it.
+  if (/^PS[UR]/.test(source)) {
+    if (/^PSD-E$/.test(value)) score += 120;
+    else if (/^PSD$/.test(value)) score += 105;
+    else if (/^PSD-SR/.test(value)) score += 95;
+    else if (/^PSED$/.test(value)) score += 90;
+    else if (/^DIA-E$/.test(value)) score += 70;
+    else if (/^DIA$/.test(value)) score += 60;
+  } else {
+    if (/^DIA-E$/.test(value)) score += 100;
+    else if (/^DIA$/.test(value)) score += 80;
+    else if (/^PSD-E$/.test(value)) score += 70;
+    else if (/^PSED$/.test(value)) score += 60;
+    else if (/^PSD/.test(value)) score += 50;
+  }
+  if (source.endsWith("-E") && value.endsWith("-E")) score += 20;
   const tunableWhiteSelected = selected.some((entry) => /^TW[789]\d{2}-[789]\d{2}$/i.test(entry.valueName));
   if (tunableWhiteSelected && /^DIA/.test(value)) score += 100;
   if (selectedState(assignment.state)) score += 1;
@@ -160,6 +174,7 @@ function configurationRequirements(parsed) {
   return [
     { key: "generation", type: "TOKEN", values: [parsed.generation] },
     { key: "package", type: "PACKAGE", values: [parsed.package, parsed.packageCanonical] },
+    { key: "efficiency", type: "TOKEN", values: [parsed.efficiency] },
     {
       key: "color",
       type: "COLOR",
