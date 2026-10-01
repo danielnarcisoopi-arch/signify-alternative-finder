@@ -1,0 +1,35 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { ProductApiClient, ProductApiError } from "../src/lib/product-api.js";
+
+test("rejects an empty Product API response with a structured error", async () => {
+  const client = new ProductApiClient({
+    fetchImpl: async () => ({ ok: true, status: 200, text: async () => "" }),
+  });
+  await assert.rejects(() => client.searchProducts({ query: "DN142B" }), (error) => {
+    assert.ok(error instanceof ProductApiError);
+    assert.equal(error.code, "EMPTY_RESPONSE");
+    return true;
+  });
+});
+
+test("paginates catalogue results", async () => {
+  const pages = [];
+  const client = new ProductApiClient({
+    maxPages: 3,
+    fetchImpl: async (url) => {
+      const page = Number(new URL(url).searchParams.get("page"));
+      pages.push(page);
+      const rows = page === 1
+        ? [
+            { displayed_order_code_description: { value: "DN142B 10S/840 PSD-E WR IP54" }, sku: { value: "910505103591" } },
+            { displayed_order_code_description: { value: "DN142B 20S/840 PSD-E WR IP54" }, sku: { value: "910505103592" } },
+          ]
+        : [{ displayed_order_code_description: { value: "DN142B 30S/840 PSD-E WR IP54" }, sku: { value: "910505103593" } }];
+      return { ok: true, status: 200, text: async () => JSON.stringify({ results: rows, total: 3 }) };
+    },
+  });
+  const result = await client.searchProducts({ query: "DN142B", size: 2 });
+  assert.deepEqual(pages, [1, 2]);
+  assert.equal(result.products.length, 3);
+});

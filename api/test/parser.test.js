@@ -1,0 +1,33 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { parseReference } from "../src/lib/normalization.js";
+
+test("keeps a pure 12NC for official resolution", () => {
+  const parsed = parseReference("911401838588");
+  assert.equal(parsed.inputType, "ORDER_CODE");
+  assert.equal(parsed.orderCode, "911401838588");
+  assert.equal(parsed.reference, "");
+});
+
+test("normalizes UE840 without losing LED150", () => {
+  const parsed = parseReference("BY120P G6 LED150/UE840 PSU WB");
+  assert.equal(parsed.family, "BY120P");
+  assert.equal(parsed.generation, "G6");
+  assert.equal(parsed.package, "LED150");
+  assert.equal(parsed.packageCanonical, "150");
+  assert.equal(parsed.colorCode, "840");
+  assert.equal(parsed.cct, 4000);
+  assert.equal(parsed.cri, 80);
+  assert.equal(parsed.efficiency, "UE");
+  assert.deepEqual(parsed.features, ["WB"]);
+});
+
+test("parses critical fields independently", () => {
+  const parsed = parseReference("WT490C 62S/840 PSU NE WB PI5 L1800");
+  assert.equal(parsed.packageCanonical, "62S");
+  assert.equal(parsed.efficiency, "NE");
+  assert.equal(parsed.length, "L1800");
+  assert.deepEqual(parsed.features, ["WB", "PI5"]);
+  assert.equal(parsed.targetControlClass, "DALI");
+});
+
