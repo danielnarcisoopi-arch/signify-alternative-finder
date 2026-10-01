@@ -83,13 +83,54 @@ function requirementMatches(assignment, requirement) {
   });
 }
 
+function tunableColorScore(assignment, requirement) {
+  if (requirement.type !== "COLOR" || !requirement.expectedCct || !requirement.expectedCri) return -1;
+  const match = normalizeText(assignment.valueName).match(/\bTW([789])(\d{2})-([789])(\d{2})\b/);
+  if (!match) return -1;
+  const criMin = Math.min(Number(match[1]), Number(match[3])) * 10;
+  const cctMin = Math.min(Number(match[2]), Number(match[4])) * 100;
+  const cctMax = Math.max(Number(match[2]), Number(match[4])) * 100;
+  if (criMin < requirement.expectedCri || requirement.expectedCct < cctMin || requirement.expectedCct > cctMax) return -1;
+  return 1000 - (cctMax - cctMin) / 100;
+}
+
+function findRequirementOption(options, requirement) {
+  const exact = options.find((assignment) => requirementMatches(assignment, requirement));
+  if (exact) return exact;
+  return options
+    .map((assignment) => ({ assignment, score: tunableColorScore(assignment, requirement) }))
+    .filter((entry) => entry.score >= 0)
+    .sort((left, right) => right.score - left.score)[0]?.assignment || null;
+}
+
+function controlPreference(assignment, requirements, selected) {
+  const value = normalizeText(assignment.valueName);
+  let score = 0;
+  if (/^DIA-E$/.test(value)) score += 100;
+  else if (/^DIA$/.test(value)) score += 80;
+  else if (/^PSD-E$/.test(value)) score += 70;
+  else if (/^PSED$/.test(value)) score += 60;
+  else if (/^PSD/.test(value)) score += 50;
+  if (normalizeText(requirements?.driver).endsWith("-E") && value.endsWith("-E")) score += 20;
+  const tunableWhiteSelected = selected.some((entry) => /^TW[789]\d{2}-[789]\d{2}$/i.test(entry.valueName));
+  if (tunableWhiteSelected && /^DIA/.test(value)) score += 100;
+  if (selectedState(assignment.state)) score += 1;
+  return score;
+}
+
 function configurationRequirements(parsed) {
   if (!parsed) return [];
   const colorWithSuffix = `${parsed.colorCode || ""}${parsed.colorSuffix || ""}`;
   return [
     { key: "generation", type: "TOKEN", values: [parsed.generation] },
     { key: "package", type: "PACKAGE", values: [parsed.package, parsed.packageCanonical] },
-    { key: "color", type: "TOKEN", values: [colorWithSuffix, parsed.colorCode] },
+    {
+      key: "color",
+      type: "COLOR",
+      values: [colorWithSuffix, parsed.colorCode],
+      expectedCri: parsed.cri,
+      expectedCct: parsed.cct,
+    },
     { key: "length", type: "TOKEN", values: [parsed.length] },
     { key: "ip", type: "TOKEN", values: [parsed.ip] },
     { key: "ik", type: "TOKEN", values: [parsed.ik] },
@@ -162,10 +203,23 @@ export class ConfiguratorApiClient {
     return this.request(configuratorId, { method: "POST", body });
   }
 
-  async bootstrap(configuratorId) {
+  async bootstrap(configuratorId, familyCode = "") {
     const generatedConfigId = globalThis.crypto?.randomUUID?.() || `cfg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const common = { configId: generatedConfigId, name: configuratorId, existingAssignments: [] };
     const attempts = [
+      ...(familyCode ? [{
+        configId: generatedConfigId,
+        name: configuratorId,
+        existingAssignments: [
+          { variableName: "Internal.PLM_BRD", valueName: "SIG" },
+          { variableName: "Internal.ModelInfo", valueName: "[Other values]" },
+          { variableName: "Internal.SPADACTIVE", valueName: "1" },
+        ],
+        newAssignment: {
+          action: "updateValues",
+          assignment: { variableName: "Product_Variant.PLM_PFC", valueName: familyCode },
+        },
+      }] : []),
       { ...common, newAssignment: { action: "updateValues", assignment: {} } },
       common,
     ];
@@ -199,12 +253,12 @@ export class ConfiguratorApiClient {
     });
   }
 
-  async validateControlChange({ configuratorId, seed, sourceControlClass, targetControlClass, requirements = null }) {
+  async validateControlChange({ configuratorId, familyCode = "", seed, sourceControlClass, targetControlClass, requirements = null }) {
     if (!configuratorId) return { validated: false, reason: "CONFIGURATOR_NOT_AVAILABLE" };
 
     let session = seed?.configId && Array.isArray(seed.existingAssignments)
       ? { configId: seed.configId, existingAssignments: seed.existingAssignments, payload: null }
-      : await this.bootstrap(configuratorId);
+      : await this.bootstrap(configuratorId, familyCode);
     if (!session?.configId) return { validated: false, reason: "CONFIGURATOR_SESSION_NOT_AVAILABLE" };
 
     let currentPayload = session.payload;
@@ -224,12 +278,11 @@ export class ConfiguratorApiClient {
     const unresolvedRequirements = [];
     for (const requirement of configurationRequirements(requirements)) {
       const options = collectAssignments(currentPayload).filter((assignment) => selectableState(assignment.state));
-      const alreadySelected = options.find((assignment) => selectedState(assignment.state) && requirementMatches(assignment, requirement));
-      if (alreadySelected) {
+      const option = findRequirementOption(options, requirement);
+      if (option && selectedState(option.state)) {
         appliedRequirements.push(requirement.key);
         continue;
       }
-      const option = options.find((assignment) => requirementMatches(assignment, requirement));
       if (!option) {
         unresolvedRequirements.push(requirement.key);
         continue;
@@ -242,17 +295,20 @@ export class ConfiguratorApiClient {
     }
 
     const options = collectAssignments(currentPayload);
-    const selectedControl = options.find((assignment) => assignmentControl(assignment) === targetControlClass && selectedState(assignment.state));
     const sourceOption = options.find((assignment) => (
       assignmentControl(assignment) === sourceControlClass
       && isControlText(`${assignment.variableName} ${assignment.valueName}`)
     ));
-    const controlVariable = selectedControl?.variableName || sourceOption?.variableName;
-    const targetOption = selectedControl || options.find((assignment) => (
+    const selectedControl = options.find((assignment) => assignmentControl(assignment) === targetControlClass && selectedState(assignment.state));
+    const controlVariable = sourceOption?.variableName || selectedControl?.variableName;
+    const targetOption = options.filter((assignment) => (
       (!controlVariable || assignment.variableName === controlVariable)
       && assignmentControl(assignment) === targetControlClass
       && selectableState(assignment.state)
-    ));
+    )).sort((left, right) => (
+      controlPreference(right, requirements, currentAssignments)
+      - controlPreference(left, requirements, currentAssignments)
+    ))[0];
     if (!targetOption) return { validated: false, reason: "TARGET_CONTROL_NOT_SELECTABLE", appliedRequirements, unresolvedRequirements };
 
     let updated = currentPayload;

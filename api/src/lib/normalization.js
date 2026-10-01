@@ -72,6 +72,22 @@ function canonicalPackage(token) {
 
 function parseColorToken(token) {
   const normalized = normalizeText(token);
+  const tunable = normalized.match(/^TW([789]\d{2})-([789]\d{2})$/);
+  if (tunable) {
+    const start = tunable[1];
+    const end = tunable[2];
+    return {
+      raw: normalized,
+      efficiencyPrefix: "",
+      colorCode: normalized,
+      cri: Math.min(Number(start[0]), Number(end[0])) * 10,
+      cct: Number(start.slice(1)) * 100,
+      cctMin: Math.min(Number(start.slice(1)), Number(end.slice(1))) * 100,
+      cctMax: Math.max(Number(start.slice(1)), Number(end.slice(1))) * 100,
+      suffix: "",
+      tunableWhite: true,
+    };
+  }
   const match = normalized.match(/^(UE|HE|NE)?([789]\d{2})([A-Z]*)$/);
   if (!match) return null;
   return {
@@ -81,6 +97,9 @@ function parseColorToken(token) {
     cri: Number(match[2][0]) * 10,
     cct: Number(match[2].slice(1)) * 100,
     suffix: match[3] || "",
+    cctMin: Number(match[2].slice(1)) * 100,
+    cctMax: Number(match[2].slice(1)) * 100,
+    tunableWhite: false,
   };
 }
 
@@ -146,6 +165,9 @@ export function parseReference(value) {
     colorCode: colorInfo?.colorCode || "",
     cri: colorInfo?.cri || null,
     cct: colorInfo?.cct || null,
+    cctMin: colorInfo?.cctMin || null,
+    cctMax: colorInfo?.cctMax || null,
+    tunableWhite: colorInfo?.tunableWhite || false,
     colorSuffix: colorInfo?.suffix || "",
     efficiency: efficiencyToken,
     length,
@@ -165,4 +187,3 @@ export const CONTROL_FILTER_KEYS = {
   DALI: "FK_LP_DIMMING_CONTROLS_DALI",
   ON_OFF: "FK_LP_DIMMING_CONTROLS_NO",
 };
-

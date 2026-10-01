@@ -1,8 +1,8 @@
-# Signify Alternative Finder v9
+# Signify Alternative Finder v10
 
 Internal tool for finding a verified PSU/On-Off ↔ PSD/DALI alternative in the official Signify professional-lighting catalogue.
 
-## What v9 changes
+## What v10 changes
 
 - Reads enriched family metadata from the Product API instead of treating search results as a flat list of articles.
 - Discovers a current successor family dynamically from official family identity, family-name continuity and the requested technical signature.
@@ -10,6 +10,10 @@ Internal tool for finding a verified PSU/On-Off ↔ PSD/DALI alternative in the 
 - Supports current products that exist only in a configurator and therefore may not have a 12NC.
 - Bootstraps a Configurator session when an official reusable session is not supplied, then discovers variable names and selectable values from API responses.
 - Keeps exact 12NC revalidation for every standard catalogue product.
+- Continues successor discovery when the obsolete family is no longer returned anywhere in the current catalogue.
+- Uses repeated enriched-facet evidence plus a unique technical signature to identify configurator-only current families.
+- Understands tunable-white ranges such as `TW927-965` and verifies that the requested fixed CRI/CCT is covered by the range.
+- Prefers the Configurator-native `DIA-E` DALI option when it is selectable and preserves the requested emergency suffix.
 
 ## Validation rules
 
@@ -19,6 +23,13 @@ There are two valid recommendation paths:
 2. **Configurable article:** the Product API supplies the official configurator identity, the requested values are selected using options returned at runtime, and the final commercial description is returned by the Configurator API. A 12NC is optional in this path.
 
 The application never presents a locally generated description as a product. If neither validation path succeeds, it returns `NO_VERIFIED_ALTERNATIVE`.
+
+Exact configurable regressions include:
+
+- `DN571B LED40S/930H PSU-E C WH PGO` → configurator `DN610BI` → `DN610B 40S/TW927-965 DIA-E C WH PGO`.
+- `DN500B 20S/840 PSU-E WR WH PCO` → configurator `DN500BI` → `DN500B 20S/840 DIA-E WR WH PCO`.
+
+These are test fixtures only; the production engine contains no fixed family replacement map.
 
 ## Successor discovery
 

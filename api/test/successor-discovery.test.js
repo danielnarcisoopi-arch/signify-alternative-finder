@@ -54,3 +54,50 @@ test("the same discovery logic works for unknown family codes", async () => {
   assert.equal(result.validated, true);
   assert.equal(result.candidate.code, "AB250C");
 });
+
+test("discovers a unique technical successor when the legacy family has left the current catalogue", async () => {
+  const current = product("DN610B 40S/TW927-965 DIA-E C WH PGO", "LuxSpace Compact, recessed", "LP_CF_DN610B_EU");
+  const unrelated = product("RS771B 40S/TW927-965 DIA-E C WH PGO", "GreenSpace recessed", "LP_CF_RS771B_EU");
+  const client = {
+    searchProducts: async () => ({ products: [unrelated, current], families: [] }),
+    searchFacets: async () => ({
+      products: [],
+      families: [
+        { code: "RS771B", name: "GreenSpace recessed", configuratorId: "RS-CONFIG" },
+        { code: "DN610B", name: "LuxSpace Compact, recessed", configuratorId: "DN610BI" },
+      ],
+    }),
+  };
+  const result = await discoverSuccessorFamilies(
+    client,
+    parseReference("DN571B LED40S/930H PSU-E C WH PGO"),
+    { code: "DN571B", name: "", raw: null },
+  );
+  assert.equal(result.validated, true);
+  assert.equal(result.candidate.code, "DN610B");
+  assert.equal(result.evidence.discoveryMode, "UNIQUE_TECHNICAL_SIGNATURE");
+});
+
+test("can use repeated enriched-facet evidence for a configurator-only current family", async () => {
+  const client = {
+    searchProducts: async () => ({ products: [], families: [] }),
+    searchFacets: async ({ query }) => ({
+      products: [],
+      families: [{
+        code: "DN610B",
+        name: "LuxSpace Compact, recessed",
+        configuratorId: "DN610BI",
+        source: { query },
+      }],
+    }),
+  };
+  const result = await discoverSuccessorFamilies(
+    client,
+    parseReference("DN571B LED40S/930H PSU-E C WH PGO"),
+    { code: "DN571B", name: "", raw: null },
+  );
+  assert.equal(result.validated, true);
+  assert.equal(result.candidate.code, "DN610B");
+  assert.equal(result.candidate.products.length, 0);
+  assert.ok(result.evidence.queryEvidence >= 2);
+});

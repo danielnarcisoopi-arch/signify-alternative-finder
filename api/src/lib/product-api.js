@@ -230,6 +230,14 @@ function getResults(payload) {
 }
 
 function getFamilyRows(payload) {
+  const flattenFamilyRows = (value) => {
+    const root = unwrap(value);
+    if (Array.isArray(root)) return root.flatMap(flattenFamilyRows);
+    if (!root || typeof root !== "object") return [];
+    const keys = Object.keys(root);
+    if (keys.some((key) => /^(family_?id|family_?code|family_?name|configurator_?id)$/i.test(key))) return [root];
+    return Object.values(root).flatMap(flattenFamilyRows);
+  };
   const roots = [
     payload?.dataEnrichment?.familyData,
     payload?.dataEnrichment?.family_data,
@@ -241,12 +249,7 @@ function getFamilyRows(payload) {
     payload?.families,
     payload?.data?.families,
   ];
-  return roots.flatMap((root) => {
-    const value = unwrap(root);
-    if (Array.isArray(value)) return value;
-    if (value && typeof value === "object") return Object.values(value);
-    return [];
-  }).filter((entry) => entry && typeof entry === "object");
+  return roots.flatMap(flattenFamilyRows).filter((entry) => entry && typeof entry === "object");
 }
 
 function deduplicateFamilies(families) {

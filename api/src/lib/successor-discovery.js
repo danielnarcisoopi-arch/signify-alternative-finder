@@ -147,24 +147,30 @@ function rankGroups(parsed, legacyFamily, groups) {
         return result.score > best.score ? { ...result, product } : best;
       }, { score: 0, comparable: 0, product: null });
       const hasConfigurator = Boolean(group.family?.configuratorId || group.products.some((product) => product.configuratorId));
+      const queryEvidence = group.queries.size;
       const score = (explicit ? 300 : 0)
         + (samePrefix ? 70 : 0)
         + Math.round(familySimilarity * 140)
         + technical.score
         + (hasConfigurator ? 15 : 0)
+        + Math.min(45, queryEvidence * 15)
         + Math.min(20, group.products.length * 3);
       const validated = explicit
         || (familySimilarity >= 0.75 && technical.score >= 35)
         || (samePrefix && familySimilarity >= 0.5 && technical.score >= 70)
-        || (samePrefix && familySimilarity >= 0.9 && Boolean(group.family?.name));
+        || (samePrefix && familySimilarity >= 0.9 && Boolean(group.family?.name))
+        || (samePrefix && !oldName && technical.score >= 100 && technical.comparable >= 4)
+        || (samePrefix && !oldName && hasConfigurator && queryEvidence >= 2);
       return {
         ...group,
         samePrefix,
         nameSimilarity: familySimilarity,
         technicalScore: technical.score,
+        technicalComparable: technical.comparable,
         bestTechnicalProduct: technical.product,
         explicitSuccessor: explicit,
         hasConfigurator,
+        queryEvidence,
         score,
         validated,
       };
@@ -176,10 +182,14 @@ function buildQueries(parsed, legacyFamily) {
   const targetTerms = controlSearchTerms(parsed.targetControlClass, parsed.driver);
   const familyTerms = familyNameTokens(legacyFamily?.name).slice(0, 3);
   const technical = [parsed.package, parsed.colorCode, parsed.length, ...(parsed.features || []).slice(0, 4)];
+  const structuralPrefix = familyPrefix(parsed.family || legacyFamily?.code);
   const queries = [
     [...familyTerms, ...technical, targetTerms[0]],
     [...familyTerms, parsed.package, parsed.colorCode, targetTerms[1] || targetTerms[0]],
     [parsed.package, parsed.colorCode, parsed.length, ...(parsed.features || []), targetTerms[0]],
+    [parsed.packageCanonical || parsed.package, ...(parsed.features || []), "DALI"],
+    [structuralPrefix, parsed.packageCanonical || parsed.package, parsed.length, "DALI"],
+    [...(parsed.features || []), "DALI"],
   ]
     .map((parts) => parts.filter(Boolean).join(" ").trim())
     .filter((query) => query.split(/\s+/).length >= 2);
@@ -212,10 +222,8 @@ export function configuratorCarrier(rankedFamily) {
 }
 
 export async function discoverSuccessorFamilies(productClient, parsed, legacyFamily) {
-  if (!legacyFamily?.name && !legacyFamily?.raw) {
-    return { validated: false, reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE", candidates: [], queries: [] };
-  }
-  const queries = buildQueries(parsed, legacyFamily);
+  const effectiveLegacyFamily = legacyFamily || { code: parsed.family, name: "", raw: null };
+  const queries = buildQueries(parsed, effectiveLegacyFamily);
   if (!queries.length) return { validated: false, reason: "INSUFFICIENT_TECHNICAL_SIGNATURE", candidates: [], queries: [] };
 
   const tasks = [];
@@ -228,7 +236,7 @@ export async function discoverSuccessorFamilies(productClient, parsed, legacyFam
   if (!successful.length && settled.length) throw settled[0].reason;
   const products = successful.flatMap((value) => value.products || []);
   const families = successful.flatMap((value) => value.families || []);
-  const ranked = rankGroups(parsed, legacyFamily, groupEvidence(families, products));
+  const ranked = rankGroups(parsed, effectiveLegacyFamily, groupEvidence(families, products));
   const top = ranked[0];
   const runnerUp = ranked[1];
   const sufficientMargin = !runnerUp || top.score - runnerUp.score >= 20 || top.explicitSuccessor;
@@ -248,7 +256,12 @@ export async function discoverSuccessorFamilies(productClient, parsed, legacyFam
       sameStructuralPrefix: top.samePrefix,
       nameSimilarity: top.nameSimilarity,
       technicalScore: top.technicalScore,
+      technicalComparable: top.technicalComparable,
+      queryEvidence: top.queryEvidence,
       discoveryScore: top.score,
+      discoveryMode: top.explicitSuccessor || top.nameSimilarity > 0
+        ? "FAMILY_METADATA_AND_TECHNICAL_SIGNATURE"
+        : "UNIQUE_TECHNICAL_SIGNATURE",
       source: "Signify Product API family metadata and technical search",
     } : null,
   };

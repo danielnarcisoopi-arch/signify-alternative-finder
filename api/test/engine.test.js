@@ -45,20 +45,18 @@ test("returns a same-family product only after exact-code verification", async (
 });
 
 test("returns a configurable-only product in a dynamically discovered successor family", async () => {
-  const currentConfigurable = createProduct({
-    displayed_order_code_description: { value: "DN610B 40S/930 PSD-E C WH PGO" },
-    filter_keys: { value: ["FK_LP_DIMMING_CONTROLS_DALI"] },
-    family_id: { value: "LP_CF_DN610B_EU" },
-    family_name: { value: "LuxSpace Compact, recessed" },
-    configurator_id: { value: "DN610BI" },
-  });
   const productClient = {
-    searchProducts: async () => ({ products: [currentConfigurable], families: [] }),
-    searchFacets: async () => ({
+    searchProducts: async () => ({ products: [], families: [] }),
+    searchFacets: async ({ query }) => ({
       products: [],
-      families: [{ code: "DN610B", name: "LuxSpace Compact, recessed", configuratorId: "DN610BI" }],
+      families: [{
+        code: "DN610B",
+        name: "LuxSpace Compact, recessed",
+        configuratorId: "DN610BI",
+        source: { query },
+      }],
     }),
-    resolveFamilyMetadata: async () => ({ code: "DN571B", name: "LuxSpace, recessed", raw: {} }),
+    resolveFamilyMetadata: async () => null,
     searchFamily: async () => [],
     resolveOrderCode: async () => null,
     verifyStandardProduct: async () => null,
@@ -66,7 +64,7 @@ test("returns a configurable-only product in a dynamically discovered successor 
   const configuratorClient = {
     validateControlChange: async ({ configuratorId, requirements }) => ({
       validated: true,
-      description: "DN610B 40S/930 PSD-E C WH PGO",
+      description: "DN610B 40S/TW927-965 DIA-E C WH PGO",
       orderCode: "",
       configuratorId,
       configId: "official-session",
@@ -81,6 +79,8 @@ test("returns a configurable-only product in a dynamically discovered successor 
   assert.equal(result.recommended.orderCode, null);
   assert.equal(result.familyMigration.oldFamily, "DN571B");
   assert.equal(result.familyMigration.currentFamily, "DN610B");
+  assert.equal(result.recommended.description, "DN610B 40S/TW927-965 DIA-E C WH PGO");
+  assert.equal(result.familyMigration.discoveryMode, "UNIQUE_TECHNICAL_SIGNATURE");
 });
 
 test("uses a same-family configurator id supplied by official family metadata", async () => {
@@ -99,18 +99,19 @@ test("uses a same-family configurator id supplied by official family metadata", 
   const configuratorClient = {
     validateControlChange: async ({ configuratorId }) => ({
       validated: true,
-      description: "DN500B 20S/840 PSD-E C WH",
+      description: "DN500B 20S/840 DIA-E WR WH PCO",
       orderCode: "",
       configuratorId,
       configId: "official-session",
     }),
   };
   const engine = createEngine({ productClient, configuratorClient });
-  const result = await engine("DN500B 20S/840 PSU-E C WH");
+  const result = await engine("DN500B 20S/840 PSU-E WR WH PCO");
   assert.equal(result.status, "VERIFIED_CONFIGURABLE_PRODUCT");
   assert.equal(result.currentFamily, "DN500B");
   assert.equal(result.recommended.configuratorId, "DN500BI");
   assert.equal(result.recommended.orderCode, null);
+  assert.equal(result.recommended.description, "DN500B 20S/840 DIA-E WR WH PCO");
 });
 
 for (const regression of [

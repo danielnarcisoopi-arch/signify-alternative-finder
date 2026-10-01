@@ -91,6 +91,40 @@ function compareFeatures(state, expected, actual) {
   }
 }
 
+function compareColor(state, expected, actual) {
+  if (!valuePresent(expected.colorCode)) return;
+  if (!valuePresent(actual.colorCode)) {
+    state.score -= 110;
+    state.changes.push({ field: "CRI/CCT", from: expected.colorCode, to: "Não especificado", severity: "critical" });
+    state.blockers.push("CRI/CCT is missing from the candidate.");
+    return;
+  }
+  if (normalizeComparable(expected.colorCode) === normalizeComparable(actual.colorCode)) {
+    state.score += 80;
+    state.preserved.push(`CRI/CCT: ${expected.colorCode}`);
+    return;
+  }
+  const fixedPointCoveredByTunableRange = !expected.tunableWhite
+    && actual.tunableWhite
+    && valuePresent(expected.cct)
+    && valuePresent(actual.cctMin)
+    && valuePresent(actual.cctMax)
+    && expected.cct >= actual.cctMin
+    && expected.cct <= actual.cctMax
+    && valuePresent(expected.cri)
+    && valuePresent(actual.cri)
+    && actual.cri >= expected.cri;
+  if (fixedPointCoveredByTunableRange) {
+    state.score += 65;
+    state.preserved.push(`CRI ${expected.cri} e ${expected.cct} K abrangidos por ${actual.colorCode}`);
+    state.changes.push({ field: "CRI/CCT", from: expected.colorCode, to: actual.colorCode, severity: "warning" });
+    return;
+  }
+  state.score -= 110;
+  state.changes.push({ field: "CRI/CCT", from: expected.colorCode, to: actual.colorCode, severity: "critical" });
+  state.blockers.push(`CRI/CCT changes from ${expected.colorCode} to ${actual.colorCode}.`);
+}
+
 export function assessCandidate(parsedInput, candidate, {
   originalProduct = null,
   targetControlClass = parsedInput.targetControlClass,
@@ -123,7 +157,7 @@ export function assessCandidate(parsedInput, candidate, {
 
   addComparison(state, { field: "Geração", expected: expected.generation, actual: actual.generation, points: 70, penalty: 90, critical: true });
   addComparison(state, { field: "Pacote luminoso", expected: expected.packageCanonical, actual: actual.packageCanonical, points: 85, penalty: 45, critical: true, allowDifference: true });
-  addComparison(state, { field: "CRI/CCT", expected: expected.colorCode, actual: actual.colorCode, points: 80, penalty: 110, critical: true });
+  compareColor(state, expected, actual);
   addComparison(state, { field: "Comprimento", expected: expected.length, actual: actual.length, points: 65, penalty: 80, critical: true });
   addComparison(state, { field: "IP", expected: expected.ip, actual: actual.ip, points: 35, penalty: 60, critical: true });
   addComparison(state, { field: "IK", expected: expected.ik, actual: actual.ik, points: 25, penalty: 45, critical: true });

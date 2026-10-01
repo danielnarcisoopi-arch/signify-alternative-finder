@@ -56,3 +56,11 @@ test("supports the inverse DALI to On/Off direction", () => {
   assert.equal(input.targetControlClass, "ON_OFF");
   assert.equal(result.safeToRecommend, true);
 });
+
+test("accepts a current tunable-white range that covers the requested CRI and CCT", () => {
+  const input = parseReference("DN571B LED40S/930H PSU-E C WH PGO");
+  const candidate = product("DN610B 40S/TW927-965 DIA-E C WH PGO", "", "FK_LP_DIMMING_CONTROLS_DALI");
+  const result = assessCandidate(input, candidate, { verified: true, requires12nc: false, allowFamilyChange: true });
+  assert.equal(result.safeToRecommend, true);
+  assert.ok(result.changes.some((change) => change.field === "CRI/CCT" && change.to === "TW927-965"));
+});

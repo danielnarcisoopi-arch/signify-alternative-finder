@@ -41,11 +41,13 @@ test("extracts family metadata and the official configurator id from enriched fa
       status: 200,
       text: async () => JSON.stringify({
         dataEnrichment: {
-          familyData: [{
-            family_id: { value: "LP_CF_DN610B_EU" },
-            family_name: { value: "LuxSpace Compact, recessed" },
-            configurator_id: { value: "DN610BI" },
-          }],
+          familyData: {
+            results: [{
+              family_id: { value: "LP_CF_DN610B_EU" },
+              family_name: { value: "LuxSpace Compact, recessed" },
+              configurator_id: { value: "DN610BI" },
+            }],
+          },
         },
       }),
     }),

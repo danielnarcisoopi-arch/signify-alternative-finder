@@ -9,7 +9,7 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "9.0.0",
+          version: "10.0.0",
           mode: "discover-successor-and-validate",
         },
       };

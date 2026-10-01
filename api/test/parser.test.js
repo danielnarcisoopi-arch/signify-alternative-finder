@@ -31,3 +31,12 @@ test("parses critical fields independently", () => {
   assert.equal(parsed.targetControlClass, "DALI");
 });
 
+test("parses a tunable-white range returned by the configurator", () => {
+  const parsed = parseReference("DN610B 40S/TW927-965 DIA-E C WH PGO");
+  assert.equal(parsed.colorCode, "TW927-965");
+  assert.equal(parsed.cri, 90);
+  assert.equal(parsed.cctMin, 2700);
+  assert.equal(parsed.cctMax, 6500);
+  assert.equal(parsed.tunableWhite, true);
+  assert.equal(parsed.controlClass, "DALI");
+});

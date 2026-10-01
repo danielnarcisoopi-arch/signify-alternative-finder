@@ -95,7 +95,7 @@ function standardResponse(parsed, originalProduct, assessment, alternatives = []
   };
 }
 
-function noResult(parsed, { message, reason, originalProduct = null, configurators = [], inspected = 0 } = {}) {
+function noResult(parsed, { message, reason, originalProduct = null, configurators = [], inspected = 0, familyMigration = null } = {}) {
   return {
     status: "NO_VERIFIED_ALTERNATIVE",
     statusLabel: RESULT_LABELS.NO_VERIFIED_ALTERNATIVE,
@@ -109,6 +109,7 @@ function noResult(parsed, { message, reason, originalProduct = null, configurato
       control: displayControl(parsed.controlClass),
     },
     recommended: null,
+    familyMigration,
     reason,
     message,
     configurators: configurators.map((id) => ({ id, validated: false })),
@@ -198,6 +199,7 @@ async function tryConfigurators(configuratorClient, parsed, products, options = 
     attempted.push(product.configuratorId);
     const result = await configuratorClient.validateControlChange({
       configuratorId: product.configuratorId,
+      familyCode: product.family,
       seed: product.configuratorSeed,
       sourceControlClass: parsed.controlClass,
       targetControlClass: parsed.targetControlClass,
@@ -330,8 +332,12 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
       let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
-      if (legacyFamily) {
-        successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily);
+      {
+        successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily || {
+          code: effective.family,
+          name: "",
+          raw: null,
+        });
         if (successorDiscovery.validated) {
           const successor = successorDiscovery.candidate;
           const verifiedSuccessor = await verifyRanked(productClient, effective, originalProduct, successor.products, {
@@ -378,17 +384,22 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         .flatMap((candidate) => [candidate.family?.configuratorId, ...candidate.products.map((product) => product.configuratorId)])
         .filter(Boolean);
       configurators.push(...discoveredConfigurators.filter((id) => !configurators.includes(id)));
-      const familyKnown = Boolean(originalProduct || sameFamily.products.length || legacyFamily);
+      const familyKnown = Boolean(originalProduct || sameFamily.products.length || legacyFamily || successorDiscovery.candidates.length);
       return noResult(effective, {
         originalProduct,
+        familyMigration: successorDiscovery.evidence || null,
         configurators,
         inspected: sameFamily.products.length + migrationCandidates.length + successorDiscovery.candidates.length,
-        reason: successorDiscovery.reason === "SUCCESSOR_CANDIDATES_AMBIGUOUS"
+        reason: successorDiscovery.validated
+          ? "SUCCESSOR_FOUND_CONFIGURATION_NOT_VALIDATED"
+          : successorDiscovery.reason === "SUCCESSOR_CANDIDATES_AMBIGUOUS"
           ? "SUCCESSOR_CANDIDATES_AMBIGUOUS"
           : familyKnown ? "NO_TECHNICALLY_SAFE_MATCH" : "ORIGINAL_FAMILY_NOT_VERIFIED",
-        message: familyKnown
-          ? "Nenhum candidato preservou as características técnicas necessárias e passou a validação oficial."
-          : "A família original não foi confirmada no catálogo oficial atual; por segurança, não foi sugerida uma família sucessora.",
+        message: successorDiscovery.validated
+          ? `A família atual ${successorDiscovery.candidate.code} foi identificada, mas a configuração final não foi confirmada pela Configurator API.`
+          : familyKnown
+            ? "Nenhum candidato preservou as características técnicas necessárias e passou a validação oficial."
+            : "A família original não foi confirmada no catálogo oficial atual e a pesquisa técnica não encontrou um sucessor único e validável.",
       });
     } catch (error) {
       if (error instanceof ProductApiError || error instanceof ConfiguratorApiError) {
