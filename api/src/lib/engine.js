@@ -95,7 +95,11 @@ function standardResponse(parsed, originalProduct, assessment, alternatives = []
   };
 }
 
-function noResult(parsed, { message, reason, originalProduct = null, configurators = [], inspected = 0, familyMigration = null } = {}) {
+function noResult(parsed, { message, reason, originalProduct = null, configurators = [], configuratorAttempts = [], inspected = 0, familyMigration = null } = {}) {
+  const attemptById = new Map(configuratorAttempts.map((attempt) => [attempt.id, attempt]));
+  for (const id of configurators) {
+    if (!attemptById.has(id)) attemptById.set(id, { id, validated: false, reason: "NOT_ATTEMPTED" });
+  }
   return {
     status: "NO_VERIFIED_ALTERNATIVE",
     statusLabel: RESULT_LABELS.NO_VERIFIED_ALTERNATIVE,
@@ -112,7 +116,7 @@ function noResult(parsed, { message, reason, originalProduct = null, configurato
     familyMigration,
     reason,
     message,
-    configurators: configurators.map((id) => ({ id, validated: false })),
+    configurators: [...attemptById.values()],
     inspectedCandidates: inspected,
     validation: { verified: false, source: "Signify Product API / Configurator API", checkedAt: new Date().toISOString() },
   };
@@ -196,7 +200,6 @@ async function tryConfigurators(configuratorClient, parsed, products, options = 
   const candidates = deduplicate(products.filter((product) => product.configuratorId));
   const attempted = [];
   for (const product of candidates.slice(0, 3)) {
-    attempted.push(product.configuratorId);
     const result = await configuratorClient.validateControlChange({
       configuratorId: product.configuratorId,
       familyCode: product.family,
@@ -205,6 +208,15 @@ async function tryConfigurators(configuratorClient, parsed, products, options = 
       targetControlClass: parsed.targetControlClass,
       requirements: parsed,
     });
+    const attempt = {
+      id: product.configuratorId,
+      family: product.family || null,
+      validated: Boolean(result.validated),
+      reason: result.validated ? null : result.reason || "CONFIGURATOR_VALIDATION_FAILED",
+      errorCode: result.errorCode || null,
+      httpStatus: result.httpStatus || null,
+    };
+    attempted.push(attempt);
     if (!result.validated) continue;
     const configured = {
       description: result.description,
@@ -217,7 +229,11 @@ async function tryConfigurators(configuratorClient, parsed, products, options = 
       url: "",
       source: { system: "SIGNIFY_CONFIGURATOR_API" },
     };
-    if (options.expectedFamily && normalizeText(configured.family) !== normalizeText(options.expectedFamily)) continue;
+    if (options.expectedFamily && normalizeText(configured.family) !== normalizeText(options.expectedFamily)) {
+      attempt.validated = false;
+      attempt.reason = "CONFIGURATOR_RETURNED_UNEXPECTED_FAMILY";
+      continue;
+    }
     const assessment = assessCandidate(parsed, configured, {
       targetControlClass: parsed.targetControlClass,
       originalProduct: options.originalProduct || null,
@@ -225,8 +241,16 @@ async function tryConfigurators(configuratorClient, parsed, products, options = 
       verified: true,
       requires12nc: false,
     });
-    if (options.allowFamilyChange && !options.migrationEvidence?.validated) continue;
-    if (!assessment.safeToRecommend) continue;
+    if (options.allowFamilyChange && !options.migrationEvidence?.validated) {
+      attempt.validated = false;
+      attempt.reason = "SUCCESSOR_EVIDENCE_NOT_VALIDATED";
+      continue;
+    }
+    if (!assessment.safeToRecommend) {
+      attempt.validated = false;
+      attempt.reason = "CONFIGURATION_TECHNICALLY_INCOMPATIBLE";
+      continue;
+    }
     return { result, configured, assessment, attempted, familyMigration: options.migrationEvidence?.evidence || null };
   }
   return { result: null, configured: null, assessment: null, attempted };
@@ -330,6 +354,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       if (safeSameFamily.length) return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
 
       const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
+      const configuratorAttempts = [];
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
       let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
       {
@@ -357,11 +382,13 @@ export function createEngine({ productClient = new ProductApiClient(), configura
             originalProduct,
             migrationEvidence: successorDiscovery,
           });
+          configuratorAttempts.push(...configuredSuccessor.attempted);
           if (configuredSuccessor.result) return configurableResponse(effective, originalProduct, configuredSuccessor);
         }
       }
 
       const configured = await tryConfigurators(configuratorClient, effective, configuratorPool);
+      configuratorAttempts.push(...configured.attempted);
       if (configured.result) return configurableResponse(effective, originalProduct, configured);
       if (legacyFamily?.configuratorId) {
         const familyConfigurator = configuratorCarrier({ family: legacyFamily, products: [] });
@@ -369,6 +396,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
           expectedFamily: effective.family,
           originalProduct,
         });
+        configuratorAttempts.push(...configuredCurrentFamily.attempted);
         if (configuredCurrentFamily.result) return configurableResponse(effective, originalProduct, configuredCurrentFamily);
       }
 
@@ -389,6 +417,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         originalProduct,
         familyMigration: successorDiscovery.evidence || null,
         configurators,
+        configuratorAttempts,
         inspected: sameFamily.products.length + migrationCandidates.length + successorDiscovery.candidates.length,
         reason: successorDiscovery.validated
           ? "SUCCESSOR_FOUND_CONFIGURATION_NOT_VALIDATED"

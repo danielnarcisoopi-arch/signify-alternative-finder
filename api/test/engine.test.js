@@ -114,6 +114,35 @@ test("uses a same-family configurator id supplied by official family metadata", 
   assert.equal(result.recommended.description, "DN500B 20S/840 DIA-E WR WH PCO");
 });
 
+test("returns the exact configurator failure stage for live diagnostics", async () => {
+  const productClient = {
+    searchProducts: async () => ({ products: [], families: [] }),
+    searchFamily: async () => [],
+    resolveOrderCode: async () => null,
+    verifyStandardProduct: async () => null,
+    resolveFamilyMetadata: async () => ({
+      code: "DN500B",
+      name: "CoreLine Downlight",
+      configuratorId: "DN500BI",
+      raw: {},
+    }),
+  };
+  const engine = createEngine({
+    productClient,
+    configuratorClient: {
+      validateControlChange: async () => ({
+        validated: false,
+        reason: "TARGET_CONTROL_NOT_SELECTABLE",
+        httpStatus: null,
+      }),
+    },
+  });
+  const result = await engine("DN500B 20S/840 PSU-E WR WH PCO");
+  assert.equal(result.status, "NO_VERIFIED_ALTERNATIVE");
+  assert.equal(result.configurators[0].id, "DN500BI");
+  assert.equal(result.configurators[0].reason, "TARGET_CONTROL_NOT_SELECTABLE");
+});
+
 for (const regression of [
   {
     input: "WT120C G3 60S/840 PSU L1200",
@@ -122,8 +151,8 @@ for (const regression of [
   },
   {
     input: "BY120P G6 LED150/UE840 PSU WB",
-    output: "BY120P G6 LED150/UE840 PSD WB",
-    orderCode: "911401899999",
+    output: "BY120P G6 LED150/840 PSD WB",
+    orderCode: "911401554345",
   },
 ]) {
   test(`preserves the verified same-family path for ${regression.input.split(" ")[0]}`, async () => {

@@ -73,6 +73,41 @@ test("does not validate when an official configurator session cannot be bootstra
   assert.equal(calls, 2);
 });
 
+test("reads a real-style hierarchical variable with values in child objects", async () => {
+  const responses = [
+    {
+      configId: "nested-session",
+      variables: [{
+        variableName: "Electrical_and_Control.PLM_TRAFO",
+        values: [
+          { valueName: "PSU-E", state: "selected" },
+          { valueName: "DIA-E", state: "selectable" },
+        ],
+      }],
+    },
+    {
+      configId: "nested-session",
+      commercialDescription: "DN500B 20S/840 DIA-E WR WH PCO",
+      variables: [{
+        variableName: "Electrical_and_Control.PLM_TRAFO",
+        values: [{ valueName: "DIA-E", state: "userSelected" }],
+      }],
+    },
+  ];
+  const client = new ConfiguratorApiClient({
+    fetchImpl: async () => jsonResponse(responses.shift()),
+  });
+  const result = await client.validateControlChange({
+    configuratorId: "DN500BI",
+    familyCode: "DN500B",
+    sourceControlClass: "ON_OFF",
+    targetControlClass: "DALI",
+  });
+  assert.equal(result.validated, true);
+  assert.equal(result.description, "DN500B 20S/840 DIA-E WR WH PCO");
+  assert.equal(result.selectedControl, "DIA-E");
+});
+
 test("bootstraps DN610BI and selects the closest tunable-white range plus DIA-E", async () => {
   const responses = [
     {

@@ -40,3 +40,12 @@ test("parses a tunable-white range returned by the configurator", () => {
   assert.equal(parsed.tunableWhite, true);
   assert.equal(parsed.controlClass, "DALI");
 });
+
+test("preserves the SM350C technical signature", () => {
+  const parsed = parseReference("SM350C 50S/840 PSU PCS L1500 WH");
+  assert.equal(parsed.family, "SM350C");
+  assert.equal(parsed.packageCanonical, "50S");
+  assert.equal(parsed.colorCode, "840");
+  assert.equal(parsed.length, "L1500");
+  assert.deepEqual(parsed.features, ["PCS", "WH"]);
+});

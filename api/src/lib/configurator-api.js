@@ -20,17 +20,53 @@ function walk(value, visitor, path = []) {
   }
 }
 
+function scalar(value) {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    for (const key of ["value", "name", "code", "id"]) {
+      if (Object.hasOwn(value, key)) {
+        const result = scalar(value[key]);
+        if (result) return result;
+      }
+    }
+  }
+  return "";
+}
+
 function collectAssignments(payload) {
   const assignments = [];
-  walk(payload, (value) => {
-    if (!value || typeof value !== "object" || Array.isArray(value)) return;
-    const variableName = value.variableName ?? value.variable_name;
-    const valueName = value.valueName ?? value.value_name;
-    if (typeof variableName === "string" && typeof valueName === "string") {
-      assignments.push({ variableName, valueName, state: value.state || value.optionState || "" });
+  const visit = (value, inheritedVariableName = "") => {
+    if (Array.isArray(value)) {
+      value.forEach((entry) => visit(entry, inheritedVariableName));
+      return;
     }
-  });
-  return assignments;
+    if (!value || typeof value !== "object") return;
+
+    const hasChildOptions = ["values", "options", "availableValues", "available_values", "items"]
+      .some((key) => Array.isArray(value[key]));
+    const explicitVariableName = scalar(value.variableName ?? value.variable_name ?? value.variableId ?? value.variable_id);
+    const containerVariableName = hasChildOptions ? scalar(value.name ?? value.code ?? value.id) : "";
+    const variableName = explicitVariableName || containerVariableName || inheritedVariableName;
+    let valueName = scalar(value.valueName ?? value.value_name ?? value.optionName ?? value.option_name);
+    const state = scalar(value.state ?? value.optionState ?? value.option_state ?? value.status);
+    if (!valueName && inheritedVariableName && !explicitVariableName && state) {
+      valueName = scalar(value.name ?? value.code ?? value.id ?? value.value);
+    }
+    if (variableName && valueName) assignments.push({ variableName, valueName, state });
+
+    for (const entry of Object.values(value)) {
+      if (entry && typeof entry === "object") visit(entry, variableName || inheritedVariableName);
+    }
+  };
+  visit(payload);
+
+  const byKey = new Map();
+  for (const assignment of assignments) {
+    const key = assignmentKey(assignment);
+    const existing = byKey.get(key);
+    if (!existing || (selectedState(assignment.state) && !selectedState(existing.state))) byKey.set(key, assignment);
+  }
+  return [...byKey.values()];
 }
 
 function isControlText(value) {
@@ -145,9 +181,9 @@ function findText(payload, keys) {
     if (found || !value || typeof value !== "object" || Array.isArray(value)) return;
     for (const [key, entry] of Object.entries(value)) {
       if (!keys.includes(key.toLowerCase())) continue;
-      const unwrapped = entry && typeof entry === "object" && Object.hasOwn(entry, "value") ? entry.value : entry;
-      if ((typeof unwrapped === "string" || typeof unwrapped === "number") && String(unwrapped).trim()) {
-        found = String(unwrapped).trim();
+      const unwrapped = scalar(entry);
+      if (unwrapped.trim()) {
+        found = unwrapped.trim();
         break;
       }
     }
@@ -179,7 +215,12 @@ export class ConfiguratorApiClient {
     try {
       response = await this.fetchImpl(this.endpoint(configuratorId), {
         method,
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          Origin: process.env.SIGNIFY_CONFIGURATOR_ORIGIN || "https://www.lighting.philips.com",
+          Referer: `${process.env.SIGNIFY_CONFIGURATOR_ORIGIN || "https://www.lighting.philips.com"}/prof/configurator`,
+        },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         signal: controller.signal,
       });
@@ -259,7 +300,14 @@ export class ConfiguratorApiClient {
     let session = seed?.configId && Array.isArray(seed.existingAssignments)
       ? { configId: seed.configId, existingAssignments: seed.existingAssignments, payload: null }
       : await this.bootstrap(configuratorId, familyCode);
-    if (!session?.configId) return { validated: false, reason: "CONFIGURATOR_SESSION_NOT_AVAILABLE" };
+    if (!session?.configId) {
+      return {
+        validated: false,
+        reason: "CONFIGURATOR_SESSION_NOT_AVAILABLE",
+        errorCode: session?.error?.code || null,
+        httpStatus: session?.error?.details?.status || null,
+      };
+    }
 
     let currentPayload = session.payload;
     let currentAssignments = session.existingAssignments;

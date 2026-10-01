@@ -14,6 +14,18 @@ const STATUS_LABELS = {
   ERROR: "Erro",
 };
 
+const CONFIGURATOR_REASON_LABELS = {
+  CONFIGURATOR_SESSION_NOT_AVAILABLE: "não foi possível iniciar a sessão",
+  CONTROL_VARIABLE_NOT_DISCOVERED: "variável de controlo não encontrada",
+  TARGET_CONTROL_NOT_SELECTABLE: "DALI não aparece como selecionável",
+  TARGET_CONTROL_NOT_SELECTED: "a seleção DALI não foi confirmada",
+  FINAL_COMMERCIAL_DESCRIPTION_NOT_RETURNED: "a descrição comercial final não foi devolvida",
+  CONFIGURATOR_RETURNED_UNEXPECTED_FAMILY: "o configurador devolveu outra família",
+  CONFIGURATION_TECHNICALLY_INCOMPATIBLE: "a configuração final não preservou os requisitos",
+  SUCCESSOR_EVIDENCE_NOT_VALIDATED: "a família sucessora não atingiu confiança suficiente",
+  NOT_ATTEMPTED: "não foi possível iniciar a validação",
+};
+
 function ProductCard({ title, product, recommended = false }) {
   if (!product) return null;
   return (
@@ -106,8 +118,15 @@ function Result({ result }) {
       {result.configurators?.length > 0 && (
         <div className="detail-block configurators">
           <h3>Configurador encontrado, mas não validado</h3>
-          <p>O sistema não recebeu estado de sessão suficiente para confirmar uma configuração. Estes IDs não são recomendações:</p>
-          <div className="chips">{result.configurators.map((item) => <span key={item.id}>{item.id}</span>)}</div>
+          <p>Estes identificadores foram encontrados oficialmente, mas ainda não constituem uma recomendação:</p>
+          <div className="chips">
+            {result.configurators.map((item) => (
+              <span key={item.id}>
+                {item.id}{item.reason && <> · {CONFIGURATOR_REASON_LABELS[item.reason] || item.reason.replaceAll("_", " ").toLowerCase()}</>}
+                {item.httpStatus && <> · HTTP {item.httpStatus}</>}
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

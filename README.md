@@ -1,8 +1,8 @@
-# Signify Alternative Finder v10
+# Signify Alternative Finder v11
 
 Internal tool for finding a verified PSU/On-Off ↔ PSD/DALI alternative in the official Signify professional-lighting catalogue.
 
-## What v10 changes
+## What v11 changes
 
 - Reads enriched family metadata from the Product API instead of treating search results as a flat list of articles.
 - Discovers a current successor family dynamically from official family identity, family-name continuity and the requested technical signature.
@@ -14,6 +14,9 @@ Internal tool for finding a verified PSU/On-Off ↔ PSD/DALI alternative in the 
 - Uses repeated enriched-facet evidence plus a unique technical signature to identify configurator-only current families.
 - Understands tunable-white ranges such as `TW927-965` and verifies that the requested fixed CRI/CCT is covered by the range.
 - Prefers the Configurator-native `DIA-E` DALI option when it is selectable and preserves the requested emergency suffix.
+- Reads both flat assignments and hierarchical Configurator responses where a parent variable contains child `values`/`options`.
+- Sends the official configurator page origin/referer on server-side session calls.
+- Reports the precise safe failure stage for every discovered configurator instead of discarding the reason.
 
 ## Validation rules
 
@@ -75,6 +78,7 @@ Use the Azure Static Web Apps CLI when testing the frontend and API together.
 | `SIGNIFY_API_TIMEOUT_MS` | `12000` | Backend request timeout |
 | `SIGNIFY_API_MAX_PAGES` | `5` | Maximum Product API pages per search |
 | `SIGNIFY_API_RETRIES` | `1` | Retries for transient Product API GET failures |
+| `SIGNIFY_CONFIGURATOR_ORIGIN` | `https://www.lighting.philips.com` | Origin and referer used for Configurator API requests |
 
 ## Tests
 
