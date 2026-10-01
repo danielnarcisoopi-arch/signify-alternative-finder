@@ -1,0 +1,2389 @@
+{
+    "query": "DN571B LED40S/930H PSU-E C WH PGO",
+    "currentPage": 0,
+    "orderBy": null,
+    "totalCount": 7,
+    "moreToLoad": false,
+    "items": [
+        {
+            "externalId": "000000910505104694",
+            "name": "000910505104694",
+            "productModelName": "DN610BI_DN610BI",
+            "materialName": "DN610BI",
+            "webImagePath": null,
+            "imageId": null,
+            "description": "DN610B 20S/840UE PSU-E C WH PGO",
+            "longText": "",
+            "isConfigurable": true,
+            "baseUnit": "ST",
+            "materialGroup": "4LH000",
+            "plant": null,
+            "enableVariantMatching": true,
+            "properties": [
+                {
+                    "name": "CountryOfOrigin",
+                    "value": ""
+                },
+                {
+                    "name": "CustomerMaterialData",
+                    "value": ""
+                },
+                {
+                    "name": "EocCode",
+                    "value": "000000000000835818/000000000083581800/000008720169835818/000872016983581800"
+                },
+                {
+                    "name": "PricingViewDisplayValue",
+                    "value": ""
+                },
+                {
+                    "name": "IndustrySector",
+                    "value": "Luminaires"
+                },
+                {
+                    "name": "MaterialType",
+                    "value": "Finished products"
+                },
+                {
+                    "name": "NetWeight",
+                    "value": "1.100"
+                },
+                {
+                    "name": "UnitOfWeight",
+                    "value": "KG"
+                },
+                {
+                    "name": "Division",
+                    "value": "01"
+                },
+                {
+                    "name": "ItemCategory",
+                    "value": ""
+                },
+                {
+                    "name": "SalesUnit",
+                    "value": ""
+                },
+                {
+                    "name": "VolumeRebateGroup",
+                    "value": "E1"
+                },
+                {
+                    "name": "PriceResponsible",
+                    "value": "0000784019"
+                },
+                {
+                    "name": "Brand",
+                    "value": "PHL"
+                },
+                {
+                    "name": "MaterialServiceOffer",
+                    "value": "EO"
+                },
+                {
+                    "name": "ProductFamilyApproval",
+                    "value": "LuxSpace Compact, recessed"
+                },
+                {
+                    "name": "Brand_Name",
+                    "value": "PHL"
+                },
+                {
+                    "name": "BrandDescription",
+                    "value": "PHILIPS"
+                },
+                {
+                    "name": "UnitOfMeasure",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialStatus",
+                    "value": ""
+                },
+                {
+                    "name": "InformationText",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialSuccessor",
+                    "value": ""
+                },
+                {
+                    "name": "PhaseOutDate",
+                    "value": ""
+                },
+                {
+                    "name": "Labor",
+                    "value": "PL6"
+                },
+                {
+                    "name": "ProductHierarchyLevel4",
+                    "value": "2767"
+                },
+                {
+                    "name": "ProductHierarchyLevel5",
+                    "value": "13"
+                },
+                {
+                    "name": "MaterialCategoryGroup",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialPresentationName",
+                    "value": ""
+                },
+                {
+                    "name": "ModelDate",
+                    "value": ""
+                },
+                {
+                    "name": "ModelVersion",
+                    "value": ""
+                },
+                {
+                    "name": "TargetEnvironment",
+                    "value": ""
+                },
+                {
+                    "name": "PricingGroup",
+                    "value": "VERDE"
+                },
+                {
+                    "name": "LuciaActive",
+                    "value": "False"
+                },
+                {
+                    "name": "LocalProductCode",
+                    "value": ""
+                }
+            ],
+            "assignments": [
+                {
+                    "variableName": "ZZSOFF",
+                    "valueName": "SO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "SPADACTIVE",
+                    "valueName": "0",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLR",
+                    "valueName": "WH",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NLP",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_STRINGS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NR_OF_OPT_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_TRAFO",
+                    "valueName": "PSU-E",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFAM",
+                    "valueName": "DN610B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CVR",
+                    "valueName": "PGO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PARALLEL_BOARDS",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LED_BOARD_TYPE",
+                    "valueName": "UE",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_BRD",
+                    "valueName": "PHL",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_COLLAMP",
+                    "valueName": "840",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LAMPFAM",
+                    "valueName": "20S",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_OPTGRP",
+                    "valueName": "C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFC",
+                    "valueName": "DN610B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_EL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLO",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_MOUNTING",
+                    "valueName": "RIM200",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CABL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_ELECACC",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                }
+            ],
+            "materialSalesAreas": [
+                {
+                    "salesOrganization": "AT02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "DK02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "FI02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "IT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NO02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PL06",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "SE02",
+                    "distributionChannel": "02"
+                }
+            ],
+            "isVariant": true
+        },
+        {
+            "externalId": "000000910505104696",
+            "name": "000910505104696",
+            "productModelName": "DN610BI_DN610BI",
+            "materialName": "DN610BI",
+            "webImagePath": null,
+            "imageId": null,
+            "description": "DN610B 24S/840UE PSU-E C WH PGO",
+            "longText": "",
+            "isConfigurable": true,
+            "baseUnit": "ST",
+            "materialGroup": "4LH000",
+            "plant": null,
+            "enableVariantMatching": true,
+            "properties": [
+                {
+                    "name": "CountryOfOrigin",
+                    "value": ""
+                },
+                {
+                    "name": "CustomerMaterialData",
+                    "value": ""
+                },
+                {
+                    "name": "EocCode",
+                    "value": "000000000000835832/000000000083583200/000008720169835832/000872016983583200"
+                },
+                {
+                    "name": "PricingViewDisplayValue",
+                    "value": ""
+                },
+                {
+                    "name": "IndustrySector",
+                    "value": "Luminaires"
+                },
+                {
+                    "name": "MaterialType",
+                    "value": "Finished products"
+                },
+                {
+                    "name": "NetWeight",
+                    "value": "1.100"
+                },
+                {
+                    "name": "UnitOfWeight",
+                    "value": "KG"
+                },
+                {
+                    "name": "Division",
+                    "value": "01"
+                },
+                {
+                    "name": "ItemCategory",
+                    "value": ""
+                },
+                {
+                    "name": "SalesUnit",
+                    "value": ""
+                },
+                {
+                    "name": "VolumeRebateGroup",
+                    "value": "E1"
+                },
+                {
+                    "name": "PriceResponsible",
+                    "value": "0000784019"
+                },
+                {
+                    "name": "Brand",
+                    "value": "PHL"
+                },
+                {
+                    "name": "MaterialServiceOffer",
+                    "value": "EO"
+                },
+                {
+                    "name": "ProductFamilyApproval",
+                    "value": "LuxSpace Compact, recessed"
+                },
+                {
+                    "name": "Brand_Name",
+                    "value": "PHL"
+                },
+                {
+                    "name": "BrandDescription",
+                    "value": "PHILIPS"
+                },
+                {
+                    "name": "UnitOfMeasure",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialStatus",
+                    "value": ""
+                },
+                {
+                    "name": "InformationText",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialSuccessor",
+                    "value": ""
+                },
+                {
+                    "name": "PhaseOutDate",
+                    "value": ""
+                },
+                {
+                    "name": "Labor",
+                    "value": "PL6"
+                },
+                {
+                    "name": "ProductHierarchyLevel4",
+                    "value": "2767"
+                },
+                {
+                    "name": "ProductHierarchyLevel5",
+                    "value": "13"
+                },
+                {
+                    "name": "MaterialCategoryGroup",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialPresentationName",
+                    "value": ""
+                },
+                {
+                    "name": "ModelDate",
+                    "value": ""
+                },
+                {
+                    "name": "ModelVersion",
+                    "value": ""
+                },
+                {
+                    "name": "TargetEnvironment",
+                    "value": ""
+                },
+                {
+                    "name": "PricingGroup",
+                    "value": "VERDE"
+                },
+                {
+                    "name": "LuciaActive",
+                    "value": "False"
+                },
+                {
+                    "name": "LocalProductCode",
+                    "value": ""
+                }
+            ],
+            "assignments": [
+                {
+                    "variableName": "ZZSOFF",
+                    "valueName": "SO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "SPADACTIVE",
+                    "valueName": "0",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLR",
+                    "valueName": "WH",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NLP",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_STRINGS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NR_OF_OPT_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_TRAFO",
+                    "valueName": "PSU-E",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFAM",
+                    "valueName": "DN610B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CVR",
+                    "valueName": "PGO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PARALLEL_BOARDS",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LED_BOARD_TYPE",
+                    "valueName": "UE",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_BRD",
+                    "valueName": "PHL",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_COLLAMP",
+                    "valueName": "840",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LAMPFAM",
+                    "valueName": "24S",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_OPTGRP",
+                    "valueName": "C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFC",
+                    "valueName": "DN610B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_EL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLO",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_MOUNTING",
+                    "valueName": "RIM200",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CABL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_ELECACC",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                }
+            ],
+            "materialSalesAreas": [
+                {
+                    "salesOrganization": "AT02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "DK02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "FI02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "IT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NO02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL06",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "SE02",
+                    "distributionChannel": "02"
+                }
+            ],
+            "isVariant": true
+        },
+        {
+            "externalId": "000000910505104878",
+            "name": "000910505104878",
+            "productModelName": "DN610CI_DN610CI",
+            "materialName": "DN610CI",
+            "webImagePath": null,
+            "imageId": null,
+            "description": "DN610C 20S/840UE PSU-E C WH PGO",
+            "longText": "",
+            "isConfigurable": true,
+            "baseUnit": "ST",
+            "materialGroup": "4LH000",
+            "plant": null,
+            "enableVariantMatching": true,
+            "properties": [
+                {
+                    "name": "CountryOfOrigin",
+                    "value": ""
+                },
+                {
+                    "name": "CustomerMaterialData",
+                    "value": ""
+                },
+                {
+                    "name": "EocCode",
+                    "value": "000000000000837683/000000000083768300/000008720169837683/000872016983768300"
+                },
+                {
+                    "name": "PricingViewDisplayValue",
+                    "value": ""
+                },
+                {
+                    "name": "IndustrySector",
+                    "value": "Luminaires"
+                },
+                {
+                    "name": "MaterialType",
+                    "value": "Finished products"
+                },
+                {
+                    "name": "NetWeight",
+                    "value": "1.100"
+                },
+                {
+                    "name": "UnitOfWeight",
+                    "value": "KG"
+                },
+                {
+                    "name": "Division",
+                    "value": "01"
+                },
+                {
+                    "name": "ItemCategory",
+                    "value": ""
+                },
+                {
+                    "name": "SalesUnit",
+                    "value": ""
+                },
+                {
+                    "name": "VolumeRebateGroup",
+                    "value": "E1"
+                },
+                {
+                    "name": "PriceResponsible",
+                    "value": "0000784019"
+                },
+                {
+                    "name": "Brand",
+                    "value": "PHL"
+                },
+                {
+                    "name": "MaterialServiceOffer",
+                    "value": "EO"
+                },
+                {
+                    "name": "ProductFamilyApproval",
+                    "value": "LuxSpace, surface mounted"
+                },
+                {
+                    "name": "Brand_Name",
+                    "value": "PHL"
+                },
+                {
+                    "name": "BrandDescription",
+                    "value": "PHILIPS"
+                },
+                {
+                    "name": "UnitOfMeasure",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialStatus",
+                    "value": ""
+                },
+                {
+                    "name": "InformationText",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialSuccessor",
+                    "value": ""
+                },
+                {
+                    "name": "PhaseOutDate",
+                    "value": ""
+                },
+                {
+                    "name": "Labor",
+                    "value": "PL6"
+                },
+                {
+                    "name": "ProductHierarchyLevel4",
+                    "value": "2767"
+                },
+                {
+                    "name": "ProductHierarchyLevel5",
+                    "value": "14"
+                },
+                {
+                    "name": "MaterialCategoryGroup",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialPresentationName",
+                    "value": ""
+                },
+                {
+                    "name": "ModelDate",
+                    "value": ""
+                },
+                {
+                    "name": "ModelVersion",
+                    "value": ""
+                },
+                {
+                    "name": "TargetEnvironment",
+                    "value": ""
+                },
+                {
+                    "name": "PricingGroup",
+                    "value": "VERDE"
+                },
+                {
+                    "name": "LuciaActive",
+                    "value": "False"
+                },
+                {
+                    "name": "LocalProductCode",
+                    "value": ""
+                }
+            ],
+            "assignments": [
+                {
+                    "variableName": "ZZSOFF",
+                    "valueName": "EO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "SPADACTIVE",
+                    "valueName": "0",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLR",
+                    "valueName": "WH",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NLP",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_STRINGS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NR_OF_OPT_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_TRAFO",
+                    "valueName": "PSU-E",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFAM",
+                    "valueName": "DN610C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CVR",
+                    "valueName": "PGO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PARALLEL_BOARDS",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LED_BOARD_TYPE",
+                    "valueName": "UE",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_BRD",
+                    "valueName": "PHL",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_COLLAMP",
+                    "valueName": "840",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LAMPFAM",
+                    "valueName": "20S",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_OPTGRP",
+                    "valueName": "C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFC",
+                    "valueName": "DN610C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                }
+            ],
+            "materialSalesAreas": [
+                {
+                    "salesOrganization": "AT02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "DK02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "FI02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "GB02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "GB02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "IT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NO02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PL06",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "SE02",
+                    "distributionChannel": "02"
+                }
+            ],
+            "isVariant": true
+        },
+        {
+            "externalId": "000000910505104884",
+            "name": "000910505104884",
+            "productModelName": "DN610CI_DN610CI",
+            "materialName": "DN610CI",
+            "webImagePath": null,
+            "imageId": null,
+            "description": "DN610P 20S/840UE PSU-E C WH PGO",
+            "longText": "",
+            "isConfigurable": true,
+            "baseUnit": "ST",
+            "materialGroup": "4LH000",
+            "plant": null,
+            "enableVariantMatching": true,
+            "properties": [
+                {
+                    "name": "CountryOfOrigin",
+                    "value": ""
+                },
+                {
+                    "name": "CustomerMaterialData",
+                    "value": ""
+                },
+                {
+                    "name": "EocCode",
+                    "value": "000000000000837744/000000000083774400/000008720169837744/000872016983774400"
+                },
+                {
+                    "name": "PricingViewDisplayValue",
+                    "value": ""
+                },
+                {
+                    "name": "IndustrySector",
+                    "value": "Luminaires"
+                },
+                {
+                    "name": "MaterialType",
+                    "value": "Finished products"
+                },
+                {
+                    "name": "NetWeight",
+                    "value": "1.100"
+                },
+                {
+                    "name": "UnitOfWeight",
+                    "value": "KG"
+                },
+                {
+                    "name": "Division",
+                    "value": "01"
+                },
+                {
+                    "name": "ItemCategory",
+                    "value": ""
+                },
+                {
+                    "name": "SalesUnit",
+                    "value": ""
+                },
+                {
+                    "name": "VolumeRebateGroup",
+                    "value": "E1"
+                },
+                {
+                    "name": "PriceResponsible",
+                    "value": "0000784019"
+                },
+                {
+                    "name": "Brand",
+                    "value": "PHL"
+                },
+                {
+                    "name": "MaterialServiceOffer",
+                    "value": "EO"
+                },
+                {
+                    "name": "ProductFamilyApproval",
+                    "value": "LuxSpace Pendant"
+                },
+                {
+                    "name": "Brand_Name",
+                    "value": "PHL"
+                },
+                {
+                    "name": "BrandDescription",
+                    "value": "PHILIPS"
+                },
+                {
+                    "name": "UnitOfMeasure",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialStatus",
+                    "value": ""
+                },
+                {
+                    "name": "InformationText",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialSuccessor",
+                    "value": ""
+                },
+                {
+                    "name": "PhaseOutDate",
+                    "value": ""
+                },
+                {
+                    "name": "Labor",
+                    "value": "PL6"
+                },
+                {
+                    "name": "ProductHierarchyLevel4",
+                    "value": "2767"
+                },
+                {
+                    "name": "ProductHierarchyLevel5",
+                    "value": "14"
+                },
+                {
+                    "name": "MaterialCategoryGroup",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialPresentationName",
+                    "value": ""
+                },
+                {
+                    "name": "ModelDate",
+                    "value": ""
+                },
+                {
+                    "name": "ModelVersion",
+                    "value": ""
+                },
+                {
+                    "name": "TargetEnvironment",
+                    "value": ""
+                },
+                {
+                    "name": "PricingGroup",
+                    "value": "VERDE"
+                },
+                {
+                    "name": "LuciaActive",
+                    "value": "False"
+                },
+                {
+                    "name": "LocalProductCode",
+                    "value": ""
+                }
+            ],
+            "assignments": [
+                {
+                    "variableName": "ZZSOFF",
+                    "valueName": "EO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "SPADACTIVE",
+                    "valueName": "0",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLR",
+                    "valueName": "WH",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NLP",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_STRINGS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NR_OF_OPT_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_TRAFO",
+                    "valueName": "PSU-E",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFAM",
+                    "valueName": "DN610C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CVR",
+                    "valueName": "PGO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PARALLEL_BOARDS",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LED_BOARD_TYPE",
+                    "valueName": "UE",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_BRD",
+                    "valueName": "PHL",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_COLLAMP",
+                    "valueName": "840",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LAMPFAM",
+                    "valueName": "20S",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_OPTGRP",
+                    "valueName": "C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFC",
+                    "valueName": "DN610P",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                }
+            ],
+            "materialSalesAreas": [
+                {
+                    "salesOrganization": "AT02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "DK02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "FI02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "GB02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "GB02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "IT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NO02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PL06",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "SE02",
+                    "distributionChannel": "02"
+                }
+            ],
+            "isVariant": true
+        },
+        {
+            "externalId": "000000910505100915",
+            "name": "000910505100915",
+            "productModelName": "DN560BI_DN560BI",
+            "materialName": "DN560BI",
+            "webImagePath": null,
+            "imageId": null,
+            "description": "DN560B LED12S/830UE PSU-E C WH",
+            "longText": "",
+            "isConfigurable": true,
+            "baseUnit": "ST",
+            "materialGroup": "4LH000",
+            "plant": null,
+            "enableVariantMatching": true,
+            "properties": [
+                {
+                    "name": "CountryOfOrigin",
+                    "value": ""
+                },
+                {
+                    "name": "CustomerMaterialData",
+                    "value": ""
+                },
+                {
+                    "name": "EocCode",
+                    "value": "000008718699970444/000000000097044400/000000000000970444/000871869997044400"
+                },
+                {
+                    "name": "PricingViewDisplayValue",
+                    "value": ""
+                },
+                {
+                    "name": "IndustrySector",
+                    "value": "Luminaires"
+                },
+                {
+                    "name": "MaterialType",
+                    "value": "Finished products"
+                },
+                {
+                    "name": "NetWeight",
+                    "value": "0.800"
+                },
+                {
+                    "name": "UnitOfWeight",
+                    "value": "KG"
+                },
+                {
+                    "name": "Division",
+                    "value": "01"
+                },
+                {
+                    "name": "ItemCategory",
+                    "value": ""
+                },
+                {
+                    "name": "SalesUnit",
+                    "value": ""
+                },
+                {
+                    "name": "VolumeRebateGroup",
+                    "value": "E1"
+                },
+                {
+                    "name": "PriceResponsible",
+                    "value": "0000784019"
+                },
+                {
+                    "name": "Brand",
+                    "value": "PHL"
+                },
+                {
+                    "name": "MaterialServiceOffer",
+                    "value": "SO"
+                },
+                {
+                    "name": "ProductFamilyApproval",
+                    "value": "LuxSpace2 Mini Low height recessed"
+                },
+                {
+                    "name": "Brand_Name",
+                    "value": "PHL"
+                },
+                {
+                    "name": "BrandDescription",
+                    "value": "PHILIPS"
+                },
+                {
+                    "name": "UnitOfMeasure",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialStatus",
+                    "value": ""
+                },
+                {
+                    "name": "InformationText",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialSuccessor",
+                    "value": ""
+                },
+                {
+                    "name": "PhaseOutDate",
+                    "value": ""
+                },
+                {
+                    "name": "Labor",
+                    "value": "PL6"
+                },
+                {
+                    "name": "ProductHierarchyLevel4",
+                    "value": "2767"
+                },
+                {
+                    "name": "ProductHierarchyLevel5",
+                    "value": "19"
+                },
+                {
+                    "name": "MaterialCategoryGroup",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialPresentationName",
+                    "value": ""
+                },
+                {
+                    "name": "ModelDate",
+                    "value": ""
+                },
+                {
+                    "name": "ModelVersion",
+                    "value": ""
+                },
+                {
+                    "name": "TargetEnvironment",
+                    "value": ""
+                },
+                {
+                    "name": "PricingGroup",
+                    "value": "VERDE"
+                },
+                {
+                    "name": "LuciaActive",
+                    "value": "False"
+                },
+                {
+                    "name": "LocalProductCode",
+                    "value": ""
+                }
+            ],
+            "assignments": [
+                {
+                    "variableName": "ZZSOFF",
+                    "valueName": "SO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "SPADACTIVE",
+                    "valueName": "0",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLR",
+                    "valueName": "WH",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NLP",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_STRINGS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NR_OF_OPT_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_TRAFO",
+                    "valueName": "PSU-E",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFAM",
+                    "valueName": "DN560B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CVR",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PARALLEL_BOARDS",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LED_BOARD_TYPE",
+                    "valueName": "UE",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_BRD",
+                    "valueName": "PHL",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_COLLAMP",
+                    "valueName": "830",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LAMPFAM",
+                    "valueName": "12S",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_OPTGRP",
+                    "valueName": "C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFC",
+                    "valueName": "DN560B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_EL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_MOUNTING",
+                    "valueName": "RIM150",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CABL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_ELECACC",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                }
+            ],
+            "materialSalesAreas": [
+                {
+                    "salesOrganization": "AT02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "IT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PL06",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "05"
+                }
+            ],
+            "isVariant": true
+        },
+        {
+            "externalId": "000000910505100916",
+            "name": "000910505100916",
+            "productModelName": "DN560BI_DN560BI",
+            "materialName": "DN560BI",
+            "webImagePath": null,
+            "imageId": null,
+            "description": "DN560B LED12S/840UE PSU-E C WH",
+            "longText": "",
+            "isConfigurable": true,
+            "baseUnit": "ST",
+            "materialGroup": "4LH000",
+            "plant": null,
+            "enableVariantMatching": true,
+            "properties": [
+                {
+                    "name": "CountryOfOrigin",
+                    "value": ""
+                },
+                {
+                    "name": "CustomerMaterialData",
+                    "value": ""
+                },
+                {
+                    "name": "EocCode",
+                    "value": "000008718699970451/000000000097045100/000000000000970451/000871869997045100"
+                },
+                {
+                    "name": "PricingViewDisplayValue",
+                    "value": ""
+                },
+                {
+                    "name": "IndustrySector",
+                    "value": "Luminaires"
+                },
+                {
+                    "name": "MaterialType",
+                    "value": "Finished products"
+                },
+                {
+                    "name": "NetWeight",
+                    "value": "0.800"
+                },
+                {
+                    "name": "UnitOfWeight",
+                    "value": "KG"
+                },
+                {
+                    "name": "Division",
+                    "value": "01"
+                },
+                {
+                    "name": "ItemCategory",
+                    "value": ""
+                },
+                {
+                    "name": "SalesUnit",
+                    "value": ""
+                },
+                {
+                    "name": "VolumeRebateGroup",
+                    "value": "E1"
+                },
+                {
+                    "name": "PriceResponsible",
+                    "value": "0000784019"
+                },
+                {
+                    "name": "Brand",
+                    "value": "PHL"
+                },
+                {
+                    "name": "MaterialServiceOffer",
+                    "value": "SO"
+                },
+                {
+                    "name": "ProductFamilyApproval",
+                    "value": "LuxSpace2 Mini Low height recessed"
+                },
+                {
+                    "name": "Brand_Name",
+                    "value": "PHL"
+                },
+                {
+                    "name": "BrandDescription",
+                    "value": "PHILIPS"
+                },
+                {
+                    "name": "UnitOfMeasure",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialStatus",
+                    "value": ""
+                },
+                {
+                    "name": "InformationText",
+                    "value": "PRICING CONDITION"
+                },
+                {
+                    "name": "MaterialSuccessor",
+                    "value": ""
+                },
+                {
+                    "name": "PhaseOutDate",
+                    "value": ""
+                },
+                {
+                    "name": "Labor",
+                    "value": "PL6"
+                },
+                {
+                    "name": "ProductHierarchyLevel4",
+                    "value": "2767"
+                },
+                {
+                    "name": "ProductHierarchyLevel5",
+                    "value": "19"
+                },
+                {
+                    "name": "MaterialCategoryGroup",
+                    "value": ""
+                },
+                {
+                    "name": "MaterialPresentationName",
+                    "value": ""
+                },
+                {
+                    "name": "ModelDate",
+                    "value": ""
+                },
+                {
+                    "name": "ModelVersion",
+                    "value": ""
+                },
+                {
+                    "name": "TargetEnvironment",
+                    "value": ""
+                },
+                {
+                    "name": "PricingGroup",
+                    "value": "VERDE"
+                },
+                {
+                    "name": "LuciaActive",
+                    "value": "False"
+                },
+                {
+                    "name": "LocalProductCode",
+                    "value": ""
+                }
+            ],
+            "assignments": [
+                {
+                    "variableName": "ZZSOFF",
+                    "valueName": "SO",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "SPADACTIVE",
+                    "valueName": "0",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CLR",
+                    "valueName": "WH",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NLP",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_STRINGS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_NR_OF_OPT_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LB_SLOTS",
+                    "valueName": "1",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_TRAFO",
+                    "valueName": "PSU-E",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFAM",
+                    "valueName": "DN560B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CVR",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PARALLEL_BOARDS",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LED_BOARD_TYPE",
+                    "valueName": "UE",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_BRD",
+                    "valueName": "PHL",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_COLLAMP",
+                    "valueName": "840",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_LAMPFAM",
+                    "valueName": "12S",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_OPTGRP",
+                    "valueName": "C",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_PFC",
+                    "valueName": "DN560B",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_EL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_MOUNTING",
+                    "valueName": "RIM150",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_CABL",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                },
+                {
+                    "variableName": "PLM_ELECACC",
+                    "valueName": "N",
+                    "updatedValues": null,
+                    "isDefault": false,
+                    "exclusion": false,
+                    "isLive": false
+                }
+            ],
+            "materialSalesAreas": [
+                {
+                    "salesOrganization": "AT02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "BE02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "DE02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "ES02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "FR02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "GB02",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "GB02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "IT02",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "NL01",
+                    "distributionChannel": "05"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "02"
+                },
+                {
+                    "salesOrganization": "PL05",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PL06",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "04"
+                },
+                {
+                    "salesOrganization": "PT02",
+                    "distributionChannel": "05"
+                }
+            ],
+            "isVariant": true
+        }
+    ]
+}

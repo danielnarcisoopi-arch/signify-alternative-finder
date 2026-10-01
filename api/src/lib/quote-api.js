@@ -7,24 +7,32 @@ export class QuoteApiError extends Error {
 }
 
 function assignmentMap(assignments = []) {
-  return new Map(assignments.filter(Boolean).map(a => [normalizeText(a.variableName), { ...a }]));
+  return new Map(assignments.filter(a => a?.variableName && a?.valueName != null).map(a => [normalizeText(a.variableName), { ...a }]));
 }
 function setAssignment(map, variableName, valueName) {
   const key = normalizeText(variableName);
-  const old = map.get(key) || { variableName, updatedValues: null, isDefault: false, exclusion: false, isLive: false };
-  map.set(key, { ...old, variableName: old.variableName || variableName, valueName });
+  const old = map.get(key) || { variableName, updatedValues: null, isDefault: false, exclusion: false, isLive: false, isUserAssignment: true };
+  map.set(key, { ...old, variableName: old.variableName || variableName, valueName, valueText: old.valueText ?? valueName });
+}
+function configuration(response) { return response?.materialBomConfiguration?.root?.configuration || null; }
+function responseAssignments(response) {
+  const list = configuration(response)?.newAssignments;
+  if (!Array.isArray(list)) return [];
+  // The Quote UI reuses the user assignments returned by the configurator. Do not
+  // feed calculated fields (CATALOGCODE1, prices, labels, etc.) back as user input.
+  const user = list.filter(a => a?.isUserAssignment === true && a?.variableName && a?.valueName != null);
+  return user.length ? user : list.filter(a => a?.variableName && a?.valueName != null);
 }
 function selectedValue(response, variableName) {
-  const list = response?.materialBomConfiguration?.root?.configuration?.newAssignments || [];
-  return list.find(a => normalizeText(a.variableName) === normalizeText(variableName))?.valueName || '';
+  return responseAssignments(response).find(a => normalizeText(a.variableName) === normalizeText(variableName))?.valueName
+    || configuration(response)?.newAssignments?.find(a => normalizeText(a.variableName) === normalizeText(variableName))?.valueName || '';
 }
-function catalogCode(response) { return String(selectedValue(response, 'CATALOGCODE1') || '').trim(); }
-function responseAssignments(response) {
-  const list = response?.materialBomConfiguration?.root?.configuration?.newAssignments;
-  return Array.isArray(list) ? list.filter(a => a?.variableName && a?.valueName != null && !/^CATALOGCODE/i.test(a.variableName)) : [];
+function catalogCode(response) {
+  const list = configuration(response)?.newAssignments || [];
+  return String(list.find(a => normalizeText(a.variableName) === 'CATALOGCODE1')?.valueName || '').trim();
 }
 function validResponse(response) {
-  const root = response?.materialBomConfiguration?.root?.configuration;
+  const root = configuration(response);
   const status = response?.bomStatus?.configurationStatus;
   return Boolean((root?.valid ?? status?.valid) && (root?.complete ?? status?.complete) && !(root?.hasConflict ?? status?.hasConflict));
 }
@@ -36,18 +44,47 @@ function configurableId(item) {
 function materialNumber(item) { return String(item?.name || item?.externalId || '').trim(); }
 function normalizePackage(v) { return normalizeText(v).replace(/^LED/, ''); }
 function colorBase(v) { return normalizeText(v).replace(/^(UE|HE|NE)/, '').replace(/(UE|HE|NE|H)$/, ''); }
+function sameValue(a,b) { return normalizeText(a) === normalizeText(b); }
 
 function scoreSeed(item, parsed) {
   const assignments = assignmentMap(item?.assignments || []);
   let score = configurableId(item) ? 100 : 0;
   const desc = parseReference(item?.description || '');
-  if (parsed.family && desc.family === parsed.family) score += 120;
+  // Retired-family searches legitimately return the current family, so matching
+  // technical attributes is stronger than requiring the same family code.
+  if (parsed.family && desc.family === parsed.family) score += 60;
   if (parsed.packageCanonical && normalizePackage(desc.packageCanonical) === normalizePackage(parsed.packageCanonical)) score += 40;
   if (parsed.colorCode && colorBase(desc.colorCode) === colorBase(parsed.colorCode)) score += 30;
-  for (const feature of parsed.features || []) {
-    if ([...assignments.values()].some(a => normalizeText(a.valueName) === normalizeText(feature))) score += 8;
-  }
+  for (const feature of parsed.features || []) if ([...assignments.values()].some(a => sameValue(a.valueName, feature))) score += 8;
   return score;
+}
+
+function payloadFor(client, seed, configId, assignments) {
+  return {
+    name: configId,
+    plant: seed?.plant || client.plant,
+    usage: client.usage,
+    languages: ['en-GB','en'],
+    rootConfiguration: {
+      existingAssignments: assignments,
+      itemId: '',
+      materialName: materialNumber(seed),
+      configurableMaterialName: configId,
+      bomItemAssignments: [],
+    },
+    salesAreaName: client.salesAreaName,
+    salesAreaId: client.salesAreaId,
+    soldTo: null,
+    shipTo: null,
+    environment: { rootEnvironment: { salesArea: { salesOrganization: client.salesOrganization, distributionChannel: client.distributionChannel }, salesDocumentType: 'ZQU' }, materialEnvironment: [] },
+  };
+}
+
+function driverCandidates(targetControl, currentDriver, requestedDriver) {
+  const external = /-E$/i.test(currentDriver || '') || /-E$/i.test(requestedDriver || '');
+  return targetControl === 'DALI'
+    ? (external ? ['PSD-E','DIA-E','PSD','DIA','PSED-E','PSED'] : ['PSD','DIA','PSED','PSD-E','DIA-E'])
+    : (external ? ['PSU-E','PSU'] : ['PSU','PSU-E']);
 }
 
 export class QuoteApiClient {
@@ -60,11 +97,11 @@ export class QuoteApiClient {
     try {
       const r = await this.fetchImpl(url, { ...options, headers: { Accept: 'application/json', ...(options.body ? {'Content-Type':'application/json'} : {}), ...(options.headers || {}) }, signal: controller.signal });
       const text = await r.text();
-      if (!r.ok) throw new QuoteApiError('HTTP_ERROR', `Quote API HTTP ${r.status}`, { status:r.status, body:text.slice(0,500) });
-      return text ? JSON.parse(text) : {};
+      if (!r.ok) throw new QuoteApiError('HTTP_ERROR', `Quote API HTTP ${r.status}`, { status:r.status, body:text.slice(0,1000), url:String(url) });
+      try { return text ? JSON.parse(text) : {}; } catch (e) { throw new QuoteApiError('INVALID_JSON', 'Quote API returned invalid JSON', { body:text.slice(0,1000), url:String(url) }); }
     } catch (e) {
       if (e instanceof QuoteApiError) throw e;
-      throw new QuoteApiError(e?.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR', 'Quote API unavailable', { cause:String(e) });
+      throw new QuoteApiError(e?.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK_ERROR', 'Quote API unavailable', { cause:String(e), url:String(url) });
     } finally { clearTimeout(timer); }
   }
   async search(query, pageSize = 12) {
@@ -76,69 +113,69 @@ export class QuoteApiClient {
 
   async findAlternative(input) {
     const parsedInput = parseReference(input);
-    let search;
-    try { search = await this.search(input, 100); }
-    catch (error) { throw error; }
-    const items = Array.isArray(search?.items) ? search.items : Array.isArray(search?.data?.items) ? search.data.items : [];
+    const search = await this.search(input);
+    const items = Array.isArray(search?.items) ? search.items : [];
     const configurable = items.filter(i => i?.isConfigurable && configurableId(i) && Array.isArray(i?.assignments) && i.assignments.length);
-    if (!configurable.length) return { matched:false, validated:false, reason:'NO_CONFIGURABLE_PRODUCT_IN_FULL_QUERY', searchedQuery:input };
-
-    const seed = configurable.sort((a,b)=>scoreSeed(b,parsedInput)-scoreSeed(a,parsedInput))[0];
+    if (!configurable.length) return { discovered:false, validated:false, reason:'NO_CONFIGURABLE_RESULT' };
+    const seed = [...configurable].sort((a,b)=>scoreSeed(b,parsedInput)-scoreSeed(a,parsedInput))[0];
     const configId = configurableId(seed);
     const seedParsed = parseReference(seed.description || '');
     const sourceControl = parsedInput.controlClass !== 'UNKNOWN' ? parsedInput.controlClass : seedParsed.controlClass;
     const targetControl = oppositeControl(sourceControl);
-    if (targetControl === 'UNKNOWN') return { matched:true, validated:false, configuratorId:configId, reason:'CONTROL_NOT_IDENTIFIED', seed };
+    if (targetControl === 'UNKNOWN') return { discovered:true, validated:false, configuratorId:configId, reason:'SOURCE_CONTROL_UNKNOWN' };
 
-    const makePayload = assignments => ({
-      name: configId, plant: this.plant, usage: this.usage, languages:['en-GB','en'],
-      rootConfiguration: { existingAssignments:assignments, itemId:'', materialName:materialNumber(seed), configurableMaterialName:configId, bomItemAssignments:[] },
-      salesAreaName:this.salesAreaName, salesAreaId:this.salesAreaId, soldTo:null, shipTo:null,
-      environment:{ rootEnvironment:{ salesArea:{ salesOrganization:this.salesOrganization, distributionChannel:this.distributionChannel }, salesDocumentType:'ZQU' }, materialEnvironment:[] }
-    });
-
-    // First reproduce the Quote UI exactly: load the untouched configuration returned
-    // by Product Search. This proves that the discovered configurator/material/assignments
-    // form a valid starting point before we attempt any PSU <-> DALI change.
-    let initial;
-    try { initial = await this.validate(makePayload(seed.assignments.map(a=>({...a})))); }
-    catch (error) {
-      return { matched:true, validated:false, configuratorId:configId, reason:'INITIAL_CONFIGURATION_REQUEST_FAILED', errorCode:error?.code||null, httpStatus:error?.details?.status||null, seed };
+    // Stage 1: reproduce the Quote UI exactly. Open the API-provided seed without
+    // changing anything. This proves that the product/configurator/assignments form
+    // a valid starting configuration before we attempt the alternative.
+    const originalAssignments = seed.assignments.map(a => ({ ...a }));
+    let originalResponse;
+    try {
+      originalResponse = await this.validate(payloadFor(this, seed, configId, originalAssignments));
+    } catch (error) {
+      return { discovered:true, validated:false, configuratorId:configId, reason:'SEED_VALIDATION_REQUEST_FAILED', errorCode:error.code, httpStatus:error.details?.status || null, errorDetails:error.details || {} };
     }
-    if (!validResponse(initial)) return { matched:true, validated:false, configuratorId:configId, reason:'INITIAL_CONFIGURATION_NOT_VALID', seed, response:initial };
+    if (!validResponse(originalResponse)) {
+      return { discovered:true, validated:false, configuratorId:configId, reason:'SEED_CONFIGURATION_NOT_VALID', seedStatus: configuration(originalResponse) ? { valid:configuration(originalResponse)?.valid, complete:configuration(originalResponse)?.complete, hasConflict:configuration(originalResponse)?.hasConflict, invalidMessage:configuration(originalResponse)?.invalidMessage } : null };
+    }
 
-    // Use the assignments normalized by the configurator itself as the baseline.
-    // Fall back to Product Search assignments only if the API does not return them.
-    const normalized = responseAssignments(initial);
-    const map = assignmentMap(normalized.length ? normalized : seed.assignments);
-    if (parsedInput.packageCanonical) setAssignment(map, 'PLM_LAMPFAM', normalizePackage(parsedInput.packageCanonical));
-    if (parsedInput.colorCode) setAssignment(map, 'PLM_COLLAMP', colorBase(parsedInput.colorCode));
+    // Stage 2 starts from the normalized user assignments returned by the real
+    // configurator, not from an invented bootstrap session.
+    const normalized = responseAssignments(originalResponse);
+    const base = assignmentMap(normalized.length ? normalized : originalAssignments);
+    if (parsedInput.packageCanonical) setAssignment(base, 'PLM_LAMPFAM', normalizePackage(parsedInput.packageCanonical));
+    if (parsedInput.colorCode) setAssignment(base, 'PLM_COLLAMP', colorBase(parsedInput.colorCode));
 
-    const driverKey = [...map.keys()].find(k => /PLM_TRAFO|(^|[._])TRAFO($|[._])|DRIVER|CONTROL/.test(k));
-    if (!driverKey) return { matched:true, validated:false, configuratorId:configId, reason:'DRIVER_CHARACTERISTIC_NOT_FOUND', seed };
-    const driverVariable = map.get(driverKey).variableName;
-    const currentDriver = map.get(driverKey).valueName;
-    const external = /-E$/i.test(currentDriver) || /-E$/i.test(parsedInput.driver);
-    const controls = targetControl === 'DALI'
-      ? (external ? ['PSD-E','DIA-E','PSD','DIA','PSED-E','PSED'] : ['PSD','DIA','PSED','PSD-E','DIA-E'])
-      : (external ? ['PSU-E','PSU'] : ['PSU','PSU-E']);
+    const driverKey = [...base.keys()].find(k => /(^|\.)PLM_TRAFO$|(^|\.)TRAFO$|DRIVER_TYPE|DRIVER|CONTROL/.test(k));
+    if (!driverKey) return { discovered:true, validated:false, configuratorId:configId, reason:'CONTROL_VARIABLE_NOT_DISCOVERED' };
+    const driverVariable = base.get(driverKey).variableName;
+    const currentDriver = base.get(driverKey).valueName;
+    const attempts = [];
 
-    const attempts=[];
-    for (const targetDriver of controls) {
-      const attempt = new Map([...map].map(([k,v])=>[k,{...v}]));
+    for (const targetDriver of driverCandidates(targetControl, currentDriver, parsedInput.driver)) {
+      const attempt = new Map([...base].map(([k,v])=>[k,{...v}]));
       setAssignment(attempt, driverVariable, targetDriver);
       let response;
-      try { response = await this.validate(makePayload([...attempt.values()])); }
-      catch (error) { attempts.push({targetDriver, reason:'REQUEST_FAILED', httpStatus:error?.details?.status||null, errorCode:error?.code||null}); continue; }
-      if (!validResponse(response)) { attempts.push({targetDriver, reason:'NOT_VALID'}); continue; }
+      try {
+        response = await this.validate(payloadFor(this, seed, configId, [...attempt.values()]));
+      } catch (error) {
+        attempts.push({ targetDriver, reason:'REQUEST_FAILED', errorCode:error.code, httpStatus:error.details?.status || null });
+        continue;
+      }
+      if (!validResponse(response)) {
+        const c = configuration(response);
+        attempts.push({ targetDriver, reason:'CONFIGURATION_NOT_VALID', valid:c?.valid ?? null, complete:c?.complete ?? null, hasConflict:c?.hasConflict ?? null, invalidMessage:c?.invalidMessage || null });
+        continue;
+      }
       const finalDriver = selectedValue(response, driverVariable);
-      if (normalizeControlCode(finalDriver) !== targetControl) { attempts.push({targetDriver, reason:'TARGET_CONTROL_NOT_SELECTED', finalDriver}); continue; }
+      if (normalizeControlCode(finalDriver) !== targetControl) {
+        attempts.push({ targetDriver, reason:'TARGET_CONTROL_NOT_SELECTED', finalDriver });
+        continue;
+      }
       const description = catalogCode(response);
-      if (!description) { attempts.push({targetDriver, reason:'CATALOG_CODE_NOT_RETURNED'}); continue; }
+      if (!description) { attempts.push({ targetDriver, reason:'CATALOGCODE1_NOT_RETURNED' }); continue; }
       const finalParsed = parseReference(description);
-      return { matched:true, validated:true, configuratorId:configId, description, orderCode:'', controlClass:targetControl, family:finalParsed.family, response, seed, targetDriver:finalDriver, initialResponse:initial };
+      return { discovered:true, validated:true, configuratorId:configId, description, orderCode:'', controlClass:targetControl, family:finalParsed.family, response, seed, targetDriver:finalDriver, attempts };
     }
-    return { matched:true, validated:false, configuratorId:configId, reason:'TARGET_CONFIGURATION_NOT_VALIDATED', attempts, seed };
+    return { discovered:true, validated:false, configuratorId:configId, reason:'ALTERNATIVE_CONFIGURATION_NOT_VALIDATED', attempts };
   }
 }
-

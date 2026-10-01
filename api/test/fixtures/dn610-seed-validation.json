@@ -1,0 +1,2990 @@
+{
+    "materialBomConfiguration": {
+        "root": {
+            "plant": "PL06",
+            "usage": "5",
+            "alternative": "",
+            "material": "DN610BI",
+            "priceMaterialName": "",
+            "completionMaterialName": "",
+            "itemId": null,
+            "itemNumber": null,
+            "componentQuantity": 1.0,
+            "fixedQuantity": false,
+            "canClearSystemAssignments": false,
+            "canUserAssignSystemAssignments": true,
+            "bomItems": [],
+            "isConfigurable": true,
+            "isMaterialItem": true,
+            "configuration": {
+                "valid": true,
+                "hasConflict": false,
+                "complete": true,
+                "presetAssigned": true,
+                "invalidMessage": "Configuration is valid",
+                "image": null,
+                "conflict": null,
+                "variableLinks": [],
+                "environmentDiff": {
+                    "added": {
+                        "image": "https://www.assets.signify.com/is/image/Signify/DN610B-PSD-WR-WH-RTP",
+                        "DimensionalDrawing": "https://www.assets.signify.com/is/image/Signify/Luxspace-recessed_DN571B",
+                        "Variants": [
+                            "BASE_VARIANT",
+                            "LAMPFAM_20S",
+                            "COLLAMP_840",
+                            "TRAFO_PSU-E",
+                            "MOUNTING_RIM200",
+                            "OPTGRP_C",
+                            "CLR_WH",
+                            "CVR_PGO"
+                        ],
+                        "PricingFactorMap": {
+                            "BASE_VARIANT": 1.0,
+                            "LAMPFAM_20S": 1.0,
+                            "COLLAMP_840": 1.0,
+                            "TRAFO_PSU-E": 1.0,
+                            "MOUNTING_RIM200": 1.0,
+                            "OPTGRP_C": 1.0,
+                            "CLR_WH": 1.0,
+                            "CVR_PGO": 1.0
+                        }
+                    },
+                    "removed": {},
+                    "modified": {}
+                },
+                "variableStates": [
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[01/01/0001 00:00:00;12/31/1999 23:59:59]",
+                                "text": "[01/01/0001 00:00:00;12/31/1999 23:59:59]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[01/01/2000 00:00:00;12/30/2026 09:26:41]",
+                                "text": "[01/01/2000 00:00:00;12/30/2026 09:26:41]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "12/30/2026 09:26:42",
+                                "text": "12/30/2026 09:26:42",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[12/30/2026 09:26:43;12/30/9999 23:59:59]",
+                                "text": "[12/30/2026 09:26:43;12/30/9999 23:59:59]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "12/31/9999 00:00:00",
+                                "text": "12/31/9999 00:00:00",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "DateCalendar",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "DIM_BUILDDATE",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "DN610BI_START",
+                                "text": "Default Start Date",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "DN610BI_END",
+                                "text": "Default End Date",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "EVENT",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "DN610B",
+                                "text": "DN610B - Luxspace Recessed Compact 8\"",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_PFC",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "20S",
+                                "text": "20S - System flux of 2000 lm",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "24S",
+                                "text": "24S - System flux of 2400 lm",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "40S",
+                                "text": "40S - System flux of 4000 lm",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "60S",
+                                "text": "60S - System flux of 6000 lm",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_LAMPFAM",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "830",
+                                "text": "830 - 3000K CRI80",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "840",
+                                "text": "840 - 4000K CRI80",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "930",
+                                "text": "930 - 3000K CRI90",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "940",
+                                "text": "940 - 4000K CRI90",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "TW927-965",
+                                "text": "TW927-965 - Tunable white 2700-6500K CRI90",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_COLLAMP",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "DEIA-VLC-E",
+                                "text": "DEIA-VLC-E - DALI dimming Interact DC",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "DIA-E",
+                                "text": "DIA-E - DALI dimming Interact external",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "DIA-VLC-E",
+                                "text": "DIA-VLC-E - DALI Dim Interact VLC external",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "PSD-E",
+                                "text": "PSD-E - Dimmable driver DALI external",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "PSE-E",
+                                "text": "PSE-E - Driver DC central EL ext.",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "PSED-E",
+                                "text": "PSED-E - DALI DC central EL ext.",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "PSU-E",
+                                "text": "PSU-E - Non-dimmable external",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "WIA-E",
+                                "text": "WIA-E - Wireless InterAct ready ext.",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_TRAFO",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "BKR",
+                                "text": "BKR - Black reflector without louver",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "C",
+                                "text": "C - High Gloss",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "FLR",
+                                "text": "FLR - Reflector with faded lines",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "M",
+                                "text": "M - Matt",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "WR",
+                                "text": "WR - White reflector",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_OPTGRP",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "ELD3",
+                                "text": "ELD3 - Emerg. ligh. DALI 3h duration",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "ELP3",
+                                "text": "ELP3 - Emerg. ligh. Pro 3h duration",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "N",
+                                "text": "N - No",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_EL",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "N",
+                                "text": "N - No",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "PG",
+                                "text": "PG - Protective clear glass cover",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "PGO",
+                                "text": "PGO - Protective opal glass cover",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_CVR",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "NE",
+                                "text": "NE - Standard efficacy",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "UE",
+                                "text": "UE - Ultra Efficient",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_LED_BOARD_TYPE",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "CLO",
+                                "text": "CLO - Constant light output",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "N",
+                                "text": "N - No",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_CLO",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "RAD225",
+                                "text": "RAD225 - Retrofit Adapter ring D225 mm",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "RAD240",
+                                "text": "RAD240 - Retrofit Adapter ring D240 mm",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "RIM200",
+                                "text": "RIM200 - Rim Recess. Round, Diam.200 mm",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "RML",
+                                "text": "RML - Rimless",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_MOUNTING",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "B2KW",
+                                "text": "B2KW - 2m B2ca + WIELAND",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "B2KWD",
+                                "text": "B2KWD - 2m B2ca + WIELAND + 2m",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "BW",
+                                "text": "BW - 0,5m B2ca+WIELAND,Sec. lock",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "BWD",
+                                "text": "BWD - 0,5mB2ca+WIELAND,Sec.+0,5mB2ca",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "E2KW",
+                                "text": "E2KW - 2m Eca GST + WIELAND",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "E2KWD",
+                                "text": "E2KWD - 2m Eca GST + WIELAND + 2m",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "EW",
+                                "text": "EW - 0,5m Eca GST+WIELAND,Sec.",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "EWD",
+                                "text": "EWD - 0,5m Eca GST + WIELAND+ 0.5m",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "EWD5P",
+                                "text": "EWD5P - 0,5m Eca GST + WIELAND5P+ 0.5m",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "N",
+                                "text": "N - No",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_CABL",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "BK",
+                                "text": "BK - BK RAL 9005 Jet Black",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "NA",
+                                "text": "NA - Not Applicable",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "SI",
+                                "text": "SI - SI RAL 9006 White Aluminium",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "WH",
+                                "text": "WH - WH RAL 9003 Signal White",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_CLR",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "N",
+                                "text": "N - No",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "WF",
+                                "text": "WF - Pre-installed Wie F conn.",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "WT",
+                                "text": "WT - Pre-installed Wie T conn.",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_ELECACC",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;55.99]",
+                                "text": "[-inf;55.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "56",
+                                "text": "56",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[56.01;71.99]",
+                                "text": "[56.01;71.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "72",
+                                "text": "72",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[72.01;inf]",
+                                "text": "[72.01;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LE1",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;23.99]",
+                                "text": "[-inf;23.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "24",
+                                "text": "24",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[24.01;35.99]",
+                                "text": "[24.01;35.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "36",
+                                "text": "36",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[36.01;inf]",
+                                "text": "[36.01;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LE3",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;-9007199254740992]",
+                                "text": "[-inf;-9007199254740992]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[-9007199254740992;9007199254740992]",
+                                "text": "[-9007199254740992;9007199254740992]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[9007199254740992;inf]",
+                                "text": "[9007199254740992;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LE4",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;inf]",
+                                "text": "[-inf;inf]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LEADTIME",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "MODELINFO",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "EU3",
+                                "text": "EU3",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SU1",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "EU2",
+                                "text": "EU2",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SU3",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SU4",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;6]",
+                                "text": "[-inf;6]",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "7",
+                                "text": "7",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[8;inf]",
+                                "text": "[8;inf]",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "BASELEADTIME",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;0.99]",
+                                "text": "[-inf;0.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1",
+                                "text": "1",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[1.01;1.19]",
+                                "text": "[1.01;1.19]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1.2",
+                                "text": "1.2",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[1.21;1.69]",
+                                "text": "[1.21;1.69]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1.7",
+                                "text": "1.7",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[1.71;inf]",
+                                "text": "[1.71;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "BRGEW",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;-9007199254740992]",
+                                "text": "[-inf;-9007199254740992]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[-9007199254740992;9007199254740992]",
+                                "text": "[-9007199254740992;9007199254740992]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[9007199254740992;inf]",
+                                "text": "[9007199254740992;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "BRGEW_TR",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;15.99]",
+                                "text": "[-inf;15.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "16",
+                                "text": "16",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[16.01;17.99]",
+                                "text": "[16.01;17.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "18",
+                                "text": "18",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[18.01;inf]",
+                                "text": "[18.01;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "HEIGHT",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "DN610B 20S/840UE PSU-E C WH PG",
+                                "text": "DN610B 20S/840UE PSU-E C WH PG",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LABEL_ID",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "O ",
+                                "text": "O ",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LABEL_ID2",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "",
+                                "text": "",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LABEL_ID3",
+                        "show": true,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;25.49]",
+                                "text": "[-inf;25.49]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "25.5",
+                                "text": "25.5",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[25.51;32.99]",
+                                "text": "[25.51;32.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "33",
+                                "text": "33",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[33.01;inf]",
+                                "text": "[33.01;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "LENGTH",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;0.69]",
+                                "text": "[-inf;0.69]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "0.7",
+                                "text": "0.7",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[0.71;0.79]",
+                                "text": "[0.71;0.79]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "0.8",
+                                "text": "0.8",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[0.81;1.29]",
+                                "text": "[0.81;1.29]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1.3",
+                                "text": "1.3",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[1.31;inf]",
+                                "text": "[1.31;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "NTGEW",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;-9007199254740992]",
+                                "text": "[-inf;-9007199254740992]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[-9007199254740992;-6305039478318694]",
+                                "text": "[-9007199254740992;-6305039478318694]",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[-6305039478318694;6305039478318694]",
+                                "text": "[-6305039478318694;6305039478318694]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[6305039478318694;9007199254740992]",
+                                "text": "[6305039478318694;9007199254740992]",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[9007199254740992;inf]",
+                                "text": "[9007199254740992;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "NTGEW_TR",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "PHL",
+                                "text": "PHL - PHILIPS",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_BRD",
+                        "show": false,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;0]",
+                                "text": "[-inf;0]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1",
+                                "text": "1",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[2;inf]",
+                                "text": "[2;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_LB_SLOTS",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;0]",
+                                "text": "[-inf;0]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1",
+                                "text": "1",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[2;inf]",
+                                "text": "[2;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_LB_STRINGS",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;0]",
+                                "text": "[-inf;0]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1",
+                                "text": "1",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[2;inf]",
+                                "text": "[2;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_NLP",
+                        "show": false,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;0]",
+                                "text": "[-inf;0]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1",
+                                "text": "1",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[2;inf]",
+                                "text": "[2;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_NR_OF_OPT_SLOTS",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "N",
+                                "text": "No",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "Y",
+                                "text": "Yes",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_PARALLEL_BOARDS",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "DN610B",
+                                "text": "DN610B - LuxSpace Recessed",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PLM_PFAM",
+                        "show": false,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;-9007199254740992]",
+                                "text": "[-inf;-9007199254740992]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[-9007199254740992;9007199254740992]",
+                                "text": "[-9007199254740992;9007199254740992]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[9007199254740992;inf]",
+                                "text": "[9007199254740992;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SALESORDQTY",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SALESORG",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "BASE_VARIANT;LAMPFAM_20S;COLLAMP_840;TRAFO_PSU-E;MOUNTING_RIM200;OPTGRP_C;CLR_WH;CVR_PGO",
+                                "text": "BASE_VARIANT;LAMPFAM_20S;COLLAMP_840;TRAFO_PSU-E;MOUNTING_RIM200;OPTGRP_C;CLR_WH;CVR_PGO",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SDCOM_VKOND",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "0",
+                                "text": "SPAD not Active",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "1",
+                                "text": "SPAD Active",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SPADACTIVE",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "https://www.assets.signify.com/is/image/Signify/Luxspace-recessed_DN571B",
+                                "text": "https://www.assets.signify.com/is/image/Signify/Luxspace-recessed_DN571B",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SPEC_DIM_DRAWING",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "https://www.assets.signify.com/is/image/Signify/DN610B-PSD-WR-WH-RTP",
+                                "text": "https://www.assets.signify.com/is/image/Signify/DN610B-PSD-WR-WH-RTP",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SPEC_IMAGE",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "DN610B - Luxspace Recessed Compact 8, System flux of 2000 lm, 4000K CRI80, Ultra Efficient, Non-dimmable external, High Gloss, Rim Recess. Round, Diam.200 mm, WH RAL 9003 Signal White, Protective opal glass cover",
+                                "text": "DN610B - Luxspace Recessed Compact 8, System flux of 2000 lm, 4000K CRI80, Ultra Efficient, Non-dimmable external, High Gloss, Rim Recess. Round, Diam.200 mm, WH RAL 9003 Signal White, Protective opal glass cover",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SPEC_LONGDESC",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;13.76]",
+                                "text": "[-inf;13.76]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "13.77",
+                                "text": "13.77",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[13.78;15.83]",
+                                "text": "[13.78;15.83]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "15.84",
+                                "text": "15.84",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[15.85;inf]",
+                                "text": "[15.85;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "VOLUME_PCE",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;-9007199254740992]",
+                                "text": "[-inf;-9007199254740992]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[-9007199254740992;9007199254740992]",
+                                "text": "[-9007199254740992;9007199254740992]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[9007199254740992;inf]",
+                                "text": "[9007199254740992;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "VOLUME_TR",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;29.99]",
+                                "text": "[-inf;29.99]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "30",
+                                "text": "30",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[30.01;inf]",
+                                "text": "[30.01;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "WIDTH",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "SO",
+                                "text": "SO",
+                                "state": 3,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "ZZSOFF",
+                        "show": false,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "[-inf;-9007199254740992]",
+                                "text": "[-inf;-9007199254740992]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[-9007199254740992;9007199254740992]",
+                                "text": "[-9007199254740992;9007199254740992]",
+                                "state": 2,
+                                "assignmentAuthor": 5,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "[9007199254740992;inf]",
+                                "text": "[9007199254740992;inf]",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "ZZTRLT",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "L100",
+                                "text": "L100",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "L90",
+                                "text": "L90",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "DSS_LIFETIME_50K",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 1,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "L100",
+                                "text": "L100",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "L80",
+                                "text": "L80",
+                                "state": 0,
+                                "assignmentAuthor": 0,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "L85",
+                                "text": "L85",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "DSS_LIFETIME_100K",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "[Other values]",
+                                "text": "all values",
+                                "state": 0,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "DN610B 20S/840UE PSU-E C WH PGO ",
+                                "text": "DN610B 20S/840UE PSU-E C WH PGO ",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "TextBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "CATALOGCODE1",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "DN610BI",
+                                "text": "DN610BI",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "PROD",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": false,
+                        "valueStates": [
+                            {
+                                "name": "SIG_PROF_EU",
+                                "text": "Signify Prof Europe",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "ComboBox",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "BRND",
+                        "show": true,
+                        "valid": true,
+                        "required": true
+                    },
+                    {
+                        "readOnly": true,
+                        "valueStates": [
+                            {
+                                "name": "BASE_VARIANT",
+                                "text": "BASE_VARIANT",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "LAMPFAM_20S",
+                                "text": "LAMPFAM_20S",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "COLLAMP_840",
+                                "text": "COLLAMP_840",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "TRAFO_PSU-E",
+                                "text": "TRAFO_PSU-E",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "MOUNTING_RIM200",
+                                "text": "MOUNTING_RIM200",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "OPTGRP_C",
+                                "text": "OPTGRP_C",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "CLR_WH",
+                                "text": "CLR_WH",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            },
+                            {
+                                "name": "CVR_PGO",
+                                "text": "CVR_PGO",
+                                "state": 4,
+                                "assignmentAuthor": 1,
+                                "image": null,
+                                "info": ""
+                            }
+                        ],
+                        "invalidMessage": "",
+                        "controlType": "MultiSelect",
+                        "unit": "",
+                        "info": "",
+                        "image": null,
+                        "calculatedValue": "",
+                        "displayForceablesAs": "Interleaved",
+                        "fullyQualifiedName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "show": false,
+                        "valid": true,
+                        "required": false
+                    }
+                ],
+                "uiGroupStates": [
+                    {
+                        "fullyQualifiedName": "Scope957",
+                        "show": true,
+                        "info": "",
+                        "image": null
+                    },
+                    {
+                        "fullyQualifiedName": "BASICS",
+                        "show": true,
+                        "info": "",
+                        "image": null
+                    },
+                    {
+                        "fullyQualifiedName": "OPTIONAL",
+                        "show": true,
+                        "info": "",
+                        "image": null
+                    },
+                    {
+                        "fullyQualifiedName": "INTERNAL",
+                        "show": true,
+                        "info": "",
+                        "image": null
+                    },
+                    {
+                        "fullyQualifiedName": "NotInView",
+                        "show": false,
+                        "info": "",
+                        "image": null
+                    }
+                ],
+                "newAssignments": [
+                    {
+                        "variableName": "DIM_BUILDDATE",
+                        "valueName": "12/30/2026 09:26:42",
+                        "valueText": "12/30/2026",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "EVENT",
+                        "valueName": "DN610BI_START",
+                        "valueText": "Default Start Date",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_PFC",
+                        "valueName": "DN610B",
+                        "valueText": "DN610B - Luxspace Recessed Compact 8\"",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_LAMPFAM",
+                        "valueName": "20S",
+                        "valueText": "20S - System flux of 2000 lm",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_COLLAMP",
+                        "valueName": "840",
+                        "valueText": "840 - 4000K CRI80",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_TRAFO",
+                        "valueName": "PSU-E",
+                        "valueText": "PSU-E - Non-dimmable external",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_OPTGRP",
+                        "valueName": "C",
+                        "valueText": "C - High Gloss",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_EL",
+                        "valueName": "N",
+                        "valueText": "N - No",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_CVR",
+                        "valueName": "PGO",
+                        "valueText": "PGO - Protective opal glass cover",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_LED_BOARD_TYPE",
+                        "valueName": "UE",
+                        "valueText": "UE - Ultra Efficient",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_CLO",
+                        "valueName": "N",
+                        "valueText": "N - No",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_MOUNTING",
+                        "valueName": "RIM200",
+                        "valueText": "RIM200 - Rim Recess. Round, Diam.200 mm",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_CABL",
+                        "valueName": "N",
+                        "valueText": "N - No",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_CLR",
+                        "valueName": "WH",
+                        "valueText": "WH - WH RAL 9003 Signal White",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_ELECACC",
+                        "valueName": "N",
+                        "valueText": "N - No",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "LE1",
+                        "valueName": "72",
+                        "valueText": "72",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "LE3",
+                        "valueName": "36",
+                        "valueText": "36",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SU1",
+                        "valueName": "EU3",
+                        "valueText": "EU3",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SU3",
+                        "valueName": "EU2",
+                        "valueText": "EU2",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "BASELEADTIME",
+                        "valueName": "7",
+                        "valueText": "7",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "BRGEW",
+                        "valueName": "1",
+                        "valueText": "1",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "HEIGHT",
+                        "valueName": "18",
+                        "valueText": "18",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "LABEL_ID",
+                        "valueName": "DN610B 20S/840UE PSU-E C WH PG",
+                        "valueText": "DN610B 20S/840UE PSU-E C WH PG",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "LABEL_ID2",
+                        "valueName": "O ",
+                        "valueText": "O ",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "LABEL_ID3",
+                        "valueName": "",
+                        "valueText": "",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "LENGTH",
+                        "valueName": "25.5",
+                        "valueText": "25.5",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "NTGEW",
+                        "valueName": "0.7",
+                        "valueText": "0.7",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_BRD",
+                        "valueName": "PHL",
+                        "valueText": "PHL - PHILIPS",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_LB_SLOTS",
+                        "valueName": "1",
+                        "valueText": "1",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_LB_STRINGS",
+                        "valueName": "1",
+                        "valueText": "1",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_NLP",
+                        "valueName": "1",
+                        "valueText": "1",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_NR_OF_OPT_SLOTS",
+                        "valueName": "1",
+                        "valueText": "1",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_PARALLEL_BOARDS",
+                        "valueName": "N",
+                        "valueText": "No",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PLM_PFAM",
+                        "valueName": "DN610B",
+                        "valueText": "DN610B - LuxSpace Recessed",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SDCOM_VKOND",
+                        "valueName": "BASE_VARIANT;LAMPFAM_20S;COLLAMP_840;TRAFO_PSU-E;MOUNTING_RIM200;OPTGRP_C;CLR_WH;CVR_PGO",
+                        "valueText": "BASE_VARIANT;LAMPFAM_20S;COLLAMP_840;TRAFO_PSU-E;MOUNTING_RIM200;OPTGRP_C;CLR_WH;CVR_PGO",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SPADACTIVE",
+                        "valueName": "0",
+                        "valueText": "SPAD not Active",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SPEC_DIM_DRAWING",
+                        "valueName": "https://www.assets.signify.com/is/image/Signify/Luxspace-recessed_DN571B",
+                        "valueText": "https://www.assets.signify.com/is/image/Signify/Luxspace-recessed_DN571B",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SPEC_IMAGE",
+                        "valueName": "https://www.assets.signify.com/is/image/Signify/DN610B-PSD-WR-WH-RTP",
+                        "valueText": "https://www.assets.signify.com/is/image/Signify/DN610B-PSD-WR-WH-RTP",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SPEC_LONGDESC",
+                        "valueName": "DN610B - Luxspace Recessed Compact 8, System flux of 2000 lm, 4000K CRI80, Ultra Efficient, Non-dimmable external, High Gloss, Rim Recess. Round, Diam.200 mm, WH RAL 9003 Signal White, Protective opal glass cover",
+                        "valueText": "DN610B - Luxspace Recessed Compact 8, System flux of 2000 lm, 4000K CRI80, Ultra Efficient, Non-dimmable external, High Gloss, Rim Recess. Round, Diam.200 mm, WH RAL 9003 Signal White, Protective opal glass cover",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "VOLUME_PCE",
+                        "valueName": "13.77",
+                        "valueText": "13.77",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "WIDTH",
+                        "valueName": "30",
+                        "valueText": "30",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "ZZSOFF",
+                        "valueName": "SO",
+                        "valueText": "SO",
+                        "isUserAssignment": true,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "DSS_LIFETIME_50K",
+                        "valueName": "L90",
+                        "valueText": "L90",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "DSS_LIFETIME_100K",
+                        "valueName": "L85",
+                        "valueText": "L85",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "CATALOGCODE1",
+                        "valueName": "DN610B 20S/840UE PSU-E C WH PGO ",
+                        "valueText": "DN610B 20S/840UE PSU-E C WH PGO ",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "PROD",
+                        "valueName": "DN610BI",
+                        "valueText": "DN610BI",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "BRND",
+                        "valueName": "SIG_PROF_EU",
+                        "valueText": "Signify Prof Europe",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "BASE_VARIANT",
+                        "valueText": "BASE_VARIANT",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "LAMPFAM_20S",
+                        "valueText": "LAMPFAM_20S",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "COLLAMP_840",
+                        "valueText": "COLLAMP_840",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "TRAFO_PSU-E",
+                        "valueText": "TRAFO_PSU-E",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "MOUNTING_RIM200",
+                        "valueText": "MOUNTING_RIM200",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "OPTGRP_C",
+                        "valueText": "OPTGRP_C",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "CLR_WH",
+                        "valueText": "CLR_WH",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    },
+                    {
+                        "variableName": "SAP_CALCULATED_PRICING_CODES_VARIABLE",
+                        "valueName": "CVR_PGO",
+                        "valueText": "CVR_PGO",
+                        "isUserAssignment": false,
+                        "isDefault": false,
+                        "exclusion": false
+                    }
+                ],
+                "assignmentsToRemove": []
+            },
+            "relevant": true,
+            "isSystemLevelSubItem": false
+        },
+        "hasBom": false
+    },
+    "bomStatus": {
+        "configurationStatus": {
+            "valid": true,
+            "complete": true,
+            "hasConflict": false,
+            "conflictingAssignments": []
+        },
+        "materialCode": "DN610BI",
+        "itemId": null,
+        "itemNumber": null,
+        "children": [],
+        "componentQuantity": 1.0,
+        "relevant": true,
+        "fixedQuantity": false,
+        "isConfigurable": true,
+        "isMaterialItem": true,
+        "environment": {
+            "/SalesArea/SalesOrganization": "PT02",
+            "/SalesArea/DistributionChannel": "05",
+            "/SalesDocumentType": "ZQU",
+            "Variants": [],
+            "//SalesArea/SalesOrganization": "PT02",
+            "//SalesArea/DistributionChannel": "05",
+            "//SalesDocumentType": "ZQU"
+        },
+        "statusType": 0
+    }
+}

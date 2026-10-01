@@ -353,29 +353,33 @@ export function createEngine({ productClient = new ProductApiClient(), configura
             message:"A configuração foi validada pelo mesmo fluxo de configuração usado pelo Signify Quote."
           };
         }
-        // If the full official Quote search identified a concrete configurable
-        // product, never discard that evidence and start a global configurator
-        // sweep. Report the real validation failure for that one configurator.
-        if (quoteResult?.matched && !quoteResult?.validated) {
+        // If the official Quote search identified a concrete configurable product,
+        // never hide a failed validation by sweeping unrelated configurators.
+        // Return the exact stage/error so production diagnostics are actionable.
+        if (quoteResult?.discovered && !quoteResult?.validated) {
           return noResult(parsed, {
             configurators: quoteResult.configuratorId ? [quoteResult.configuratorId] : [],
             configuratorAttempts: quoteResult.configuratorId ? [{
               id: quoteResult.configuratorId,
-              family: quoteResult.seed?.description ? parseReference(quoteResult.seed.description).family : null,
               validated: false,
               reason: quoteResult.reason || "QUOTE_CONFIGURATION_NOT_VALIDATED",
               errorCode: quoteResult.errorCode || null,
               httpStatus: quoteResult.httpStatus || null,
+              attempts: quoteResult.attempts || [],
+              seedStatus: quoteResult.seedStatus || null,
             }] : [],
             inspected: 1,
             reason: quoteResult.reason || "QUOTE_CONFIGURATION_NOT_VALIDATED",
-            message: "A pesquisa oficial encontrou o configurador correspondente, mas a configuração alternativa não foi validada pelo fluxo real do Quote.",
+            message: `O Quote identificou ${quoteResult.configuratorId || "o configurador"}, mas a validação parou em ${quoteResult.reason || "um erro desconhecido"}.`,
           });
         }
       } catch (quoteError) {
-        // Quote endpoints may require environment-specific access. Preserve all
-        // existing standard-product behaviour by falling back to the catalogue path.
         if (!(quoteError instanceof QuoteApiError)) throw quoteError;
+        return {
+          httpStatus: 503, status: "SOURCE_UNAVAILABLE", statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, resultType: "SOURCE_UNAVAILABLE",
+          message: `Signify Quote API: ${quoteError.message}`, errorCode: quoteError.code,
+          sourceDetails: { httpStatus: quoteError.details?.status || null, url: quoteError.details?.url || null, body: quoteError.details?.body || null },
+        };
       }
 
       // Always preserve the complete user reference in the first catalogue lookup.
