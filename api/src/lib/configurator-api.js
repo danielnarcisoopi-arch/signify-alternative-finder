@@ -130,11 +130,41 @@ function tunableColorScore(assignment, requirement) {
   return 1000 - (cctMax - cctMin) / 100;
 }
 
+function fixedColorScore(assignment, requirement) {
+  if (requirement.type !== "COLOR" || !requirement.expectedCct || !requirement.expectedCri) return -1;
+  const match = normalizeText(assignment.valueName).match(/^(UE|HE|NE)?([789])(\d{2})(UE|HE|NE|H)?$/);
+  if (!match) return -1;
+
+  const candidateCri = Number(match[2]) * 10;
+  const candidateCct = Number(match[3]) * 100;
+  if (candidateCri !== requirement.expectedCri || candidateCct !== requirement.expectedCct) return -1;
+
+  const candidateVariant = match[1] || match[4] || "";
+  const requestedVariant = normalizeText(requirement.expectedEfficiency || requirement.expectedSuffix);
+  let score = 2000;
+  if (candidateVariant === requestedVariant) score += 300;
+  if (!requestedVariant && !candidateVariant) score += 250;
+  // Older H light-colour designations are represented by the current
+  // UltraEfficient (UE) variant when the original option no longer exists.
+  if (requestedVariant === "H" && candidateVariant === "UE") score += 200;
+  if (candidateVariant === "UE") score += 20;
+  return score;
+}
+
 function findRequirementOption(options, requirement) {
-  const exact = options.find((assignment) => requirementMatches(assignment, requirement));
+  const exactValues = requirement.type === "COLOR" && requirement.expectedValue
+    ? [requirement.expectedValue]
+    : requirement.values;
+  const exact = options.find((assignment) => requirementMatches(assignment, { ...requirement, values: exactValues }));
   if (exact) return exact;
   return options
-    .map((assignment) => ({ assignment, score: tunableColorScore(assignment, requirement) }))
+    .map((assignment) => ({
+      assignment,
+      score: Math.max(
+        fixedColorScore(assignment, requirement),
+        tunableColorScore(assignment, requirement),
+      ),
+    }))
     .filter((entry) => entry.score >= 0)
     .sort((left, right) => right.score - left.score)[0]?.assignment || null;
 }
@@ -149,7 +179,9 @@ function controlPreference(assignment, requirements, selected) {
   else if (/^PSD/.test(value)) score += 50;
   if (normalizeText(requirements?.driver).endsWith("-E") && value.endsWith("-E")) score += 20;
   const tunableWhiteSelected = selected.some((entry) => /^TW[789]\d{2}-[789]\d{2}$/i.test(entry.valueName));
+  const ultraEfficientSelected = selected.some((entry) => /^(?:UE[789]\d{2}|[789]\d{2}UE)$/i.test(entry.valueName));
   if (tunableWhiteSelected && /^DIA/.test(value)) score += 100;
+  if (ultraEfficientSelected && /^PSD/.test(value)) score += 100;
   if (selectedState(assignment.state)) score += 1;
   return score;
 }
@@ -166,6 +198,9 @@ function configurationRequirements(parsed) {
       values: [colorWithSuffix, parsed.colorCode],
       expectedCri: parsed.cri,
       expectedCct: parsed.cct,
+      expectedValue: colorWithSuffix,
+      expectedSuffix: parsed.colorSuffix,
+      expectedEfficiency: parsed.efficiency,
     },
     { key: "length", type: "TOKEN", values: [parsed.length] },
     { key: "ip", type: "TOKEN", values: [parsed.ip] },
@@ -245,24 +280,34 @@ export class ConfiguratorApiClient {
   }
 
   async bootstrap(configuratorId, familyCode = "") {
-    const generatedConfigId = globalThis.crypto?.randomUUID?.() || `cfg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const common = { configId: generatedConfigId, name: configuratorId, existingAssignments: [] };
+    const createConfigId = () => globalThis.crypto?.randomUUID?.() || `cfg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const familyAssignment = familyCode ? {
+      action: "updateValues",
+      assignment: { variableName: "Product_Variant.PLM_PFC", valueName: familyCode },
+    } : null;
+    const familyBaselines = [
+      [],
+      [{ variableName: "Internal.PLM_BRD", valueName: "SIG" }],
+      [
+        { variableName: "Internal.PLM_BRD", valueName: "SIG" },
+        { variableName: "Internal.SPADACTIVE", valueName: "1" },
+      ],
+      [{ variableName: "Internal.SPADACTIVE", valueName: "1" }],
+    ];
     const attempts = [
-      ...(familyCode ? [{
-        configId: generatedConfigId,
+      ...(familyAssignment ? familyBaselines.map((existingAssignments) => ({
+        configId: createConfigId(),
         name: configuratorId,
-        existingAssignments: [
-          { variableName: "Internal.PLM_BRD", valueName: "SIG" },
-          { variableName: "Internal.ModelInfo", valueName: "[Other values]" },
-          { variableName: "Internal.SPADACTIVE", valueName: "1" },
-        ],
-        newAssignment: {
-          action: "updateValues",
-          assignment: { variableName: "Product_Variant.PLM_PFC", valueName: familyCode },
-        },
-      }] : []),
-      { ...common, newAssignment: { action: "updateValues", assignment: {} } },
-      common,
+        existingAssignments,
+        newAssignment: familyAssignment,
+      })) : []),
+      {
+        configId: createConfigId(),
+        name: configuratorId,
+        existingAssignments: [],
+        newAssignment: { action: "updateValues", assignment: {} },
+      },
+      { configId: createConfigId(), name: configuratorId, existingAssignments: [] },
     ];
     let lastError = null;
     for (const body of attempts) {
@@ -271,7 +316,7 @@ export class ConfiguratorApiClient {
         const assignments = collectAssignments(payload);
         if (!assignments.length) continue;
         return {
-          configId: findText(payload, ["configid", "config_id"]) || generatedConfigId,
+          configId: findText(payload, ["configid", "config_id"]) || body.configId,
           existingAssignments: assignments.filter((assignment) => selectedState(assignment.state)),
           payload,
         };

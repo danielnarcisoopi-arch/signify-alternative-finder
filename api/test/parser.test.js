@@ -41,6 +41,16 @@ test("parses a tunable-white range returned by the configurator", () => {
   assert.equal(parsed.controlClass, "DALI");
 });
 
+test("parses a current 930UE suffix as an efficiency designation", () => {
+  const parsed = parseReference("DN610B 40S/930UE PSD-E C WH PGO");
+  assert.equal(parsed.colorCode, "930");
+  assert.equal(parsed.cri, 90);
+  assert.equal(parsed.cct, 3000);
+  assert.equal(parsed.efficiency, "UE");
+  assert.equal(parsed.colorSuffix, "");
+  assert.equal(parsed.controlClass, "DALI");
+});
+
 test("preserves the SM350C technical signature", () => {
   const parsed = parseReference("SM350C 50S/840 PSU PCS L1500 WH");
   assert.equal(parsed.family, "SM350C");

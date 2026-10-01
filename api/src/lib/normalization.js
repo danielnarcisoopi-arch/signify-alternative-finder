@@ -90,13 +90,15 @@ function parseColorToken(token) {
   }
   const match = normalized.match(/^(UE|HE|NE)?([789]\d{2})([A-Z]*)$/);
   if (!match) return null;
+  const suffix = match[3] || "";
+  const suffixEfficiency = /^(UE|HE|NE)$/.test(suffix) ? suffix : "";
   return {
     raw: normalized,
-    efficiencyPrefix: match[1] || "",
+    efficiencyPrefix: match[1] || suffixEfficiency,
     colorCode: match[2],
     cri: Number(match[2][0]) * 10,
     cct: Number(match[2].slice(1)) * 100,
-    suffix: match[3] || "",
+    suffix: suffixEfficiency ? "" : suffix,
     cctMin: Number(match[2].slice(1)) * 100,
     cctMax: Number(match[2].slice(1)) * 100,
     tunableWhite: false,

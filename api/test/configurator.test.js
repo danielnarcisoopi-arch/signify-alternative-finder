@@ -108,12 +108,14 @@ test("reads a real-style hierarchical variable with values in child objects", as
   assert.equal(result.selectedControl, "DIA-E");
 });
 
-test("bootstraps DN610BI and selects the closest tunable-white range plus DIA-E", async () => {
+test("bootstraps DN610BI and returns the exact 930UE plus PSD-E configuration", async () => {
   const responses = [
     {
       configId: "generated-session",
       options: [
         { variableName: "v.light_package", valueName: "LED40S", state: "selected" },
+        { variableName: "v.colour", valueName: "930", state: "selectable" },
+        { variableName: "v.colour", valueName: "930UE", state: "selectable" },
         { variableName: "v.colour", valueName: "TW927-965", state: "selectable" },
         { variableName: "v.distribution", valueName: "C", state: "selected" },
         { variableName: "v.finish", valueName: "WH", state: "selected" },
@@ -127,7 +129,9 @@ test("bootstraps DN610BI and selects the closest tunable-white range plus DIA-E"
       configId: "generated-session",
       options: [
         { variableName: "v.light_package", valueName: "LED40S", state: "selected" },
-        { variableName: "v.colour", valueName: "TW927-965", state: "userSelected" },
+        { variableName: "v.colour", valueName: "930", state: "selectable" },
+        { variableName: "v.colour", valueName: "930UE", state: "userSelected" },
+        { variableName: "v.colour", valueName: "TW927-965", state: "selectable" },
         { variableName: "v.distribution", valueName: "C", state: "selected" },
         { variableName: "v.finish", valueName: "WH", state: "selected" },
         { variableName: "v.optic", valueName: "PGO", state: "selected" },
@@ -138,14 +142,14 @@ test("bootstraps DN610BI and selects the closest tunable-white range plus DIA-E"
     },
     {
       configId: "generated-session",
-      commercialDescription: "DN610B 40S/TW927-965 DIA-E C WH PGO",
+      commercialDescription: "DN610B 40S/930UE PSD-E C WH PGO",
       options: [
         { variableName: "v.light_package", valueName: "LED40S", state: "userSelected" },
-        { variableName: "v.colour", valueName: "TW927-965", state: "userSelected" },
+        { variableName: "v.colour", valueName: "930UE", state: "userSelected" },
         { variableName: "v.distribution", valueName: "C", state: "userSelected" },
         { variableName: "v.finish", valueName: "WH", state: "userSelected" },
         { variableName: "v.optic", valueName: "PGO", state: "userSelected" },
-        { variableName: "v.driver", valueName: "DIA-E", state: "userSelected" },
+        { variableName: "v.driver", valueName: "PSD-E", state: "userSelected" },
       ],
     },
   ];
@@ -164,8 +168,32 @@ test("bootstraps DN610BI and selects the closest tunable-white range plus DIA-E"
     requirements: parseReference("DN571B LED40S/930H PSU-E C WH PGO"),
   });
   assert.equal(result.validated, true);
-  assert.equal(result.description, "DN610B 40S/TW927-965 DIA-E C WH PGO");
+  assert.equal(result.description, "DN610B 40S/930UE PSD-E C WH PGO");
   assert.deepEqual(result.appliedRequirements, ["package", "color", "feature-0", "feature-1", "feature-2"]);
-  assert.equal(bodies[1].newAssignment.assignment.valueName, "TW927-965");
-  assert.equal(bodies.at(-1).newAssignment.assignment.valueName, "DIA-E");
+  assert.equal(bodies[0].newAssignment.assignment.valueName, "DN610B");
+  assert.deepEqual(bodies[0].existingAssignments, []);
+  assert.equal(bodies.flatMap((body) => body.existingAssignments).some((entry) => entry.valueName === "[Other values]"), false);
+  assert.equal(bodies[1].newAssignment.assignment.valueName, "930UE");
+  assert.equal(bodies.at(-1).newAssignment.assignment.valueName, "PSD-E");
+});
+
+test("retries DN610BI bootstrap with valid internal baselines and a fresh session id", async () => {
+  const bodies = [];
+  const client = new ConfiguratorApiClient({
+    fetchImpl: async (_url, options) => {
+      const body = JSON.parse(options.body);
+      bodies.push(body);
+      if (bodies.length === 1) return jsonResponse({ message: "first shape rejected" }, 500);
+      return jsonResponse({
+        configId: "official-session",
+        options: [{ variableName: "Product_Variant.PLM_PFC", valueName: "DN610B", state: "selected" }],
+      });
+    },
+  });
+  const session = await client.bootstrap("DN610BI", "DN610B");
+  assert.equal(session.configId, "official-session");
+  assert.equal(bodies.length, 2);
+  assert.notEqual(bodies[0].configId, bodies[1].configId);
+  assert.deepEqual(bodies[1].existingAssignments, [{ variableName: "Internal.PLM_BRD", valueName: "SIG" }]);
+  assert.equal(JSON.stringify(bodies).includes("[Other values]"), false);
 });

@@ -64,7 +64,7 @@ test("returns a configurable-only product in a dynamically discovered successor 
   const configuratorClient = {
     validateControlChange: async ({ configuratorId, requirements }) => ({
       validated: true,
-      description: "DN610B 40S/TW927-965 DIA-E C WH PGO",
+      description: "DN610B 40S/930UE PSD-E C WH PGO",
       orderCode: "",
       configuratorId,
       configId: "official-session",
@@ -79,7 +79,7 @@ test("returns a configurable-only product in a dynamically discovered successor 
   assert.equal(result.recommended.orderCode, null);
   assert.equal(result.familyMigration.oldFamily, "DN571B");
   assert.equal(result.familyMigration.currentFamily, "DN610B");
-  assert.equal(result.recommended.description, "DN610B 40S/TW927-965 DIA-E C WH PGO");
+  assert.equal(result.recommended.description, "DN610B 40S/930UE PSD-E C WH PGO");
   assert.equal(result.familyMigration.discoveryMode, "UNIQUE_TECHNICAL_SIGNATURE");
 });
 
