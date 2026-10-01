@@ -59,3 +59,11 @@ test("preserves the SM350C technical signature", () => {
   assert.equal(parsed.length, "L1500");
   assert.deepEqual(parsed.features, ["PCS", "WH"]);
 });
+
+test("extracts an embedded 12NC without losing the written reference", () => {
+  const parsed = parseReference("SM350C 50S/840 PSD PCS L1500 WH 910925868386");
+  assert.equal(parsed.orderCode, "910925868386");
+  assert.equal(parsed.reference, "SM350C 50S/840 PSD PCS L1500 WH");
+  assert.equal(parsed.family, "SM350C");
+  assert.equal(parsed.controlClass, "DALI");
+});

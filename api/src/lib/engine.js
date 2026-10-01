@@ -14,69 +14,6 @@ const RESULT_LABELS = {
   SOURCE_UNAVAILABLE: "Source unavailable",
   NEEDS_REVIEW: "Input needs review",
 };
-const VERIFIED_RECOVERY_RULES = [
-  {
-    sourceFamily: "DN571B",
-    sourceControl: "ON_OFF",
-    targetFamily: "DN610B",
-    configuratorId: "DN610BI",
-    description: "DN610B 40S/930UE PSD-E C WH PGO",
-    targetControl: "DALI",
-    match: (parsed) => parsed.packageCanonical === "40S" && parsed.cri === 90 && parsed.cct === 3000
-      && (parsed.features || []).includes("C") && (parsed.features || []).includes("WH") && (parsed.features || []).includes("PGO"),
-  },
-  {
-    sourceFamily: "SM350C",
-    sourceControl: "DALI",
-    targetFamily: "SM350C",
-    configuratorId: "SM350CI",
-    description: "SM350C 50S/840 PSU PCS L1500 WH",
-    orderCode: "910925868380",
-    targetControl: "ON_OFF",
-    match: (parsed) => parsed.packageCanonical === "50S" && parsed.cri === 80 && parsed.cct === 4000
-      && parsed.length === "L1500" && (parsed.features || []).includes("PCS") && (parsed.features || []).includes("WH"),
-  },
-];
-
-async function tryVerifiedRecovery(productClient, parsed, originalProduct, successorDiscovery) {
-  const rule = VERIFIED_RECOVERY_RULES.find((entry) => normalizeText(entry.sourceFamily) === normalizeText(parsed.family)
-    && entry.sourceControl === parsed.controlClass && entry.targetControl === parsed.targetControlClass && entry.match(parsed));
-  if (!rule) return null;
-
-  if (rule.sourceFamily !== rule.targetFamily) {
-    if (!successorDiscovery?.validated || normalizeText(successorDiscovery.candidate?.code) !== normalizeText(rule.targetFamily)) return null;
-  }
-
-  if (rule.orderCode) {
-    const official = await productClient.resolveOrderCode(rule.orderCode);
-    if (!official || normalizeText(official.description) !== normalizeText(rule.description) || official.controlClass !== rule.targetControl) return null;
-    const assessment = assessCandidate(parsed, official, {
-      originalProduct,
-      targetControlClass: parsed.targetControlClass,
-      allowFamilyChange: rule.sourceFamily !== rule.targetFamily,
-      verified: true,
-    });
-    if (!assessment.safeToRecommend) return null;
-    if (!official.configuratorId) official.configuratorId = rule.configuratorId;
-    return standardResponse(parsed, originalProduct, assessment, [], successorDiscovery?.evidence || null);
-  }
-
-  const configured = {
-    description: rule.description, orderCode: "", is12nc: false, family: rule.targetFamily,
-    parsed: parseReference(rule.description), controlClass: rule.targetControl, configuratorId: rule.configuratorId,
-    url: "", source: { system: "SIGNIFY_CONFIGURATOR_RECOVERY" },
-  };
-  const assessment = assessCandidate(parsed, configured, {
-    originalProduct, targetControlClass: parsed.targetControlClass,
-    allowFamilyChange: rule.sourceFamily !== rule.targetFamily, verified: true, requires12nc: false,
-  });
-  if (!assessment.safeToRecommend) return null;
-  return configurableResponse(parsed, originalProduct, {
-    result: { configuratorId: rule.configuratorId, configId: "recovery-rule" }, configured, assessment,
-    familyMigration: successorDiscovery?.evidence || null,
-  });
-}
-
 
 function deduplicate(products) {
   const seen = new Set();
@@ -113,6 +50,17 @@ function compactAssessment(assessment) {
     changes: assessment.changes,
     productUrl: assessment.candidate.url || null,
   };
+}
+
+async function ensureConfiguratorId(productClient, product) {
+  if (!product || product.configuratorId || !product.family || typeof productClient.resolveFamilyMetadata !== "function") return product;
+  try {
+    const metadata = await productClient.resolveFamilyMetadata(product.family);
+    if (metadata?.configuratorId) product.configuratorId = metadata.configuratorId;
+  } catch {
+    // Configurator metadata is useful presentation context, but must never invalidate an otherwise verified product.
+  }
+  return product;
 }
 
 function standardResponse(parsed, originalProduct, assessment, alternatives = [], familyMigration = null) {
@@ -414,7 +362,10 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       const sameFamily = await collectSameFamilyCandidates(productClient, effective, originalProduct);
       const verifiedSameFamily = await verifyRanked(productClient, effective, originalProduct, sameFamily.products);
       const safeSameFamily = verifiedSameFamily.filter((assessment) => assessment.safeToRecommend);
-      if (safeSameFamily.length) return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
+      if (safeSameFamily.length) {
+        await ensureConfiguratorId(productClient, safeSameFamily[0].candidate);
+        return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
+      }
 
       const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
       const configuratorAttempts = [];
@@ -463,8 +414,6 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         if (configuredCurrentFamily.result) return configurableResponse(effective, originalProduct, configuredCurrentFamily);
       }
 
-      const recovered = await tryVerifiedRecovery(productClient, effective, originalProduct, successorDiscovery);
-      if (recovered) return recovered;
 
       const migrationCandidates = await collectMigrationCandidates(productClient, effective, originalProduct);
       if (migrationCandidates.length) {

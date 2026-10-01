@@ -294,19 +294,24 @@ export class ConfiguratorApiClient {
       ],
       [{ variableName: "Internal.SPADACTIVE", valueName: "1" }],
     ];
+    const bootstrapAssignments = [
+      ...(familyAssignment ? [familyAssignment] : []),
+      { action: "updateValues", assignment: { variableName: "Internal.PLM_BRD", valueName: "SIG" } },
+      { action: "updateValues", assignment: { variableName: "Internal.SPADACTIVE", valueName: "1" } },
+    ];
     const attempts = [
+      ...bootstrapAssignments.map((newAssignment) => ({
+        configId: createConfigId(),
+        name: configuratorId,
+        existingAssignments: [],
+        newAssignment,
+      })),
       ...(familyAssignment ? familyBaselines.map((existingAssignments) => ({
         configId: createConfigId(),
         name: configuratorId,
         existingAssignments,
         newAssignment: familyAssignment,
       })) : []),
-      {
-        configId: createConfigId(),
-        name: configuratorId,
-        existingAssignments: [],
-        newAssignment: { action: "updateValues", assignment: {} },
-      },
       { configId: createConfigId(), name: configuratorId, existingAssignments: [] },
     ];
     let lastError = null;
@@ -367,6 +372,23 @@ export class ConfiguratorApiClient {
     }
 
     let configId = findText(currentPayload, ["configid", "config_id"]) || session.configId;
+
+    // The family is API-derived metadata, not a hard-coded product rule. Some
+    // configurators bootstrap at brand/root level, so explicitly select the
+    // requested family whenever the API exposes PLM_PFC as a selectable value.
+    if (familyCode) {
+      const familyOption = collectAssignments(currentPayload).find((assignment) => (
+        comparable(assignment.valueName) === comparable(familyCode)
+        && /PLM_PFC|PRODUCT.*FAMILY|FAMILY/i.test(assignment.variableName)
+        && selectableState(assignment.state)
+      ));
+      if (familyOption && !selectedState(familyOption.state)) {
+        currentPayload = await this.applyAssignment(configuratorId, configId, currentAssignments, familyOption);
+        configId = findText(currentPayload, ["configid", "config_id"]) || configId;
+        currentAssignments = selectedAssignments(currentPayload, currentAssignments);
+      }
+    }
+
     const appliedRequirements = [];
     const unresolvedRequirements = [];
     for (const requirement of configurationRequirements(requirements)) {

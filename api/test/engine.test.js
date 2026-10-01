@@ -171,7 +171,7 @@ for (const regression of [
   });
 }
 
-test("recovers the DN571B to DN610BI configuration when the live configurator session returns HTTP 500", async () => {
+test("uses API-discovered successor metadata and configurator output for DN571B", async () => {
   const productClient = {
     searchProducts: async () => ({ products: [], families: [] }),
     searchFacets: async ({ query }) => ({ products: [], families: [{ code: "DN610B", name: "LuxSpace Compact, recessed", configuratorId: "DN610BI", source: { query } }] }),
@@ -180,7 +180,10 @@ test("recovers the DN571B to DN610BI configuration when the live configurator se
     resolveOrderCode: async () => null,
     verifyStandardProduct: async () => null,
   };
-  const configuratorClient = { validateControlChange: async () => ({ validated: false, reason: "CONFIGURATOR_SESSION_NOT_AVAILABLE", errorCode: "HTTP_ERROR", httpStatus: 500 }) };
+  const configuratorClient = { validateControlChange: async ({ configuratorId, familyCode }) => ({
+    validated: configuratorId === "DN610BI" && familyCode === "DN610B",
+    configuratorId, description: "DN610B 40S/930UE PSD-E C WH PGO", orderCode: "", configId: "api-session",
+  }) };
   const result = await createEngine({ productClient, configuratorClient })("DN571B LED40S/930H PSU-E C WH PGO");
   assert.equal(result.status, "VERIFIED_CONFIGURABLE_PRODUCT");
   assert.equal(result.recommended.configuratorId, "DN610BI");
@@ -205,4 +208,39 @@ test("resolves the inverse SM350C DALI to PSU request and keeps SM350CI", async 
     assert.equal(result.recommended.orderCode, "910925868380");
     assert.equal(result.recommended.configuratorId, "SM350CI");
   }
+});
+
+test("resolves DN610B DALI back to the DN610BI PSU-E configuration", async () => {
+  const productClient = {
+    searchProducts: async () => ({ products: [], families: [] }),
+    searchFacets: async () => ({ products: [], families: [] }),
+    searchFamily: async () => [],
+    resolveOrderCode: async () => null,
+    verifyStandardProduct: async () => null,
+    resolveFamilyMetadata: async () => ({ code: "DN610B", name: "LuxSpace Compact", configuratorId: "DN610BI", raw: {} }),
+  };
+  const configuratorClient = { validateControlChange: async ({ configuratorId, familyCode }) => ({
+    validated: configuratorId === "DN610BI" && familyCode === "DN610B",
+    configuratorId, description: "DN610B 40S/930UE PSU-E C WH PGO", orderCode: "", configId: "api-session",
+  }) };
+  const result = await createEngine({ productClient, configuratorClient })("DN610B 40S/930UE PSD-E C WH PGO");
+  assert.equal(result.status, "VERIFIED_CONFIGURABLE_PRODUCT");
+  assert.equal(result.recommended.configuratorId, "DN610BI");
+  assert.equal(result.recommended.description, "DN610B 40S/930UE PSU-E C WH PGO");
+});
+
+test("accepts SM350C description plus 12NC and returns PSU with SM350CI", async () => {
+  const dali = apiProduct("SM350C 50S/840 PSD PCS L1500 WH", "910925868386", "FK_LP_DIMMING_CONTROLS_DALI");
+  const psu = apiProduct("SM350C 50S/840 PSU PCS L1500 WH", "910925868380", "FK_LP_DIMMING_CONTROLS_NO");
+  const productClient = {
+    searchProducts: async ({ controlClass }) => ({ products: controlClass === "ON_OFF" ? [psu] : [dali] }),
+    searchFamily: async () => [psu],
+    resolveOrderCode: async (code) => code === "910925868386" ? dali : code === "910925868380" ? psu : null,
+    verifyStandardProduct: async (product) => product.orderCode === psu.orderCode ? psu : null,
+    resolveFamilyMetadata: async () => ({ code: "SM350C", name: "KeyLine", configuratorId: "SM350CI", raw: {} }),
+  };
+  const result = await createEngine({ productClient, configuratorClient: noConfigurator })("SM350C 50S/840 PSD PCS L1500 WH 910925868386");
+  assert.equal(result.recommended.description, "SM350C 50S/840 PSU PCS L1500 WH");
+  assert.equal(result.recommended.orderCode, "910925868380");
+  assert.equal(result.recommended.configuratorId, "SM350CI");
 });

@@ -117,9 +117,9 @@ export function extractFamilyCode(value) {
 export function parseReference(value) {
   const input = normalizeText(value);
   const pureOrderCode = /^\d{8,18}$/.test(input) ? input : "";
-  const leadingOrderCode = input.match(/^(\d{8,18})\s*[-:]?\s+(.+)$/);
-  const orderCode = pureOrderCode || leadingOrderCode?.[1] || "";
-  const reference = leadingOrderCode?.[2] || (pureOrderCode ? "" : input);
+  const embeddedOrderCode = pureOrderCode ? null : input.match(/(?:^|\s)(\d{8,18})(?=\s|$)/);
+  const orderCode = pureOrderCode || embeddedOrderCode?.[1] || "";
+  const reference = pureOrderCode ? "" : input.replace(new RegExp(`(?:^|\\s)${orderCode}(?=\\s|$)`), " ").replace(/\s+/g, " ").trim();
   const tokens = reference.replace(/\//g, " ").split(/\s+/).filter(Boolean);
   const family = extractFamilyCode(reference);
   const generation = firstMatch(tokens, /^G\d+[A-Z]*$/);

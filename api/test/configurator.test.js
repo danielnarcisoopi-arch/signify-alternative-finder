@@ -70,7 +70,7 @@ test("does not validate when an official configurator session cannot be bootstra
   const result = await client.validateControlChange({ configuratorId: "DN500BI", seed: null, sourceControlClass: "ON_OFF", targetControlClass: "DALI" });
   assert.equal(result.validated, false);
   assert.equal(result.reason, "CONFIGURATOR_SESSION_NOT_AVAILABLE");
-  assert.equal(calls, 2);
+  assert.equal(calls, 3);
 });
 
 test("reads a real-style hierarchical variable with values in child objects", async () => {
@@ -194,6 +194,7 @@ test("retries DN610BI bootstrap with valid internal baselines and a fresh sessio
   assert.equal(session.configId, "official-session");
   assert.equal(bodies.length, 2);
   assert.notEqual(bodies[0].configId, bodies[1].configId);
-  assert.deepEqual(bodies[1].existingAssignments, [{ variableName: "Internal.PLM_BRD", valueName: "SIG" }]);
+  assert.equal(bodies[1].newAssignment.assignment.variableName, "Internal.PLM_BRD");
+  assert.equal(bodies[1].newAssignment.assignment.valueName, "SIG");
   assert.equal(JSON.stringify(bodies).includes("[Other values]"), false);
 });
