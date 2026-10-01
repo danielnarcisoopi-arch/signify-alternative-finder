@@ -247,9 +247,17 @@ export async function discoverSuccessorFamilies(productClient, parsed, legacyFam
   const products = successful.flatMap((value) => value.products || []);
   const families = successful.flatMap((value) => value.families || []);
   const ranked = rankGroups(parsed, effectiveLegacyFamily, groupEvidence(families, products));
-  const top = ranked[0];
-  const runnerUp = ranked[1];
-  const sufficientMargin = !runnerUp || top.score - runnerUp.score >= 20 || top.explicitSuccessor;
+  // A unique configurable family returned by the official Product API for the
+  // exact, complete user reference is direct discovery evidence. Do not let
+  // broader relaxed searches make that result ambiguous merely because they
+  // also return technically similar families. This remains fully data-driven.
+  const exactInputCandidates = ranked.filter((candidate) =>
+    candidate.exactInputEvidence && candidate.hasConfigurator && candidate.samePrefix && candidate.validated
+  );
+  const top = exactInputCandidates.length === 1 ? exactInputCandidates[0] : ranked[0];
+  const runnerUp = ranked.find((candidate) => candidate !== top);
+  const uniqueExactInput = exactInputCandidates.length === 1 && top === exactInputCandidates[0];
+  const sufficientMargin = uniqueExactInput || !runnerUp || top.score - runnerUp.score >= 20 || top.explicitSuccessor;
   const validated = Boolean(top?.validated && sufficientMargin);
   return {
     validated,

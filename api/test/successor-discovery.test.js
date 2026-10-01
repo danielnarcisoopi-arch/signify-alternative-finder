@@ -133,3 +133,37 @@ test("prioritizes a configurable successor returned for the complete original re
   assert.equal(result.candidate.family.configuratorId, "ZX200BI");
   assert.equal(result.evidence.exactInputEvidence, true);
 });
+
+test("a unique exact-reference configurable family wins over ambiguous relaxed-search candidates", async () => {
+  const parsed = parseReference("ZX500B 20S/840 PSU-E WR WH PCO");
+  const direct = createProduct({
+    displayed_order_code_description: { value: "ZX610B 20S/840UE PSU-E WR WH PCO" },
+    family_id: { value: "LP_CF_ZX610B_EU" },
+    family_name: { value: "ExampleSpace Compact recessed" },
+    configurator_id: { value: "ZX610BI" },
+  }, { query: parsed.input });
+  const distractor = createProduct({
+    displayed_order_code_description: { value: "ZX572B 20S/840 PSD-E WR WH PCO" },
+    family_id: { value: "LP_CF_ZX572B_EU" },
+    family_name: { value: "ExampleSpace recessed" },
+    configurator_id: { value: "ZX572BI" },
+  }, { query: "20S 840 WR WH PCO DALI" });
+  const client = {
+    searchProducts: async ({ query }) => query === parsed.input
+      ? { products: [direct], families: [] }
+      : { products: [distractor], families: [] },
+    searchFacets: async ({ query }) => ({
+      products: [],
+      families: query === parsed.input ? [{
+        code: "ZX610B", name: "ExampleSpace Compact recessed", configuratorId: "ZX610BI", source: { query },
+      }] : [{
+        code: "ZX572B", name: "ExampleSpace recessed", configuratorId: "ZX572BI", source: { query },
+      }],
+    }),
+  };
+  const result = await discoverSuccessorFamilies(client, parsed, { code: "ZX500B", name: "", raw: null });
+  assert.equal(result.validated, true);
+  assert.equal(result.candidate.code, "ZX610B");
+  assert.equal(result.candidate.family.configuratorId, "ZX610BI");
+  assert.equal(result.evidence.exactInputEvidence, true);
+});
