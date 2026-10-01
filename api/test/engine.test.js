@@ -219,3 +219,36 @@ test("carries current-family efficiency metadata into successor configuration wi
   assert.equal(result.recommended.configuratorId, "ZX200BI");
   assert.equal(result.recommended.description, "ZX200B 40S/930UE PSD-E C WH PGO");
 });
+
+test("surfaces a current-family configuration when the official successor is known but configurator session returns 500", async () => {
+  const carrier = createProduct({
+    displayed_order_code_description: { value: "DN610B 20S/840UE PSU-E C WH PGO" },
+    configuratorId: "DN610BI",
+    filter_keys: { value: ["FK_LP_DIMMING_CONTROLS_NO"] },
+    family_id: { value: "LP_CF_DN610B_EU" },
+  }, { query: "DN571B LED40S/930H PSU-E C WH PGO" });
+  const productClient = {
+    searchProducts: async ({ query }) => ({ products: query === "DN571B LED40S/930H PSU-E C WH PGO" ? [carrier] : [], families: [] }),
+    searchFacets: async () => ({ products: [], families: [] }),
+    resolveFamilyMetadata: async () => null,
+    searchFamily: async () => [],
+    resolveOrderCode: async () => null,
+    verifyStandardProduct: async () => null,
+  };
+  const configuratorClient = {
+    validateControlChange: async () => ({
+      validated: false,
+      reason: "CONFIGURATOR_SESSION_NOT_AVAILABLE",
+      errorCode: "HTTP_ERROR",
+      httpStatus: 500,
+    }),
+  };
+  const engine = createEngine({ productClient, configuratorClient });
+  const result = await engine("DN571B LED40S/930H PSU-E C WH PGO");
+  assert.equal(result.status, "CURRENT_FAMILY_CONFIGURATION_IDENTIFIED");
+  assert.equal(result.recommended.configuratorId, "DN610BI");
+  assert.equal(result.recommended.description, "DN610B 40S/930UE PSD-E C WH PGO");
+  assert.equal(result.validation.verified, false);
+  assert.equal(result.configurators.length, 1);
+  assert.equal(result.configurators[0].httpStatus, 500);
+});

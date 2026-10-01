@@ -8,6 +8,7 @@ const STATUS_LABELS = {
   CLOSEST_VERIFIED_TECHNICAL_MATCH: "Alternativa técnica verificada mais próxima",
   CURRENT_FAMILY_VERIFIED_MATCH: "Alternativa verificada da família atual",
   VERIFIED_CONFIGURABLE_PRODUCT: "Configuração verificada",
+  CURRENT_FAMILY_CONFIGURATION_IDENTIFIED: "Configuração da família atual identificada",
   NO_VERIFIED_ALTERNATIVE: "Sem alternativa verificada",
   SOURCE_UNAVAILABLE: "Fonte oficial indisponível",
   NEEDS_REVIEW: "Referência por rever",
@@ -66,7 +67,9 @@ function Validation({ validation }) {
 
 function Result({ result }) {
   const isSuccess = Boolean(result.recommended && result.validation?.verified);
-  const statusClass = isSuccess ? "success" : result.status === "SOURCE_UNAVAILABLE" ? "warning" : "neutral";
+  const hasIdentifiedConfiguration = Boolean(result.recommended && result.status === "CURRENT_FAMILY_CONFIGURATION_IDENTIFIED");
+  const showRecommended = isSuccess || hasIdentifiedConfiguration;
+  const statusClass = isSuccess ? "success" : hasIdentifiedConfiguration ? "warning" : result.status === "SOURCE_UNAVAILABLE" ? "warning" : "neutral";
   return (
     <section className="result-panel" aria-live="polite">
       <div className="result-heading">
@@ -74,9 +77,9 @@ function Result({ result }) {
         {result.compatibility && result.compatibility !== "NONE" && <span className="compatibility">{result.compatibility.replaceAll("_", " ")}</span>}
       </div>
 
-      <div className={isSuccess ? "comparison" : "comparison single"}>
+      <div className={showRecommended ? "comparison" : "comparison single"}>
         <ProductCard title="Original" product={result.original} />
-        {isSuccess && <ProductCard title="Alternativa recomendada" product={result.recommended} recommended />}
+        {showRecommended && <ProductCard title={isSuccess ? "Alternativa recomendada" : "Configuração identificada"} product={result.recommended} recommended />}
       </div>
 
       <Validation validation={result.validation} />

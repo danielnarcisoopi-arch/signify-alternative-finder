@@ -262,6 +262,55 @@ async function tryConfigurators(configuratorClient, parsed, products, options = 
   return { result: null, configured: null, assessment: null, attempted };
 }
 
+
+function inferredCurrentFamilyConfiguration(parsed, successorDiscovery) {
+  if (!successorDiscovery?.validated || !successorDiscovery?.candidate) return null;
+  const successor = successorDiscovery.candidate;
+  const carrier = configuratorCarrier(successor);
+  if (!carrier?.configuratorId || !successor.code) return null;
+
+  // Build only from information already established by official Product API data:
+  // current family/configurator from successor discovery, technical requirements
+  // from the user's reference, and current-generation efficiency/board marker from
+  // the carrier product. No family/product identifiers are hard-coded here.
+  const carrierParsed = carrier.parsed || parseReference(carrier.description || '');
+  const packageCode = parsed.packageCanonical || parsed.package || carrierParsed.packageCanonical || carrierParsed.package;
+  const efficiency = carrierParsed.efficiency || parsed.efficiency || '';
+  const colorSuffix = efficiency ? '' : (parsed.colorSuffix || '');
+  const color = parsed.colorCode ? `${parsed.colorCode}${efficiency || colorSuffix}` : '';
+  const targetDriver = controlSearchTerms(parsed.targetControlClass, parsed.driver)[0] || '';
+  const features = (parsed.features || []).filter(Boolean);
+  const description = [successor.code, packageCode && color ? `${packageCode}/${color}` : packageCode || color, targetDriver, ...features]
+    .filter(Boolean).join(' ');
+  if (!description || !targetDriver) return null;
+
+  return {
+    status: 'CURRENT_FAMILY_CONFIGURATION_IDENTIFIED',
+    statusLabel: 'Configuração da família atual identificada',
+    resultType: 'CURRENT_FAMILY_CONFIGURATION_IDENTIFIED',
+    compatibility: 'CURRENT_FAMILY',
+    recommended: {
+      description,
+      orderCode: null,
+      productCode: null,
+      family: successor.code,
+      control: displayControl(parsed.targetControlClass),
+      configuratorId: carrier.configuratorId,
+      configurationId: null,
+    },
+    currentFamily: successor.code,
+    familyMigration: successorDiscovery.evidence || null,
+    validation: {
+      verified: false,
+      source: 'Signify Product API',
+      method: 'Família/configurador identificados oficialmente; configuração reconstruída a partir dos requisitos técnicos porque a sessão do Configurator não ficou disponível',
+      checkedAt: new Date().toISOString(),
+    },
+    reason: 'CONFIGURATOR_SESSION_UNAVAILABLE_CONFIGURATION_IDENTIFIED',
+    message: `A família atual ${successor.code} e o configurador ${carrier.configuratorId} foram identificados pela Product API. A configuração técnica foi reconstruída com os dados oficiais disponíveis, mas a sessão do Configurator não confirmou a seleção final.`,
+  };
+}
+
 function configurableResponse(parsed, originalProduct, configuredResult) {
   const { result, configured, assessment, familyMigration = null } = configuredResult;
   return {
@@ -390,6 +439,22 @@ export function createEngine({ productClient = new ProductApiClient(), configura
           });
           configuratorAttempts.push(...configuredSuccessor.attempted);
           if (configuredSuccessor.result) return configurableResponse(effective, originalProduct, configuredSuccessor);
+
+          // The official catalogue has already established the current family and
+          // configurator. If only the Configurator session itself is unavailable
+          // (for example HTTP 500), do not throw that discovery away. Surface the
+          // reconstructed current-family configuration as identified-but-unverified.
+          const primaryAttempt = configuredSuccessor.attempted.find((attempt) => attempt.id === carrier?.configuratorId);
+          if (primaryAttempt?.reason === 'CONFIGURATOR_SESSION_NOT_AVAILABLE') {
+            const inferred = inferredCurrentFamilyConfiguration(effective, successorDiscovery);
+            if (inferred) {
+              return {
+                ...inferred,
+                original: originalProduct ? productSummary(originalProduct) : { input: effective.input, description: effective.reference, family: effective.family, control: displayControl(effective.controlClass) },
+                configurators: configuredSuccessor.attempted,
+              };
+            }
+          }
         }
       }
 
