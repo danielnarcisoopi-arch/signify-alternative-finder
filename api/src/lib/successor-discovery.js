@@ -148,7 +148,12 @@ function rankGroups(parsed, legacyFamily, groups) {
       }, { score: 0, comparable: 0, product: null });
       const hasConfigurator = Boolean(group.family?.configuratorId || group.products.some((product) => product.configuratorId));
       const queryEvidence = group.queries.size;
+      // A configurable family returned by the official Product API for the exact,
+      // complete user reference is strong migration evidence. This is generic:
+      // no family/configurator identifiers are encoded here.
+      const exactInputEvidence = [...group.queries].some((query) => normalizeText(query) === normalizeText(parsed.input));
       const score = (explicit ? 300 : 0)
+        + (exactInputEvidence && hasConfigurator ? 180 : 0)
         + (samePrefix ? 70 : 0)
         + Math.round(familySimilarity * 140)
         + technical.score
@@ -156,6 +161,7 @@ function rankGroups(parsed, legacyFamily, groups) {
         + Math.min(45, queryEvidence * 15)
         + Math.min(20, group.products.length * 3);
       const validated = explicit
+        || (exactInputEvidence && hasConfigurator && samePrefix)
         || (familySimilarity >= 0.75 && technical.score >= 35)
         || (samePrefix && familySimilarity >= 0.5 && technical.score >= 70)
         || (samePrefix && familySimilarity >= 0.9 && Boolean(group.family?.name))
@@ -171,6 +177,7 @@ function rankGroups(parsed, legacyFamily, groups) {
         explicitSuccessor: explicit,
         hasConfigurator,
         queryEvidence,
+        exactInputEvidence,
         score,
         validated,
       };
@@ -181,36 +188,22 @@ function rankGroups(parsed, legacyFamily, groups) {
 function buildQueries(parsed, legacyFamily) {
   const targetTerms = controlSearchTerms(parsed.targetControlClass, parsed.driver);
   const familyTerms = familyNameTokens(legacyFamily?.name).slice(0, 3);
-  const stableFeatures = (parsed.features || []).filter((value) => value && value.length <= 8).slice(0, 5);
+  const technical = [parsed.package, parsed.colorCode, parsed.length, ...(parsed.features || []).slice(0, 4)];
   const structuralPrefix = familyPrefix(parsed.family || legacyFamily?.code);
-  const packageToken = parsed.packageCanonical || parsed.package;
-  const colorToken = parsed.colorCode || "";
-
-  // Search progressively: start with family-name evidence when it exists, then
-  // fall back to a technical fingerprint that deliberately removes legacy-only
-  // spelling (LED40S -> 40S, 930H -> 930).  No family replacement is encoded
-  // here; the Product API results still have to provide and validate the family.
-  const signatures = [
-    [...familyTerms, packageToken, colorToken, ...stableFeatures.slice(0, 3)],
-    [packageToken, colorToken, ...stableFeatures],
-    [packageToken, ...stableFeatures],
-    [colorToken, ...stableFeatures],
-    [structuralPrefix, packageToken, colorToken, ...stableFeatures.slice(0, 2)],
-    [...familyTerms, packageToken, colorToken],
-  ].filter((parts) => parts.filter(Boolean).length >= 2);
-
-  const queries = [];
-  for (const signature of signatures) {
-    for (const control of targetTerms.slice(0, 4)) {
-      queries.push([...signature, control].filter(Boolean).join(" ").trim());
-    }
-  }
-  // A control-neutral query is useful when the API's searchable description
-  // does not contain the generic word DALI/ON-OFF but the control facet does.
-  for (const signature of signatures.slice(0, 4)) {
-    queries.push(signature.filter(Boolean).join(" ").trim());
-  }
-  return [...new Set(queries)].filter((query) => query.split(/\s+/).length >= 2);
+  const queries = [
+    // Always ask the official catalogue the complete reference first. The API
+    // may directly associate a legacy reference with its current configurable family.
+    [parsed.input],
+    [...familyTerms, ...technical, targetTerms[0]],
+    [...familyTerms, parsed.package, parsed.colorCode, targetTerms[1] || targetTerms[0]],
+    [parsed.package, parsed.colorCode, parsed.length, ...(parsed.features || []), targetTerms[0]],
+    [parsed.packageCanonical || parsed.package, ...(parsed.features || []), "DALI"],
+    [structuralPrefix, parsed.packageCanonical || parsed.package, parsed.length, "DALI"],
+    [...(parsed.features || []), "DALI"],
+  ]
+    .map((parts) => parts.filter(Boolean).join(" ").trim())
+    .filter((query) => query.split(/\s+/).length >= 2);
+  return [...new Set(queries)];
 }
 
 export function configuratorCarrier(rankedFamily) {
@@ -275,6 +268,7 @@ export async function discoverSuccessorFamilies(productClient, parsed, legacyFam
       technicalScore: top.technicalScore,
       technicalComparable: top.technicalComparable,
       queryEvidence: top.queryEvidence,
+      exactInputEvidence: top.exactInputEvidence,
       discoveryScore: top.score,
       discoveryMode: top.explicitSuccessor || top.nameSimilarity > 0
         ? "FAMILY_METADATA_AND_TECHNICAL_SIGNATURE"

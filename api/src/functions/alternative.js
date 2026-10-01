@@ -9,8 +9,8 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "20.0.0",
-          mode: "quote-two-stage-validation",
+          version: "11.0.0",
+          mode: "discover-successor-and-validate",
         },
       };
     }

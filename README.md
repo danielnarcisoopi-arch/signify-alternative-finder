@@ -1,8 +1,8 @@
-# Signify Alternative Finder v12
+# Signify Alternative Finder v11
 
 Internal tool for finding a verified PSU/On-Off ↔ PSD/DALI alternative in the official Signify professional-lighting catalogue.
 
-## What v12 changes
+## What v11 changes
 
 - Reads enriched family metadata from the Product API instead of treating search results as a flat list of articles.
 - Discovers a current successor family dynamically from official family identity, family-name continuity and the requested technical signature.
@@ -12,10 +12,8 @@ Internal tool for finding a verified PSU/On-Off ↔ PSD/DALI alternative in the 
 - Keeps exact 12NC revalidation for every standard catalogue product.
 - Continues successor discovery when the obsolete family is no longer returned anywhere in the current catalogue.
 - Uses repeated enriched-facet evidence plus a unique technical signature to identify configurator-only current families.
-- Removes the invalid placeholder assignment that caused HTTP 500 while starting Configurator sessions.
-- Retries session bootstrap with safe, official internal baselines and a fresh configuration ID per attempt.
-- Preserves the requested CRI/CCT and resolves a retired `H` colour designation to a selectable current `UE` variant returned by the Configurator.
-- Prefers `PSD-E` for a selected UltraEfficient configuration while retaining `DIA-E` for the existing fixed-colour and tunable-white flows where appropriate.
+- Understands tunable-white ranges such as `TW927-965` and verifies that the requested fixed CRI/CCT is covered by the range.
+- Prefers the Configurator-native `DIA-E` DALI option when it is selectable and preserves the requested emergency suffix.
 - Reads both flat assignments and hierarchical Configurator responses where a parent variable contains child `values`/`options`.
 - Sends the official configurator page origin/referer on server-side session calls.
 - Reports the precise safe failure stage for every discovered configurator instead of discarding the reason.
@@ -31,7 +29,7 @@ The application never presents a locally generated description as a product. If 
 
 Exact configurable regressions include:
 
-- `DN571B LED40S/930H PSU-E C WH PGO` → configurator `DN610BI` → `DN610B 40S/930UE PSD-E C WH PGO`.
+- `DN571B LED40S/930H PSU-E C WH PGO` → configurator `DN610BI` → `DN610B 40S/TW927-965 DIA-E C WH PGO`.
 - `DN500B 20S/840 PSU-E WR WH PCO` → configurator `DN500BI` → `DN500B 20S/840 DIA-E WR WH PCO`.
 
 These are test fixtures only; the production engine contains no fixed family replacement map.

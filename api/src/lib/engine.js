@@ -1,5 +1,4 @@
 import { ConfiguratorApiClient, ConfiguratorApiError } from "./configurator-api.js";
-import { QuoteApiClient, QuoteApiError } from "./quote-api.js";
 import { assessCandidate, canValidateFamilyMigration, rankCandidates } from "./matcher.js";
 import { controlSearchTerms, displayControl, normalizeText, oppositeControl, parseReference } from "./normalization.js";
 import { ProductApiClient, ProductApiError } from "./product-api.js";
@@ -51,17 +50,6 @@ function compactAssessment(assessment) {
     changes: assessment.changes,
     productUrl: assessment.candidate.url || null,
   };
-}
-
-async function ensureConfiguratorId(productClient, product) {
-  if (!product || product.configuratorId || !product.family || typeof productClient.resolveFamilyMetadata !== "function") return product;
-  try {
-    const metadata = await productClient.resolveFamilyMetadata(product.family);
-    if (metadata?.configuratorId) product.configuratorId = metadata.configuratorId;
-  } catch {
-    // Configurator metadata is useful presentation context, but must never invalidate an otherwise verified product.
-  }
-  return product;
 }
 
 function standardResponse(parsed, originalProduct, assessment, alternatives = [], familyMigration = null) {
@@ -332,64 +320,11 @@ async function collectMigrationCandidates(productClient, parsed, originalProduct
   return products.filter((product) => product.controlClass === parsed.targetControlClass && product.family !== parsed.family);
 }
 
-export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient(), quoteClient = null } = {}) {
+export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient() } = {}) {
   return async function engine(query) {
     const parsed = parseReference(query);
     if (!parsed.input) return { httpStatus: 400, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Introduza uma referência Signify ou um 12NC." };
     try {
-      // Prefer the same Quote APIs used by the production Quote UI for configurable
-      // products. They return the configurator identity and real assignments, so no
-      // family/configurator exception table or brute-force bootstrap is needed.
-      try {
-        const quoteResult = quoteClient ? await quoteClient.findAlternative(parsed.input) : null;
-        if (quoteResult?.validated) {
-          const configured = { description: quoteResult.description, orderCode: quoteResult.orderCode || "", is12nc: false, family: quoteResult.family, parsed: parseReference(quoteResult.description), controlClass: quoteResult.controlClass, configuratorId: quoteResult.configuratorId, url: "", source: { system: "SIGNIFY_QUOTE_API" } };
-          return {
-            status: "VERIFIED_CONFIGURABLE_PRODUCT", statusLabel: RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT, resultType: "VERIFIED_CONFIGURABLE_PRODUCT", compatibility: "CONFIGURABLE_CLOSEST",
-            original: { input: parsed.input, description: parsed.reference, family: parsed.family, control: displayControl(parsed.controlClass) },
-            recommended: { description: configured.description, orderCode: null, productCode: null, family: configured.family, control: displayControl(configured.controlClass), configuratorId: quoteResult.configuratorId, configurationId: null },
-            currentFamily: configured.family, familyMigration: parsed.family && configured.family !== parsed.family ? { fromFamily: parsed.family, toFamily: configured.family, source: "Signify Quote Product API" } : null,
-            changes: [], preserved: [], validation: { verified:true, source:"Signify Quote APIs", method:"Product search assignments + getFromExistingConfigurationWithStatus", checkedAt:new Date().toISOString() },
-            message:"A configuração foi validada pelo mesmo fluxo de configuração usado pelo Signify Quote."
-          };
-        }
-        // If the official Quote search identified a concrete configurable product,
-        // never hide a failed validation by sweeping unrelated configurators.
-        // Return the exact stage/error so production diagnostics are actionable.
-        if (quoteResult?.discovered && !quoteResult?.validated) {
-          return noResult(parsed, {
-            configurators: quoteResult.configuratorId ? [quoteResult.configuratorId] : [],
-            configuratorAttempts: quoteResult.configuratorId ? [{
-              id: quoteResult.configuratorId,
-              validated: false,
-              reason: quoteResult.reason || "QUOTE_CONFIGURATION_NOT_VALIDATED",
-              errorCode: quoteResult.errorCode || null,
-              httpStatus: quoteResult.httpStatus || null,
-              attempts: quoteResult.attempts || [],
-              seedStatus: quoteResult.seedStatus || null,
-            }] : [],
-            inspected: 1,
-            reason: quoteResult.reason || "QUOTE_CONFIGURATION_NOT_VALIDATED",
-            message: `O Quote identificou ${quoteResult.configuratorId || "o configurador"}, mas a validação parou em ${quoteResult.reason || "um erro desconhecido"}.`,
-          });
-        }
-      } catch (quoteError) {
-        if (!(quoteError instanceof QuoteApiError)) throw quoteError;
-        return {
-          httpStatus: 503, status: "SOURCE_UNAVAILABLE", statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, resultType: "SOURCE_UNAVAILABLE",
-          message: `Signify Quote API: ${quoteError.message}`, errorCode: quoteError.code,
-          sourceDetails: { httpStatus: quoteError.details?.status || null, url: quoteError.details?.url || null, body: quoteError.details?.body || null },
-        };
-      }
-
-      // Always preserve the complete user reference in the first catalogue lookup.
-      // This is critical for retired families: the official search can return the
-      // current configurable family only when flux/colour/driver/options are kept.
-      let fullQueryDiscovery = { products: [], families: [] };
-      try {
-        fullQueryDiscovery = await productClient.searchProducts({ query: parsed.input, maxPages: 2, size: 100 });
-      } catch { /* the normal catalogue path below retains its existing error handling */ }
-
       const originalProduct = await resolveOriginal(productClient, parsed);
       const officialParsed = originalProduct ? parseReference(originalProduct.description) : null;
       const effectiveControl = originalProduct?.controlClass !== "UNKNOWN" ? originalProduct?.controlClass : officialParsed?.controlClass;
@@ -416,36 +351,11 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       const sameFamily = await collectSameFamilyCandidates(productClient, effective, originalProduct);
       const verifiedSameFamily = await verifyRanked(productClient, effective, originalProduct, sameFamily.products);
       const safeSameFamily = verifiedSameFamily.filter((assessment) => assessment.safeToRecommend);
-      if (safeSameFamily.length) {
-        await ensureConfiguratorId(productClient, safeSameFamily[0].candidate);
-        return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
-      }
+      if (safeSameFamily.length) return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
 
-      const fullQueryConfigurables = (fullQueryDiscovery.products || []).filter((product) => product.configuratorId);
-      const configuratorPool = deduplicate([originalProduct, ...fullQueryConfigurables, ...sameFamily.products].filter(Boolean));
+      const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
       const configuratorAttempts = [];
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
-
-      // A configurable product returned by the complete official search is stronger
-      // evidence than a family-only/facet sweep. Try it first and never enumerate
-      // unrelated configurators when this evidence exists.
-      if (fullQueryConfigurables.length) {
-        for (const carrier of fullQueryConfigurables.slice(0, 4)) {
-          const familyChanged = Boolean(carrier.family && effective.family && normalizeText(carrier.family) !== normalizeText(effective.family));
-          const directConfigured = await tryConfigurators(configuratorClient, effective, [carrier], {
-            allowFamilyChange: familyChanged, expectedFamily: carrier.family || undefined, originalProduct,
-            migrationEvidence: familyChanged ? { validated: true, evidence: { oldFamily: effective.family, currentFamily: carrier.family, discoveryMode: "FULL_REFERENCE_OFFICIAL_SEARCH" } } : undefined,
-          });
-          configuratorAttempts.push(...directConfigured.attempted);
-          if (directConfigured.result) return configurableResponse(effective, originalProduct, directConfigured);
-        }
-        return noResult(effective, {
-          originalProduct, configuratorAttempts, configurators: fullQueryConfigurables.map(p => p.configuratorId).filter(Boolean),
-          inspected: fullQueryConfigurables.length, reason: "OFFICIAL_CONFIGURABLE_RESULT_NOT_VALIDATED",
-          message: "A pesquisa oficial encontrou o configurador correspondente à referência completa, mas a configuração final não foi validada."
-        });
-      }
-
       let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
       {
         successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily || {
@@ -490,7 +400,6 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         if (configuredCurrentFamily.result) return configurableResponse(effective, originalProduct, configuredCurrentFamily);
       }
 
-
       const migrationCandidates = await collectMigrationCandidates(productClient, effective, originalProduct);
       if (migrationCandidates.length) {
         const verifiedMigration = await verifyRanked(productClient, effective, originalProduct, migrationCandidates, { allowFamilyChange: true });
@@ -531,4 +440,4 @@ export function createEngine({ productClient = new ProductApiClient(), configura
   };
 }
 
-export const engine = createEngine({ quoteClient: new QuoteApiClient() });
+export const engine = createEngine();

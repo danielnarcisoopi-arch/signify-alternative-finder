@@ -130,41 +130,11 @@ function tunableColorScore(assignment, requirement) {
   return 1000 - (cctMax - cctMin) / 100;
 }
 
-function fixedColorScore(assignment, requirement) {
-  if (requirement.type !== "COLOR" || !requirement.expectedCct || !requirement.expectedCri) return -1;
-  const match = normalizeText(assignment.valueName).match(/^(UE|HE|NE)?([789])(\d{2})(UE|HE|NE|H)?$/);
-  if (!match) return -1;
-
-  const candidateCri = Number(match[2]) * 10;
-  const candidateCct = Number(match[3]) * 100;
-  if (candidateCri !== requirement.expectedCri || candidateCct !== requirement.expectedCct) return -1;
-
-  const candidateVariant = match[1] || match[4] || "";
-  const requestedVariant = normalizeText(requirement.expectedEfficiency || requirement.expectedSuffix);
-  let score = 2000;
-  if (candidateVariant === requestedVariant) score += 300;
-  if (!requestedVariant && !candidateVariant) score += 250;
-  // Older H light-colour designations are represented by the current
-  // UltraEfficient (UE) variant when the original option no longer exists.
-  if (requestedVariant === "H" && candidateVariant === "UE") score += 200;
-  if (candidateVariant === "UE") score += 20;
-  return score;
-}
-
 function findRequirementOption(options, requirement) {
-  const exactValues = requirement.type === "COLOR" && requirement.expectedValue
-    ? [requirement.expectedValue]
-    : requirement.values;
-  const exact = options.find((assignment) => requirementMatches(assignment, { ...requirement, values: exactValues }));
+  const exact = options.find((assignment) => requirementMatches(assignment, requirement));
   if (exact) return exact;
   return options
-    .map((assignment) => ({
-      assignment,
-      score: Math.max(
-        fixedColorScore(assignment, requirement),
-        tunableColorScore(assignment, requirement),
-      ),
-    }))
+    .map((assignment) => ({ assignment, score: tunableColorScore(assignment, requirement) }))
     .filter((entry) => entry.score >= 0)
     .sort((left, right) => right.score - left.score)[0]?.assignment || null;
 }
@@ -179,9 +149,7 @@ function controlPreference(assignment, requirements, selected) {
   else if (/^PSD/.test(value)) score += 50;
   if (normalizeText(requirements?.driver).endsWith("-E") && value.endsWith("-E")) score += 20;
   const tunableWhiteSelected = selected.some((entry) => /^TW[789]\d{2}-[789]\d{2}$/i.test(entry.valueName));
-  const ultraEfficientSelected = selected.some((entry) => /^(?:UE[789]\d{2}|[789]\d{2}UE)$/i.test(entry.valueName));
   if (tunableWhiteSelected && /^DIA/.test(value)) score += 100;
-  if (ultraEfficientSelected && /^PSD/.test(value)) score += 100;
   if (selectedState(assignment.state)) score += 1;
   return score;
 }
@@ -198,9 +166,6 @@ function configurationRequirements(parsed) {
       values: [colorWithSuffix, parsed.colorCode],
       expectedCri: parsed.cri,
       expectedCct: parsed.cct,
-      expectedValue: colorWithSuffix,
-      expectedSuffix: parsed.colorSuffix,
-      expectedEfficiency: parsed.efficiency,
     },
     { key: "length", type: "TOKEN", values: [parsed.length] },
     { key: "ip", type: "TOKEN", values: [parsed.ip] },
@@ -280,45 +245,36 @@ export class ConfiguratorApiClient {
   }
 
   async bootstrap(configuratorId, familyCode = "") {
-    const createConfigId = () => globalThis.crypto?.randomUUID?.() || `cfg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const familyValue = normalizeText(familyCode);
-    const starters = [
-      { action: "updateValues", assignment: { variableName: "Internal.PLM_BRD", valueName: "SIG" } },
-      { action: "updateValues", assignment: { variableName: "Internal.SPADACTIVE", valueName: "1" } },
-      ...(familyValue ? [{ action: "updateValues", assignment: { variableName: "Product_Variant.PLM_PFC", valueName: familyValue } }] : []),
+    const generatedConfigId = globalThis.crypto?.randomUUID?.() || `cfg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const common = { configId: generatedConfigId, name: configuratorId, existingAssignments: [] };
+    const attempts = [
+      ...(familyCode ? [{
+        configId: generatedConfigId,
+        name: configuratorId,
+        existingAssignments: [
+          { variableName: "Internal.PLM_BRD", valueName: "SIG" },
+          { variableName: "Internal.ModelInfo", valueName: "[Other values]" },
+          { variableName: "Internal.SPADACTIVE", valueName: "1" },
+        ],
+        newAssignment: {
+          action: "updateValues",
+          assignment: { variableName: "Product_Variant.PLM_PFC", valueName: familyCode },
+        },
+      }] : []),
+      { ...common, newAssignment: { action: "updateValues", assignment: {} } },
+      common,
     ];
-
     let lastError = null;
-    for (const newAssignment of starters) {
-      const body = { configId: createConfigId(), name: configuratorId, existingAssignments: [], newAssignment };
+    for (const body of attempts) {
       try {
-        let payload = await this.update(configuratorId, body);
-        let assignments = collectAssignments(payload);
+        const payload = await this.update(configuratorId, body);
+        const assignments = collectAssignments(payload);
         if (!assignments.length) continue;
-        let configId = findText(payload, ["configid", "config_id"]) || body.configId;
-        let existingAssignments = assignments.filter((assignment) => selectedState(assignment.state));
-
-        // Some configurators reject PLM_PFC as the very first assignment but
-        // expose it after their normal bootstrap variable has been selected.
-        // Discover the family option from that live payload and apply it in the
-        // same session.  This is data-driven and works for any family code.
-        if (familyValue) {
-          const familyOption = assignments.find((assignment) => (
-            normalizeText(assignment.valueName) === familyValue
-            && /PLM_PFC|PRODUCT.*FAMILY|FAMILY/i.test(assignment.variableName)
-          ));
-          const familySelected = existingAssignments.some((assignment) => (
-            normalizeText(assignment.valueName) === familyValue
-            && /PLM_PFC|PRODUCT.*FAMILY|FAMILY/i.test(assignment.variableName)
-          ));
-          if (familyOption && !familySelected) {
-            payload = await this.applyAssignment(configuratorId, configId, existingAssignments, familyOption);
-            assignments = collectAssignments(payload);
-            configId = findText(payload, ["configid", "config_id"]) || configId;
-            existingAssignments = selectedAssignments(payload, existingAssignments);
-          }
-        }
-        return { configId, existingAssignments, payload };
+        return {
+          configId: findText(payload, ["configid", "config_id"]) || generatedConfigId,
+          existingAssignments: assignments.filter((assignment) => selectedState(assignment.state)),
+          payload,
+        };
       } catch (error) {
         lastError = error;
       }
@@ -366,23 +322,6 @@ export class ConfiguratorApiClient {
     }
 
     let configId = findText(currentPayload, ["configid", "config_id"]) || session.configId;
-
-    // The family is API-derived metadata, not a hard-coded product rule. Some
-    // configurators bootstrap at brand/root level, so explicitly select the
-    // requested family whenever the API exposes PLM_PFC as a selectable value.
-    if (familyCode) {
-      const familyOption = collectAssignments(currentPayload).find((assignment) => (
-        comparable(assignment.valueName) === comparable(familyCode)
-        && /PLM_PFC|PRODUCT.*FAMILY|FAMILY/i.test(assignment.variableName)
-        && selectableState(assignment.state)
-      ));
-      if (familyOption && !selectedState(familyOption.state)) {
-        currentPayload = await this.applyAssignment(configuratorId, configId, currentAssignments, familyOption);
-        configId = findText(currentPayload, ["configid", "config_id"]) || configId;
-        currentAssignments = selectedAssignments(currentPayload, currentAssignments);
-      }
-    }
-
     const appliedRequirements = [];
     const unresolvedRequirements = [];
     for (const requirement of configurationRequirements(requirements)) {

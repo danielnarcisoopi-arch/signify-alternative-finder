@@ -102,15 +102,34 @@ test("can use repeated enriched-facet evidence for a configurator-only current f
   assert.ok(result.evidence.queryEvidence >= 2);
 });
 
-
-test("finds a successor through relaxed API queries instead of a preloaded answer", async () => {
-  const current = product("ZX220B 40S/930UE PSD-E C WH PGO", "ExampleSpace Compact recessed", "LP_CF_ZX220B_EU");
+test("prioritizes a configurable successor returned for the complete original reference", async () => {
+  const parsed = parseReference("ZX100B LED40S/930H PSU-E C WH PGO");
   const calls = [];
+  const current = createProduct({
+    displayed_order_code_description: { value: "ZX200B 20S/840UE PSU-E C WH PGO" },
+    family_id: { value: "LP_CF_ZX200B_EU" },
+    family_name: { value: "ExampleSpace Compact, recessed" },
+    configurator_id: { value: "ZX200BI" },
+  }, { query: parsed.input });
   const client = {
-    searchProducts: async ({ query }) => { calls.push(query); const q=String(query).toUpperCase(); const hit=q.includes("40S")&&q.includes("930")&&q.includes("C")&&q.includes("WH")&&!q.includes("930H"); return {products:hit?[current]:[],families:[]}; },
-    searchFacets: async ({ query }) => { const q=String(query).toUpperCase(); const hit=q.includes("40S")&&q.includes("930")&&!q.includes("930H"); return {products:[],families:hit?[{code:"ZX220B",name:"ExampleSpace Compact recessed",configuratorId:"ZX220BI",source:{query}}]:[]}; },
+    searchProducts: async ({ query }) => {
+      calls.push(query);
+      return query === parsed.input ? { products: [current], families: [] } : { products: [], families: [] };
+    },
+    searchFacets: async ({ query }) => ({
+      products: [],
+      families: query === parsed.input ? [{
+        code: "ZX200B",
+        name: "ExampleSpace Compact, recessed",
+        configuratorId: "ZX200BI",
+        source: { query },
+      }] : [],
+    }),
   };
-  const result = await discoverSuccessorFamilies(client, parseReference("ZX100B LED40S/930H PSU-E C WH PGO"), {code:"ZX100B",name:"ExampleSpace recessed",raw:{}});
-  assert.equal(result.validated,true); assert.equal(result.candidate.code,"ZX220B"); assert.equal(result.candidate.family.configuratorId,"ZX220BI");
-  assert.ok(calls.some((query)=>query.includes("40S 930")));
+  const result = await discoverSuccessorFamilies(client, parsed, { code: "ZX100B", name: "", raw: null });
+  assert.equal(calls[0], parsed.input);
+  assert.equal(result.validated, true);
+  assert.equal(result.candidate.code, "ZX200B");
+  assert.equal(result.candidate.family.configuratorId, "ZX200BI");
+  assert.equal(result.evidence.exactInputEvidence, true);
 });

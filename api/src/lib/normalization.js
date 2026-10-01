@@ -90,15 +90,13 @@ function parseColorToken(token) {
   }
   const match = normalized.match(/^(UE|HE|NE)?([789]\d{2})([A-Z]*)$/);
   if (!match) return null;
-  const suffix = match[3] || "";
-  const suffixEfficiency = /^(UE|HE|NE)$/.test(suffix) ? suffix : "";
   return {
     raw: normalized,
-    efficiencyPrefix: match[1] || suffixEfficiency,
+    efficiencyPrefix: match[1] || "",
     colorCode: match[2],
     cri: Number(match[2][0]) * 10,
     cct: Number(match[2].slice(1)) * 100,
-    suffix: suffixEfficiency ? "" : suffix,
+    suffix: match[3] || "",
     cctMin: Number(match[2].slice(1)) * 100,
     cctMax: Number(match[2].slice(1)) * 100,
     tunableWhite: false,
@@ -117,9 +115,9 @@ export function extractFamilyCode(value) {
 export function parseReference(value) {
   const input = normalizeText(value);
   const pureOrderCode = /^\d{8,18}$/.test(input) ? input : "";
-  const embeddedOrderCode = pureOrderCode ? null : input.match(/(?:^|\s)(\d{8,18})(?=\s|$)/);
-  const orderCode = pureOrderCode || embeddedOrderCode?.[1] || "";
-  const reference = pureOrderCode ? "" : input.replace(new RegExp(`(?:^|\\s)${orderCode}(?=\\s|$)`), " ").replace(/\s+/g, " ").trim();
+  const leadingOrderCode = input.match(/^(\d{8,18})\s*[-:]?\s+(.+)$/);
+  const orderCode = pureOrderCode || leadingOrderCode?.[1] || "";
+  const reference = leadingOrderCode?.[2] || (pureOrderCode ? "" : input);
   const tokens = reference.replace(/\//g, " ").split(/\s+/).filter(Boolean);
   const family = extractFamilyCode(reference);
   const generation = firstMatch(tokens, /^G\d+[A-Z]*$/);
