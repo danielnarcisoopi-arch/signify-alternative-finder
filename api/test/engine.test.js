@@ -44,3 +44,99 @@ test("returns a same-family product only after exact-code verification", async (
   assert.equal(result.validation.verified, true);
 });
 
+test("returns a configurable-only product in a dynamically discovered successor family", async () => {
+  const currentConfigurable = createProduct({
+    displayed_order_code_description: { value: "DN610B 40S/930 PSD-E C WH PGO" },
+    filter_keys: { value: ["FK_LP_DIMMING_CONTROLS_DALI"] },
+    family_id: { value: "LP_CF_DN610B_EU" },
+    family_name: { value: "LuxSpace Compact, recessed" },
+    configurator_id: { value: "DN610BI" },
+  });
+  const productClient = {
+    searchProducts: async () => ({ products: [currentConfigurable], families: [] }),
+    searchFacets: async () => ({
+      products: [],
+      families: [{ code: "DN610B", name: "LuxSpace Compact, recessed", configuratorId: "DN610BI" }],
+    }),
+    resolveFamilyMetadata: async () => ({ code: "DN571B", name: "LuxSpace, recessed", raw: {} }),
+    searchFamily: async () => [],
+    resolveOrderCode: async () => null,
+    verifyStandardProduct: async () => null,
+  };
+  const configuratorClient = {
+    validateControlChange: async ({ configuratorId, requirements }) => ({
+      validated: true,
+      description: "DN610B 40S/930 PSD-E C WH PGO",
+      orderCode: "",
+      configuratorId,
+      configId: "official-session",
+      appliedRequirements: requirements.features,
+    }),
+  };
+  const engine = createEngine({ productClient, configuratorClient });
+  const result = await engine("DN571B LED40S/930H PSU-E C WH PGO");
+  assert.equal(result.status, "VERIFIED_CONFIGURABLE_PRODUCT");
+  assert.equal(result.currentFamily, "DN610B");
+  assert.equal(result.recommended.configuratorId, "DN610BI");
+  assert.equal(result.recommended.orderCode, null);
+  assert.equal(result.familyMigration.oldFamily, "DN571B");
+  assert.equal(result.familyMigration.currentFamily, "DN610B");
+});
+
+test("uses a same-family configurator id supplied by official family metadata", async () => {
+  const productClient = {
+    searchProducts: async () => ({ products: [], families: [] }),
+    searchFamily: async () => [],
+    resolveOrderCode: async () => null,
+    verifyStandardProduct: async () => null,
+    resolveFamilyMetadata: async () => ({
+      code: "DN500B",
+      name: "CoreLine Downlight",
+      configuratorId: "DN500BI",
+      raw: {},
+    }),
+  };
+  const configuratorClient = {
+    validateControlChange: async ({ configuratorId }) => ({
+      validated: true,
+      description: "DN500B 20S/840 PSD-E C WH",
+      orderCode: "",
+      configuratorId,
+      configId: "official-session",
+    }),
+  };
+  const engine = createEngine({ productClient, configuratorClient });
+  const result = await engine("DN500B 20S/840 PSU-E C WH");
+  assert.equal(result.status, "VERIFIED_CONFIGURABLE_PRODUCT");
+  assert.equal(result.currentFamily, "DN500B");
+  assert.equal(result.recommended.configuratorId, "DN500BI");
+  assert.equal(result.recommended.orderCode, null);
+});
+
+for (const regression of [
+  {
+    input: "WT120C G3 60S/840 PSU L1200",
+    output: "WT120C G3 60S/840 PSD L1200",
+    orderCode: "911401838588",
+  },
+  {
+    input: "BY120P G6 LED150/UE840 PSU WB",
+    output: "BY120P G6 LED150/UE840 PSD WB",
+    orderCode: "911401899999",
+  },
+]) {
+  test(`preserves the verified same-family path for ${regression.input.split(" ")[0]}`, async () => {
+    const original = apiProduct(regression.input, "910500000001", "FK_LP_DIMMING_CONTROLS_NO");
+    const candidate = apiProduct(regression.output, regression.orderCode, "FK_LP_DIMMING_CONTROLS_DALI");
+    const productClient = {
+      searchProducts: async ({ controlClass }) => ({ products: controlClass === "DALI" ? [candidate] : [original] }),
+      searchFamily: async () => [candidate],
+      resolveOrderCode: async (code) => code === candidate.orderCode ? candidate : null,
+      verifyStandardProduct: async (product) => product.orderCode === candidate.orderCode ? candidate : null,
+    };
+    const engine = createEngine({ productClient, configuratorClient: noConfigurator });
+    const result = await engine(regression.input);
+    assert.equal(result.status, "DIRECT_VERIFIED_MATCH");
+    assert.equal(result.recommended.orderCode, regression.orderCode);
+  });
+}

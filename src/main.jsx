@@ -69,6 +69,20 @@ function Result({ result }) {
 
       <Validation validation={result.validation} />
 
+      {result.familyMigration && (
+        <div className="detail-block migration">
+          <h3>Família atual identificada</h3>
+          <p>
+            <strong>{result.familyMigration.oldFamily}</strong>
+            <span aria-hidden="true"> → </span>
+            <strong>{result.familyMigration.currentFamily}</strong>
+          </p>
+          <small>
+            Relação determinada pelos metadados oficiais da família e pela compatibilidade técnica; não por uma tabela fixa.
+          </small>
+        </div>
+      )}
+
       {result.changes?.length > 0 && (
         <div className="detail-block changes">
           <h3>O que muda</h3>
@@ -184,17 +198,16 @@ function App() {
             {loading ? <><span className="spinner" />A validar…</> : "Encontrar alternativa"}
           </button>
         </div>
-        <p className="hint">A pesquisa pode demorar alguns segundos porque o resultado é novamente verificado pelo 12NC.</p>
+        <p className="hint">A pesquisa pode demorar alguns segundos: um artigo standard é confirmado pelo 12NC; uma solução configurável é confirmada pelo Configurator.</p>
       </form>
 
       {result && <Result result={result} />}
 
       <footer>
-        <strong>Regra de segurança:</strong> nenhuma referência gerada por texto é apresentada como produto. Sem validação oficial, o resultado será “Sem alternativa verificada”.
+        <strong>Regra de segurança:</strong> nenhuma referência gerada por texto é apresentada como produto. É necessária validação pelo Product API ou pelo Configurator API.
       </footer>
     </main>
   );
 }
 
 createRoot(document.getElementById("root")).render(<App />);
-

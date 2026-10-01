@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ProductApiClient, ProductApiError } from "../src/lib/product-api.js";
+import { ProductApiClient, ProductApiError, familyCodeFromId } from "../src/lib/product-api.js";
 
 test("rejects an empty Product API response with a structured error", async () => {
   const client = new ProductApiClient({
@@ -32,4 +32,26 @@ test("paginates catalogue results", async () => {
   const result = await client.searchProducts({ query: "DN142B", size: 2 });
   assert.deepEqual(pages, [1, 2]);
   assert.equal(result.products.length, 3);
+});
+
+test("extracts family metadata and the official configurator id from enriched facets", async () => {
+  const client = new ProductApiClient({
+    fetchImpl: async () => ({
+      ok: true,
+      status: 200,
+      text: async () => JSON.stringify({
+        dataEnrichment: {
+          familyData: [{
+            family_id: { value: "LP_CF_DN610B_EU" },
+            family_name: { value: "LuxSpace Compact, recessed" },
+            configurator_id: { value: "DN610BI" },
+          }],
+        },
+      }),
+    }),
+  });
+  const result = await client.searchFacets({ query: "LuxSpace 40S 930 DALI" });
+  assert.equal(result.families[0].code, "DN610B");
+  assert.equal(result.families[0].configuratorId, "DN610BI");
+  assert.equal(familyCodeFromId("LP_CF_WT120C_EU"), "WT120C");
 });

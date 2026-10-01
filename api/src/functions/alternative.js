@@ -9,8 +9,8 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "8.0.0",
-          mode: "validate-before-recommend",
+          version: "9.0.0",
+          mode: "discover-successor-and-validate",
         },
       };
     }
@@ -41,4 +41,3 @@ app.http("alternative", {
     return { status: httpStatus, jsonBody };
   },
 });
-

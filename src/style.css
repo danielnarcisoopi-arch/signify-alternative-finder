@@ -272,6 +272,9 @@ dd { margin: 0; color: #17324f; font-weight: 700; }
 .detail-block li { margin: 6px 0; line-height: 1.45; }
 .changes { border-left: 4px solid #e2a126; background: #fffaf0; }
 .preserved { border-left: 4px solid #2c9a5d; }
+.migration { border-left: 4px solid #287cc1; background: #f3f8fd; }
+.migration p { color: #173e63; font-size: 17px; }
+.migration small { color: #5e7287; line-height: 1.5; }
 summary { cursor: pointer; color: #244765; font-weight: 750; }
 
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -311,4 +314,3 @@ footer {
   .comparison { grid-template-columns: 1fr; }
   .result-panel, .search { padding: 18px; }
 }
-

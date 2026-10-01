@@ -2,6 +2,7 @@ import { ConfiguratorApiClient, ConfiguratorApiError } from "./configurator-api.
 import { assessCandidate, canValidateFamilyMigration, rankCandidates } from "./matcher.js";
 import { controlSearchTerms, displayControl, normalizeText, oppositeControl, parseReference } from "./normalization.js";
 import { ProductApiClient, ProductApiError } from "./product-api.js";
+import { configuratorCarrier, discoverSuccessorFamilies } from "./successor-discovery.js";
 
 const RESULT_LABELS = {
   DIRECT_VERIFIED_MATCH: "Direct verified match",
@@ -51,7 +52,7 @@ function compactAssessment(assessment) {
   };
 }
 
-function standardResponse(parsed, originalProduct, assessment, alternatives = []) {
+function standardResponse(parsed, originalProduct, assessment, alternatives = [], familyMigration = null) {
   const candidate = assessment.candidate;
   const compatibility = assessment.resultType === "DIRECT_VERIFIED_MATCH"
     ? "DIRECT"
@@ -72,13 +73,16 @@ function standardResponse(parsed, originalProduct, assessment, alternatives = []
     },
     recommended: productSummary(candidate),
     currentFamily: candidate.family || null,
+    familyMigration,
     score: assessment.score,
     changes: assessment.changes,
     preserved: assessment.preserved,
     validation: {
       verified: true,
       source: "Signify Product API",
-      method: "Pesquisa exata pelo 12NC após comparação técnica",
+      method: familyMigration
+        ? "Família atual descoberta por metadados oficiais e produto confirmado por pesquisa exata pelo 12NC"
+        : "Pesquisa exata pelo 12NC após comparação técnica",
       locale: candidate.source?.locale || null,
       checkedAt: new Date().toISOString(),
     },
@@ -178,7 +182,7 @@ async function verifyRanked(productClient, parsed, originalProduct, candidates, 
       allowFamilyChange: options.allowFamilyChange || false,
       verified: true,
     });
-    if (options.allowFamilyChange && !canValidateFamilyMigration(parsed, originalProduct, product)) {
+    if (options.allowFamilyChange && !options.migrationEvidence?.validated && !canValidateFamilyMigration(parsed, originalProduct, product)) {
       assessment.blockers.push("No official successor relationship or complete form-factor equivalence was available.");
       assessment.safeToRecommend = false;
     }
@@ -187,7 +191,7 @@ async function verifyRanked(productClient, parsed, originalProduct, candidates, 
   return verified.sort((left, right) => right.score - left.score);
 }
 
-async function tryConfigurators(configuratorClient, parsed, products) {
+async function tryConfigurators(configuratorClient, parsed, products, options = {}) {
   const candidates = deduplicate(products.filter((product) => product.configuratorId));
   const attempted = [];
   for (const product of candidates.slice(0, 3)) {
@@ -197,6 +201,7 @@ async function tryConfigurators(configuratorClient, parsed, products) {
       seed: product.configuratorSeed,
       sourceControlClass: parsed.controlClass,
       targetControlClass: parsed.targetControlClass,
+      requirements: parsed,
     });
     if (!result.validated) continue;
     const configured = {
@@ -210,19 +215,23 @@ async function tryConfigurators(configuratorClient, parsed, products) {
       url: "",
       source: { system: "SIGNIFY_CONFIGURATOR_API" },
     };
+    if (options.expectedFamily && normalizeText(configured.family) !== normalizeText(options.expectedFamily)) continue;
     const assessment = assessCandidate(parsed, configured, {
       targetControlClass: parsed.targetControlClass,
+      originalProduct: options.originalProduct || null,
+      allowFamilyChange: options.allowFamilyChange || false,
       verified: true,
       requires12nc: false,
     });
+    if (options.allowFamilyChange && !options.migrationEvidence?.validated) continue;
     if (!assessment.safeToRecommend) continue;
-    return { result, configured, assessment, attempted };
+    return { result, configured, assessment, attempted, familyMigration: options.migrationEvidence?.evidence || null };
   }
   return { result: null, configured: null, assessment: null, attempted };
 }
 
 function configurableResponse(parsed, originalProduct, configuredResult) {
-  const { result, configured, assessment } = configuredResult;
+  const { result, configured, assessment, familyMigration = null } = configuredResult;
   return {
     status: "VERIFIED_CONFIGURABLE_PRODUCT",
     statusLabel: RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT,
@@ -239,6 +248,7 @@ function configurableResponse(parsed, originalProduct, configuredResult) {
       configurationId: result.configId,
     },
     currentFamily: configured.family,
+    familyMigration,
     changes: assessment.changes,
     preserved: assessment.preserved,
     validation: {
@@ -249,7 +259,29 @@ function configurableResponse(parsed, originalProduct, configuredResult) {
     },
     message: configured.is12nc
       ? "A configuração e o 12NC foram devolvidos pela Signify Configurator API."
-      : "A configuração foi validada pela Signify Configurator API; não foi devolvido um 12NC standard.",
+      : familyMigration
+        ? `A família atual ${configured.family} foi descoberta através dos dados oficiais e a configuração foi validada pela Signify Configurator API. Esta configuração não necessita de um 12NC standard.`
+        : "A configuração foi validada pela Signify Configurator API; não foi devolvido um 12NC standard.",
+  };
+}
+
+async function resolveLegacyFamily(productClient, parsed, originalProduct) {
+  if (typeof productClient.resolveFamilyMetadata === "function") {
+    return productClient.resolveFamilyMetadata(parsed, originalProduct);
+  }
+  if (!originalProduct) return null;
+  return {
+    raw: originalProduct.raw,
+    id: originalProduct.familyIds?.[0] || "",
+    code: originalProduct.family,
+    name: originalProduct.familyName,
+    configuratorId: originalProduct.configuratorId,
+    configuratorSeed: originalProduct.configuratorSeed,
+    category: originalProduct.category,
+    mounting: originalProduct.mounting,
+    dimensions: originalProduct.dimensions,
+    url: originalProduct.url,
+    source: originalProduct.source,
   };
 }
 
@@ -296,8 +328,43 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       if (safeSameFamily.length) return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
 
       const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
+      const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
+      let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
+      if (legacyFamily) {
+        successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily);
+        if (successorDiscovery.validated) {
+          const successor = successorDiscovery.candidate;
+          const verifiedSuccessor = await verifyRanked(productClient, effective, originalProduct, successor.products, {
+            allowFamilyChange: true,
+            migrationEvidence: successorDiscovery,
+          });
+          const safeSuccessor = verifiedSuccessor.filter((assessment) => assessment.safeToRecommend);
+          if (safeSuccessor.length) {
+            return standardResponse(effective, originalProduct, safeSuccessor[0], safeSuccessor.slice(1, 2), successorDiscovery.evidence);
+          }
+
+          const carrier = configuratorCarrier(successor);
+          const successorPool = deduplicate([carrier, ...successor.products].filter(Boolean));
+          const configuredSuccessor = await tryConfigurators(configuratorClient, effective, successorPool, {
+            allowFamilyChange: true,
+            expectedFamily: successor.code,
+            originalProduct,
+            migrationEvidence: successorDiscovery,
+          });
+          if (configuredSuccessor.result) return configurableResponse(effective, originalProduct, configuredSuccessor);
+        }
+      }
+
       const configured = await tryConfigurators(configuratorClient, effective, configuratorPool);
       if (configured.result) return configurableResponse(effective, originalProduct, configured);
+      if (legacyFamily?.configuratorId) {
+        const familyConfigurator = configuratorCarrier({ family: legacyFamily, products: [] });
+        const configuredCurrentFamily = await tryConfigurators(configuratorClient, effective, [familyConfigurator].filter(Boolean), {
+          expectedFamily: effective.family,
+          originalProduct,
+        });
+        if (configuredCurrentFamily.result) return configurableResponse(effective, originalProduct, configuredCurrentFamily);
+      }
 
       const migrationCandidates = await collectMigrationCandidates(productClient, effective, originalProduct);
       if (migrationCandidates.length) {
@@ -307,12 +374,18 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       }
 
       const configurators = [...new Set(configuratorPool.map((product) => product.configuratorId).filter(Boolean))];
-      const familyKnown = Boolean(originalProduct || sameFamily.products.length);
+      const discoveredConfigurators = successorDiscovery.candidates
+        .flatMap((candidate) => [candidate.family?.configuratorId, ...candidate.products.map((product) => product.configuratorId)])
+        .filter(Boolean);
+      configurators.push(...discoveredConfigurators.filter((id) => !configurators.includes(id)));
+      const familyKnown = Boolean(originalProduct || sameFamily.products.length || legacyFamily);
       return noResult(effective, {
         originalProduct,
         configurators,
-        inspected: sameFamily.products.length + migrationCandidates.length,
-        reason: familyKnown ? "NO_TECHNICALLY_SAFE_MATCH" : "ORIGINAL_FAMILY_NOT_VERIFIED",
+        inspected: sameFamily.products.length + migrationCandidates.length + successorDiscovery.candidates.length,
+        reason: successorDiscovery.reason === "SUCCESSOR_CANDIDATES_AMBIGUOUS"
+          ? "SUCCESSOR_CANDIDATES_AMBIGUOUS"
+          : familyKnown ? "NO_TECHNICALLY_SAFE_MATCH" : "ORIGINAL_FAMILY_NOT_VERIFIED",
         message: familyKnown
           ? "Nenhum candidato preservou as características técnicas necessárias e passou a validação oficial."
           : "A família original não foi confirmada no catálogo oficial atual; por segurança, não foi sugerida uma família sucessora.",

@@ -1,25 +1,47 @@
-# Signify Alternative Finder v8
+# Signify Alternative Finder v9
 
 Internal tool for finding a verified PSU/On-Off ↔ PSD/DALI alternative in the official Signify professional-lighting catalogue.
 
-## Safety principle
+## What v9 changes
 
-The application never recommends a generated product string. A standard product is displayed only after:
+- Reads enriched family metadata from the Product API instead of treating search results as a flat list of articles.
+- Discovers a current successor family dynamically from official family identity, family-name continuity and the requested technical signature.
+- Rejects weak or ambiguous successor evidence; there is no product-specific replacement table.
+- Supports current products that exist only in a configurator and therefore may not have a 12NC.
+- Bootstraps a Configurator session when an official reusable session is not supplied, then discovers variable names and selectable values from API responses.
+- Keeps exact 12NC revalidation for every standard catalogue product.
 
-1. technical ranking against the original requirements; and
-2. an exact order-code lookup in the Signify Product API.
+## Validation rules
 
-If that validation is not possible, the application returns `NO_VERIFIED_ALTERNATIVE`.
+There are two valid recommendation paths:
+
+1. **Standard article:** the technical match is ranked and the exact 12NC is looked up again in the Product API.
+2. **Configurable article:** the Product API supplies the official configurator identity, the requested values are selected using options returned at runtime, and the final commercial description is returned by the Configurator API. A 12NC is optional in this path.
+
+The application never presents a locally generated description as a product. If neither validation path succeeds, it returns `NO_VERIFIED_ALTERNATIVE`.
+
+## Successor discovery
+
+Successor discovery does not contain mappings such as `DN571B → DN610B`. Candidate current families are scored using:
+
+- an explicit successor/replacement field when the Product API provides one;
+- continuity of the official family/range name;
+- structural family-code prefix;
+- preservation of package, CRI/CCT, generation, length, IP/IK and feature tokens;
+- availability of the requested target control and an official configurator.
+
+A family change is accepted only when the evidence clears a confidence threshold and is not ambiguous. The chosen standard product or configuration still has to pass its own official validation.
 
 ## Architecture
 
 - React + Vite frontend.
 - Node.js Azure Functions v4 backend.
 - API route: `/api/alternative`.
-- Signify Product API for catalogue discovery and exact 12NC validation.
-- Signify Configurator API validation when the Product API supplies reusable session assignments.
-
-The Azure function registration stays in `api/src/functions/alternative.js`. Matching logic is separated into testable modules under `api/src/lib/`.
+- `product-api.js`: catalogue, enriched family metadata and exact 12NC verification.
+- `successor-discovery.js`: generic current-family discovery and confidence gating.
+- `configurator-api.js`: dynamic session bootstrap and assignment discovery.
+- `matcher.js`: technical comparison and safety blockers.
+- `engine.js`: orchestration and result contract.
 
 ## Local commands
 
@@ -37,23 +59,12 @@ Use the Azure Static Web Apps CLI when testing the frontend and API together.
 | Variable | Default | Purpose |
 |---|---|---|
 | `SIGNIFY_PRODUCT_API_BASE` | `https://api.microservices.signify.com/api/product/v1/smc` | Product API base URL |
-| `SIGNIFY_CONFIGURATOR_API_BASE` | `https://api.microservices.signify.com/api/configurator/v3/session/update` | Configurator update endpoint |
+| `SIGNIFY_CONFIGURATOR_API_BASE` | `https://api.microservices.signify.com/api/configurator/v3/session/update` | Configurator session-update endpoint |
 | `SIGNIFY_LOCALE` | `pt_PT` | Catalogue/configurator locale |
 | `SIGNIFY_API_TIMEOUT_MS` | `12000` | Backend request timeout |
 | `SIGNIFY_API_MAX_PAGES` | `5` | Maximum Product API pages per search |
 | `SIGNIFY_API_RETRIES` | `1` | Retries for transient Product API GET failures |
 
-## Important Configurator limitation
-
-The application does not invent variable names or assignments. It only attempts automatic Configurator validation when an official product record supplies a reusable `configId` and `existingAssignments`. Otherwise it reports that a configurator exists but does not present the configuration as verified.
-
 ## Tests
 
-The Node test suite covers:
-
-- pure 12NC parsing;
-- `LED150/UE840` normalization;
-- direct same-family matching;
-- missing-field false positives;
-- closest lumen-package matching; and
-- prevention of guessed successor families.
+The test suite covers standard same-family alternatives, Product API pagination and family enrichment, generic successor discovery, ambiguous-family prevention, Configurator bootstrap without fixed variable names, configurable-only products without a 12NC, inverse DALI → On/Off conversion, and regressions for DN142B, WT120C and BY120P.

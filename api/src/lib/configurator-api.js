@@ -55,12 +55,61 @@ function selectableState(state) {
   return !state || /SELECTABLE|SELECTED|USERSELECTED/i.test(String(state));
 }
 
+function assignmentKey(assignment) {
+  return `${assignment.variableName}\u0000${assignment.valueName}`;
+}
+
+function selectedAssignments(payload, fallback = []) {
+  const selected = collectAssignments(payload).filter((assignment) => selectedState(assignment.state));
+  if (selected.length) return selected;
+  return fallback;
+}
+
+function comparable(value) {
+  return normalizeText(value).replace(/[\s_/-]+/g, "");
+}
+
+function requirementMatches(assignment, requirement) {
+  const value = comparable(assignment.valueName);
+  if (!value) return false;
+  if (requirement.type === "PACKAGE") {
+    return requirement.values.some((candidate) => value.replace(/^LED/, "") === comparable(candidate).replace(/^LED/, ""));
+  }
+  return requirement.values.some((candidate) => {
+    const wanted = comparable(candidate);
+    if (!wanted) return false;
+    if (wanted.length <= 2) return value === wanted;
+    return value === wanted || normalizeText(assignment.valueName).split(/[^A-Z0-9-]+/).some((token) => comparable(token) === wanted);
+  });
+}
+
+function configurationRequirements(parsed) {
+  if (!parsed) return [];
+  const colorWithSuffix = `${parsed.colorCode || ""}${parsed.colorSuffix || ""}`;
+  return [
+    { key: "generation", type: "TOKEN", values: [parsed.generation] },
+    { key: "package", type: "PACKAGE", values: [parsed.package, parsed.packageCanonical] },
+    { key: "color", type: "TOKEN", values: [colorWithSuffix, parsed.colorCode] },
+    { key: "length", type: "TOKEN", values: [parsed.length] },
+    { key: "ip", type: "TOKEN", values: [parsed.ip] },
+    { key: "ik", type: "TOKEN", values: [parsed.ik] },
+    ...(parsed.features || []).map((feature, index) => ({ key: `feature-${index}`, type: "TOKEN", values: [feature] })),
+  ].map((requirement) => ({ ...requirement, values: requirement.values.filter(Boolean) }))
+    .filter((requirement) => requirement.values.length);
+}
+
 function findText(payload, keys) {
   let found = "";
-  walk(payload, (value, path) => {
-    if (found || typeof value !== "string") return;
-    const key = String(path[path.length - 1] || "").toLowerCase();
-    if (keys.includes(key) && value.trim()) found = value.trim();
+  walk(payload, (value) => {
+    if (found || !value || typeof value !== "object" || Array.isArray(value)) return;
+    for (const [key, entry] of Object.entries(value)) {
+      if (!keys.includes(key.toLowerCase())) continue;
+      const unwrapped = entry && typeof entry === "object" && Object.hasOwn(entry, "value") ? entry.value : entry;
+      if ((typeof unwrapped === "string" || typeof unwrapped === "number") && String(unwrapped).trim()) {
+        found = String(unwrapped).trim();
+        break;
+      }
+    }
   });
   return found;
 }
@@ -82,15 +131,15 @@ export class ConfiguratorApiClient {
     return `${this.baseUrl}/${encodeURIComponent(configuratorId)}/${encodeURIComponent(this.locale)}`;
   }
 
-  async update(configuratorId, body) {
+  async request(configuratorId, { method = "POST", body } = {}) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     let response;
     try {
       response = await this.fetchImpl(this.endpoint(configuratorId), {
-        method: "POST",
+        method,
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify(body),
+        ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         signal: controller.signal,
       });
     } catch (error) {
@@ -109,46 +158,108 @@ export class ConfiguratorApiClient {
     }
   }
 
-  async validateControlChange({ configuratorId, seed, sourceControlClass, targetControlClass }) {
-    if (!configuratorId || !seed?.configId || !Array.isArray(seed.existingAssignments)) {
-      return { validated: false, reason: "CONFIGURATOR_SESSION_NOT_AVAILABLE" };
+  async update(configuratorId, body) {
+    return this.request(configuratorId, { method: "POST", body });
+  }
+
+  async bootstrap(configuratorId) {
+    const generatedConfigId = globalThis.crypto?.randomUUID?.() || `cfg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    const common = { configId: generatedConfigId, name: configuratorId, existingAssignments: [] };
+    const attempts = [
+      { ...common, newAssignment: { action: "updateValues", assignment: {} } },
+      common,
+    ];
+    let lastError = null;
+    for (const body of attempts) {
+      try {
+        const payload = await this.update(configuratorId, body);
+        const assignments = collectAssignments(payload);
+        if (!assignments.length) continue;
+        return {
+          configId: findText(payload, ["configid", "config_id"]) || generatedConfigId,
+          existingAssignments: assignments.filter((assignment) => selectedState(assignment.state)),
+          payload,
+        };
+      } catch (error) {
+        lastError = error;
+      }
     }
+    return { error: lastError, payload: null, configId: "", existingAssignments: [] };
+  }
 
-    const currentControl = seed.existingAssignments.find((assignment) => {
-      const control = assignmentControl(assignment);
-      return control === sourceControlClass && isControlText(`${assignment.variableName} ${assignment.valueName}`);
-    });
-    if (!currentControl) return { validated: false, reason: "CONTROL_VARIABLE_NOT_DISCOVERED" };
-
-    const discovery = await this.update(configuratorId, {
-      configId: seed.configId,
+  async applyAssignment(configuratorId, configId, existingAssignments, assignment) {
+    return this.update(configuratorId, {
+      configId,
       name: configuratorId,
-      existingAssignments: seed.existingAssignments,
+      existingAssignments,
       newAssignment: {
         action: "updateValues",
-        assignment: { variableName: currentControl.variableName, valueName: currentControl.valueName },
+        assignment: { variableName: assignment.variableName, valueName: assignment.valueName },
       },
     });
+  }
 
-    const options = collectAssignments(discovery);
-    const targetOption = options.find((assignment) => (
-      assignment.variableName === currentControl.variableName
+  async validateControlChange({ configuratorId, seed, sourceControlClass, targetControlClass, requirements = null }) {
+    if (!configuratorId) return { validated: false, reason: "CONFIGURATOR_NOT_AVAILABLE" };
+
+    let session = seed?.configId && Array.isArray(seed.existingAssignments)
+      ? { configId: seed.configId, existingAssignments: seed.existingAssignments, payload: null }
+      : await this.bootstrap(configuratorId);
+    if (!session?.configId) return { validated: false, reason: "CONFIGURATOR_SESSION_NOT_AVAILABLE" };
+
+    let currentPayload = session.payload;
+    let currentAssignments = session.existingAssignments;
+    if (!currentPayload) {
+      const currentControl = currentAssignments.find((assignment) => {
+        const control = assignmentControl(assignment);
+        return control === sourceControlClass && isControlText(`${assignment.variableName} ${assignment.valueName}`);
+      });
+      if (!currentControl) return { validated: false, reason: "CONTROL_VARIABLE_NOT_DISCOVERED" };
+      currentPayload = await this.applyAssignment(configuratorId, session.configId, currentAssignments, currentControl);
+      currentAssignments = selectedAssignments(currentPayload, currentAssignments);
+    }
+
+    let configId = findText(currentPayload, ["configid", "config_id"]) || session.configId;
+    const appliedRequirements = [];
+    const unresolvedRequirements = [];
+    for (const requirement of configurationRequirements(requirements)) {
+      const options = collectAssignments(currentPayload).filter((assignment) => selectableState(assignment.state));
+      const alreadySelected = options.find((assignment) => selectedState(assignment.state) && requirementMatches(assignment, requirement));
+      if (alreadySelected) {
+        appliedRequirements.push(requirement.key);
+        continue;
+      }
+      const option = options.find((assignment) => requirementMatches(assignment, requirement));
+      if (!option) {
+        unresolvedRequirements.push(requirement.key);
+        continue;
+      }
+      currentPayload = await this.applyAssignment(configuratorId, configId, currentAssignments, option);
+      configId = findText(currentPayload, ["configid", "config_id"]) || configId;
+      currentAssignments = selectedAssignments(currentPayload, currentAssignments)
+        .filter((assignment, index, all) => all.findIndex((entry) => assignmentKey(entry) === assignmentKey(assignment)) === index);
+      appliedRequirements.push(requirement.key);
+    }
+
+    const options = collectAssignments(currentPayload);
+    const selectedControl = options.find((assignment) => assignmentControl(assignment) === targetControlClass && selectedState(assignment.state));
+    const sourceOption = options.find((assignment) => (
+      assignmentControl(assignment) === sourceControlClass
+      && isControlText(`${assignment.variableName} ${assignment.valueName}`)
+    ));
+    const controlVariable = selectedControl?.variableName || sourceOption?.variableName;
+    const targetOption = selectedControl || options.find((assignment) => (
+      (!controlVariable || assignment.variableName === controlVariable)
       && assignmentControl(assignment) === targetControlClass
       && selectableState(assignment.state)
     ));
-    if (!targetOption) return { validated: false, reason: "TARGET_CONTROL_NOT_SELECTABLE" };
+    if (!targetOption) return { validated: false, reason: "TARGET_CONTROL_NOT_SELECTABLE", appliedRequirements, unresolvedRequirements };
 
-    const configId = findText(discovery, ["configid", "config_id"]) || seed.configId;
-    const existingAssignments = collectAssignments(discovery).filter((assignment) => selectedState(assignment.state));
-    const updated = await this.update(configuratorId, {
-      configId,
-      name: configuratorId,
-      existingAssignments: existingAssignments.length ? existingAssignments : seed.existingAssignments,
-      newAssignment: {
-        action: "updateValues",
-        assignment: { variableName: targetOption.variableName, valueName: targetOption.valueName },
-      },
-    });
+    let updated = currentPayload;
+    if (!selectedState(targetOption.state)) {
+      updated = await this.applyAssignment(configuratorId, configId, currentAssignments, targetOption);
+      configId = findText(updated, ["configid", "config_id"]) || configId;
+    }
 
     const finalAssignments = collectAssignments(updated);
     const selectedTarget = finalAssignments.some((assignment) => (
@@ -177,6 +288,8 @@ export class ConfiguratorApiClient {
       configuratorId,
       configId: findText(updated, ["configid", "config_id"]) || configId,
       selectedControl: targetOption.valueName,
+      appliedRequirements,
+      unresolvedRequirements,
       validationSource: "SIGNIFY_CONFIGURATOR_API",
     };
   }

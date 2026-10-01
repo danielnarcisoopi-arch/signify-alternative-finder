@@ -72,6 +72,90 @@ function extractFamilyIds(item) {
     .filter(Boolean);
 }
 
+export function familyCodeFromId(value) {
+  const normalized = normalizeText(value);
+  const explicit = normalized.match(/(?:^|_)LP_CF_([A-Z0-9-]+?)(?:_[A-Z]{2,5})?(?:_|$)/);
+  if (explicit?.[1]) return explicit[1];
+  return extractFamilyCode(normalized);
+}
+
+function recursiveFieldValues(value, keyPattern, results = []) {
+  if (Array.isArray(value)) {
+    value.forEach((entry) => recursiveFieldValues(entry, keyPattern, results));
+    return results;
+  }
+  if (!value || typeof value !== "object") return results;
+  for (const [key, entry] of Object.entries(value)) {
+    if (keyPattern.test(key)) results.push(unwrap(entry));
+    recursiveFieldValues(entry, keyPattern, results);
+  }
+  return results;
+}
+
+function firstRecursiveString(value, keyPattern) {
+  return recursiveFieldValues(value, keyPattern)
+    .flatMap(asStrings)
+    .map((entry) => entry.trim())
+    .find(Boolean) || "";
+}
+
+function extractConfiguratorId(item) {
+  const direct = getField(item, [
+    "configurator_id",
+    "configuratorId",
+    "configurator_name",
+    "configuratorName",
+    "configurator",
+  ]);
+  const candidates = [
+    ...asStrings(direct),
+    ...recursiveFieldValues(item, /configurator|configuratorId|configurator_name/i).flatMap(asStrings),
+  ].map((entry) => entry.trim()).filter(Boolean);
+
+  for (const candidate of candidates) {
+    const fromUrl = candidate.match(/(?:configurator|configuration)[^/?#]*[/?#=]([A-Z]{1,6}\d{2,5}[A-Z]{0,3}I)\b/i);
+    if (fromUrl?.[1]) return normalizeText(fromUrl[1]);
+    if (/^[A-Z]{1,6}\d{2,5}[A-Z]{0,3}I$/i.test(candidate)) return normalizeText(candidate);
+  }
+  return candidates[0] || "";
+}
+
+export function createFamilyRecord(item, evidence = {}) {
+  const id = String(getField(item, ["family_id", "familyId", "id", "identifier"]) || "").trim();
+  const directCode = String(getField(item, ["family_code", "familyCode", "code", "product_family_code"]) || "").trim();
+  const name = String(getField(item, [
+    "family_name",
+    "familyName",
+    "product_family_name",
+    "range_name",
+    "displayName",
+    "display_name",
+    "name",
+    "title",
+  ]) || "").trim();
+  const code = familyCodeFromId(directCode) || familyCodeFromId(id) || extractFamilyCode(name);
+  if (!code && !id && !name) return null;
+  return {
+    raw: item,
+    id,
+    code,
+    name,
+    configuratorId: extractConfiguratorId(item),
+    configuratorSeed: extractConfiguratorSeed(item),
+    category: String(getField(item, ["category", "category_name", "categoryName", "product_category"]) || "").trim(),
+    mounting: String(getField(item, ["mounting", "mounting_type", "mountingType", "installation"]) || "").trim(),
+    dimensions: String(getField(item, ["dimensions", "dimension", "cutout", "cut_out"]) || "").trim(),
+    url: String(getField(item, ["url", "family_url", "familyUrl", "pdp_url"]) || "").trim(),
+    source: {
+      system: "SIGNIFY_PRODUCT_API",
+      locale: evidence.locale || DEFAULT_LOCALE,
+      endpoint: evidence.endpoint || "",
+      query: evidence.query || "",
+      query: evidence.query || "",
+    },
+  };
+}
+
 function controlFromEvidence(filterKeys, searchableText) {
   if (filterKeys.includes(CONTROL_FILTER_KEYS.DALI)) return "DALI";
   if (filterKeys.includes(CONTROL_FILTER_KEYS.ON_OFF)) return "ON_OFF";
@@ -115,7 +199,7 @@ export function createProduct(item, evidence = {}) {
     family: parsed.family || extractFamilyCode(description),
     familyIds,
     familyName: String(getField(item, ["family_name", "familyName", "product_family_name", "range_name"]) || "").trim(),
-    configuratorId: String(getField(item, ["configurator_id", "configuratorId", "configurator"]) || "").trim(),
+    configuratorId: extractConfiguratorId(item),
     configuratorSeed: extractConfiguratorSeed(item),
     url: String(getField(item, ["url", "product_url", "productUrl", "pdp_url"]) || "").trim(),
     status: String(getField(item, ["status", "product_status", "lifecycle_status", "lifecycleStatus"]) || "").trim(),
@@ -143,6 +227,36 @@ function getResults(payload) {
   if (Array.isArray(payload?.data?.results)) return payload.data.results;
   if (Array.isArray(payload?.data?.items)) return payload.data.items;
   return [];
+}
+
+function getFamilyRows(payload) {
+  const roots = [
+    payload?.dataEnrichment?.familyData,
+    payload?.dataEnrichment?.family_data,
+    payload?.data_enrichment?.familyData,
+    payload?.data_enrichment?.family_data,
+    payload?.data?.dataEnrichment?.familyData,
+    payload?.data?.data_enrichment?.family_data,
+    payload?.familyData,
+    payload?.families,
+    payload?.data?.families,
+  ];
+  return roots.flatMap((root) => {
+    const value = unwrap(root);
+    if (Array.isArray(value)) return value;
+    if (value && typeof value === "object") return Object.values(value);
+    return [];
+  }).filter((entry) => entry && typeof entry === "object");
+}
+
+function deduplicateFamilies(families) {
+  const seen = new Set();
+  return families.filter((family) => {
+    const key = normalizeText(family.id || family.code || family.name);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function getTotal(payload) {
@@ -177,6 +291,10 @@ export class ProductApiClient {
 
   searchEndpoint() {
     return `${this.baseUrl}/${this.locale}/search`;
+  }
+
+  facetsEndpoint() {
+    return `${this.baseUrl}/${this.locale}/search/facets`;
   }
 
   async requestJson(url, options = {}) {
@@ -214,8 +332,8 @@ export class ProductApiClient {
     throw lastError;
   }
 
-  buildSearchUrl({ query = "", filters = "", page = 1, size = 100 } = {}) {
-    const url = new URL(this.searchEndpoint());
+  buildSearchUrl({ query = "", filters = "", page = 1, size = 100, endpoint = this.searchEndpoint() } = {}) {
+    const url = new URL(endpoint);
     const params = {
       page,
       size,
@@ -231,6 +349,7 @@ export class ProductApiClient {
 
   async searchProducts({ query = "", filters = "", controlClass = "", maxPages = this.maxPages, size = 100 } = {}) {
     const products = [];
+    const families = [];
     const seen = new Set();
     let total = null;
     let pagesRead = 0;
@@ -238,10 +357,13 @@ export class ProductApiClient {
       const url = this.buildSearchUrl({ query, filters, page, size });
       const payload = await this.requestJson(url);
       const rows = getResults(payload);
+      families.push(...getFamilyRows(payload)
+        .map((row) => createFamilyRecord(row, { locale: this.locale, endpoint: url.origin + url.pathname, query }))
+        .filter(Boolean));
       total ??= getTotal(payload);
       pagesRead += 1;
       for (const row of rows) {
-        const product = createProduct(row, { controlClass, locale: this.locale, endpoint: url.origin + url.pathname });
+        const product = createProduct(row, { controlClass, locale: this.locale, endpoint: url.origin + url.pathname, query });
         const key = product.orderCode || `${product.description}|${product.familyIds.join(",")}`;
         if (!key || seen.has(key)) continue;
         seen.add(key);
@@ -249,7 +371,51 @@ export class ProductApiClient {
       }
       if (rows.length < size || (total !== null && page * size >= total)) break;
     }
-    return { products, total, pagesRead };
+    return { products, families: deduplicateFamilies(families), total, pagesRead };
+  }
+
+  async searchFacets({ query = "", filters = "", controlClass = "", size = 100 } = {}) {
+    const url = this.buildSearchUrl({ query, filters, page: 1, size, endpoint: this.facetsEndpoint() });
+    const payload = await this.requestJson(url);
+    const endpoint = url.origin + url.pathname;
+    const families = getFamilyRows(payload)
+      .map((row) => createFamilyRecord(row, { locale: this.locale, endpoint, query }))
+      .filter(Boolean);
+    const products = getResults(payload)
+      .map((row) => createProduct(row, { controlClass, locale: this.locale, endpoint, query }))
+      .filter((product) => product.description || product.orderCode);
+    return { families: deduplicateFamilies(families), products, raw: payload };
+  }
+
+  async resolveFamilyMetadata(parsed, originalProduct = null) {
+    const expected = normalizeText(parsed?.family || originalProduct?.family);
+    if (!expected) return null;
+    const queries = [...new Set([parsed?.input, parsed?.family, originalProduct?.familyName].filter(Boolean))];
+    const tasks = queries.flatMap((query) => [
+      this.searchFacets({ query }),
+      this.searchProducts({ query, maxPages: 1, size: 100 }),
+    ]);
+    const settled = await Promise.allSettled(tasks);
+    const families = deduplicateFamilies(settled.flatMap((entry) => entry.status === "fulfilled" ? entry.value.families : []));
+    const exact = families.find((family) => normalizeText(family.code) === expected
+      || normalizeText(family.id).includes(`_${expected}_`));
+    if (exact) return exact;
+    if (originalProduct) {
+      return {
+        raw: originalProduct.raw,
+        id: originalProduct.familyIds[0] || "",
+        code: originalProduct.family,
+        name: originalProduct.familyName,
+        configuratorId: originalProduct.configuratorId,
+        configuratorSeed: originalProduct.configuratorSeed,
+        category: originalProduct.category,
+        mounting: originalProduct.mounting,
+        dimensions: originalProduct.dimensions,
+        url: originalProduct.url,
+        source: originalProduct.source,
+      };
+    }
+    return null;
   }
 
   async resolveOrderCode(orderCode) {
