@@ -166,6 +166,27 @@ function rankGroups(parsed, legacyFamily, groups) {
       }, { score: 0, comparable: 0, product: null });
       const hasConfigurator = Boolean(group.family?.configuratorId || group.products.some((product) => product.configuratorId));
       const queryEvidence = group.queries.size;
+
+      // Migration continuity: a current family is much stronger evidence when the
+      // catalogue shows the same core photometric signature in BOTH the original
+      // control type and the requested control type. This is generic and prevents
+      // a DALI-only family with a coincidental 20S/840 match from tying a family
+      // that demonstrably carries the old On/Off product forward and also offers
+      // its DALI counterpart.
+      const coreMatches = (product) => {
+        const candidate = product?.parsed || parseReference(product?.description || "");
+        const packageMatch = !parsed.packageCanonical || sameValue(parsed.packageCanonical, candidate.packageCanonical);
+        const colorMatch = !parsed.colorCode || sameValue(parsed.colorCode, candidate.colorCode);
+        return packageMatch && colorMatch;
+      };
+      const hasOriginalControlContinuity = group.products.some((product) =>
+        product.controlClass === parsed.controlClass && coreMatches(product)
+      );
+      const hasTargetControlContinuity = group.products.some((product) =>
+        product.controlClass === parsed.targetControlClass && coreMatches(product)
+      );
+      const bidirectionalControlContinuity = hasOriginalControlContinuity && hasTargetControlContinuity;
+      const controlContinuityScore = bidirectionalControlContinuity ? 70 : hasOriginalControlContinuity ? 30 : 0;
       // A configurable family returned by the official Product API for the exact,
       // complete user reference is strong migration evidence. This is generic:
       // no family/configurator identifiers are encoded here.
@@ -175,6 +196,7 @@ function rankGroups(parsed, legacyFamily, groups) {
         + (samePrefix ? 70 : 0)
         + Math.round(familySimilarity * 140)
         + technical.score
+        + controlContinuityScore
         + (hasConfigurator ? 15 : 0)
         + Math.min(45, queryEvidence * 15)
         + Math.min(20, group.products.length * 3);
@@ -196,6 +218,10 @@ function rankGroups(parsed, legacyFamily, groups) {
         hasConfigurator,
         queryEvidence,
         exactInputEvidence,
+        hasOriginalControlContinuity,
+        hasTargetControlContinuity,
+        bidirectionalControlContinuity,
+        controlContinuityScore,
         score,
         validated,
       };
@@ -303,6 +329,10 @@ function discoveryDiagnostics(ranked, queries) {
       nameSimilarity: candidate.nameSimilarity,
       technicalScore: candidate.technicalScore,
       technicalComparable: candidate.technicalComparable,
+      hasOriginalControlContinuity: candidate.hasOriginalControlContinuity,
+      hasTargetControlContinuity: candidate.hasTargetControlContinuity,
+      bidirectionalControlContinuity: candidate.bidirectionalControlContinuity,
+      controlContinuityScore: candidate.controlContinuityScore,
       configuratorId: candidate.family?.configuratorId || candidate.products.find((p) => p.configuratorId)?.configuratorId || "",
       products: candidate.products.slice(0, 5).map(diagnosticProduct),
     })),

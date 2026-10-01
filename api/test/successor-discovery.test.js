@@ -195,3 +195,39 @@ test("uses a configurable-material identifier as generic current-family evidence
   assert.equal(result.candidate.family.configuratorId, "ZX610BI");
   assert.equal(result.evidence.exactInputEvidence, true);
 });
+
+test("breaks an ambiguous family tie using bidirectional control continuity, without family-specific rules", async () => {
+  const parsed = parseReference("ZX500B 20S/840 PSU-E WR WH PCO");
+  const currentOnOff = createProduct({
+    displayed_order_code_description: { value: "ZX610B 20S/840UE PSU-E C WH PGO" },
+    filter_keys: { value: [] },
+    family_id: { value: "LP_CF_ZX610B_EU" },
+    configurator_id: { value: "ZX610BI" },
+  }, { query: "20S 840 DIA-E" });
+  const currentDali = createProduct({
+    displayed_order_code_description: { value: "ZX610B 20S/840UE DIA-E C WH" },
+    filter_keys: { value: ["FK_LP_DIMMING_CONTROLS_DALI"] },
+    family_id: { value: "LP_CF_ZX610B_EU" },
+    configurator_id: { value: "ZX610BI" },
+  }, { query: "20S 840 DIA-E" });
+  const distractorDali = createProduct({
+    displayed_order_code_description: { value: "ZX572B 20S/840UE PSD-E C WH" },
+    filter_keys: { value: ["FK_LP_DIMMING_CONTROLS_DALI"] },
+    family_id: { value: "LP_CF_ZX572B_EU" },
+    configurator_id: { value: "ZX572BI" },
+  }, { query: "20S 840 DIA-E" });
+  const client = {
+    searchProducts: async () => ({ products: [currentOnOff, currentDali, distractorDali], families: [] }),
+    searchFacets: async ({ query }) => ({ products: [], families: [
+      { code: "ZX610B", configuratorId: "ZX610BI", source: { query } },
+      { code: "ZX572B", configuratorId: "ZX572BI", source: { query } },
+    ] }),
+  };
+  const result = await discoverSuccessorFamilies(client, parsed, { code: "ZX500B", name: "", raw: null });
+  assert.equal(result.validated, true);
+  assert.equal(result.candidate.code, "ZX610B");
+  assert.equal(result.candidate.bidirectionalControlContinuity, true);
+  const runner = result.candidates.find((c) => c.code === "ZX572B");
+  assert.equal(runner.bidirectionalControlContinuity, false);
+  assert.ok(result.candidate.score - runner.score >= 20);
+});
