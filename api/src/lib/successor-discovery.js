@@ -1,4 +1,5 @@
 import { controlSearchTerms, normalizeText, parseReference } from "./normalization.js";
+import { familyCodeFromConfiguratorId } from "./product-api.js";
 
 const GENERIC_FAMILY_WORDS = new Set([
   "PHILIPS",
@@ -109,25 +110,42 @@ function groupEvidence(families, products) {
     if (group) mergeFamily(group, family);
   }
   for (const product of products) {
-    const group = get(product.family);
-    if (!group) continue;
-    group.products.push(product);
-    if (!group.family) {
-      group.family = {
-        raw: product.raw,
-        id: product.familyIds?.[0] || "",
-        code: product.family,
-        name: product.familyName,
-        configuratorId: product.configuratorId,
-        configuratorSeed: product.configuratorSeed,
-        category: product.category,
-        mounting: product.mounting,
-        dimensions: product.dimensions,
-        url: product.url,
-        source: product.source,
-      };
+    const attach = (code, evidenceProduct = product) => {
+      const group = get(code);
+      if (!group) return;
+      group.products.push(evidenceProduct);
+      if (!group.family) {
+        group.family = {
+          raw: product.raw,
+          id: product.familyIds?.[0] || "",
+          code: normalizeText(code),
+          name: product.familyName,
+          configuratorId: product.configuratorId,
+          configuratorSeed: product.configuratorSeed,
+          category: product.category,
+          mounting: product.mounting,
+          dimensions: product.dimensions,
+          url: product.url,
+          source: product.source,
+        };
+      }
+      if (product.source?.query) group.queries.add(product.source.query);
+    };
+
+    attach(product.family);
+
+    // A configurable-material ID is itself official family evidence. Some API
+    // payloads describe the legacy/seed product while materialName or
+    // productModelName already points at the current configurable material.
+    // Add that family as a separate candidate instead of discarding the clue.
+    const configuratorFamily = familyCodeFromConfiguratorId(product.configuratorId);
+    if (configuratorFamily && normalizeText(configuratorFamily) !== normalizeText(product.family)) {
+      attach(configuratorFamily, {
+        ...product,
+        family: configuratorFamily,
+        parsed: parseReference(`${configuratorFamily} ${product.description || ""}`),
+      });
     }
-    if (product.source?.query) group.queries.add(product.source.query);
   }
   return [...groups.values()];
 }

@@ -99,6 +99,17 @@ function firstRecursiveString(value, keyPattern) {
     .find(Boolean) || "";
 }
 
+export function familyCodeFromConfiguratorId(value) {
+  const normalized = normalizeText(value).trim();
+  // Configurable material identifiers commonly append a terminal I to the
+  // product-family code (e.g. <family>I). Treat this only as discovery
+  // evidence; it is never a product-specific mapping.
+  const token = normalized.match(/(?:^|[^A-Z0-9])([A-Z]{1,8}\d{2,5}[A-Z]{0,4}I)(?=$|[^A-Z0-9])/i)?.[1]
+    || (/^[A-Z]{1,8}\d{2,5}[A-Z]{0,4}I$/i.test(normalized) ? normalized : "");
+  if (!token) return "";
+  return normalizeText(token).slice(0, -1);
+}
+
 function extractConfiguratorId(item) {
   const direct = getField(item, [
     "configurator_id",
@@ -121,9 +132,14 @@ function extractConfiguratorId(item) {
   for (const candidate of candidates) {
     const fromUrl = candidate.match(/(?:configurator|configuration)[^/?#]*[/?#=]([A-Z]{1,6}\d{2,5}[A-Z]{0,3}I)\b/i);
     if (fromUrl?.[1]) return normalizeText(fromUrl[1]);
-    if (/^[A-Z]{1,6}\d{2,5}[A-Z]{0,3}I$/i.test(candidate)) return normalizeText(candidate);
+    if (/^[A-Z]{1,8}\d{2,5}[A-Z]{0,4}I$/i.test(candidate)) return normalizeText(candidate);
+    // productModelName is sometimes repeated/qualified (e.g. ABC123I_ABC123I).
+    // Extract the configurable-material token instead of returning the whole
+    // qualified string as an ID.
+    const embedded = candidate.match(/(?:^|[^A-Z0-9])([A-Z]{1,8}\d{2,5}[A-Z]{0,4}I)(?=$|[^A-Z0-9])/i);
+    if (embedded?.[1]) return normalizeText(embedded[1]);
   }
-  return candidates[0] || "";
+  return "";
 }
 
 export function createFamilyRecord(item, evidence = {}) {
@@ -139,14 +155,18 @@ export function createFamilyRecord(item, evidence = {}) {
     "name",
     "title",
   ]) || "").trim();
-  const code = familyCodeFromId(directCode) || familyCodeFromId(id) || extractFamilyCode(name);
-  if (!code && !id && !name) return null;
+  const configuratorId = extractConfiguratorId(item);
+  const code = familyCodeFromId(directCode)
+    || familyCodeFromId(id)
+    || extractFamilyCode(name)
+    || familyCodeFromConfiguratorId(configuratorId);
+  if (!code && !id && !name && !configuratorId) return null;
   return {
     raw: item,
     id,
     code,
     name,
-    configuratorId: extractConfiguratorId(item),
+    configuratorId,
     configuratorSeed: extractConfiguratorSeed(item),
     category: String(getField(item, ["category", "category_name", "categoryName", "product_category"]) || "").trim(),
     mounting: String(getField(item, ["mounting", "mounting_type", "mountingType", "installation"]) || "").trim(),
@@ -216,16 +236,20 @@ export function createProduct(item, evidence = {}) {
     ? controlFromEvidence(filterKeys, searchableText)
     : evidence.controlClass || "UNKNOWN";
 
+  const configuratorId = extractConfiguratorId(item);
   return {
     raw: item,
     description,
     marketingDescription,
     orderCode,
     is12nc: /^\d{12}$/.test(orderCode),
-    family: familyFromOfficialItem(item, description) || parsed.family || extractFamilyCode(description),
+    family: familyFromOfficialItem(item, description)
+      || parsed.family
+      || extractFamilyCode(description)
+      || familyCodeFromConfiguratorId(configuratorId),
     familyIds,
     familyName: String(getField(item, ["family_name", "familyName", "product_family_name", "range_name"]) || "").trim(),
-    configuratorId: extractConfiguratorId(item),
+    configuratorId,
     configuratorSeed: extractConfiguratorSeed(item),
     url: String(getField(item, ["url", "product_url", "productUrl", "pdp_url"]) || "").trim(),
     status: String(getField(item, ["status", "product_status", "lifecycle_status", "lifecycleStatus"]) || "").trim(),

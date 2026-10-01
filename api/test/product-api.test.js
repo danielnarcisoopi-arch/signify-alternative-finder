@@ -76,3 +76,11 @@ test("reads current family and configurator from a Quote-style configurable sear
   assert.equal(product.configuratorId, "ZX610BI");
   assert.equal(product.controlClass, "ON_OFF");
 });
+
+test("derives a family generically from a qualified configurable material id", () => {
+  const product = createProduct({
+    description: "LEGACY500B 20S/840 PSU-E WR WH PCO",
+    productModelName: "ZX610BI_ZX610BI",
+  });
+  assert.equal(product.configuratorId, "ZX610BI");
+});

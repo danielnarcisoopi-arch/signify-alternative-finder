@@ -167,3 +167,31 @@ test("a unique exact-reference configurable family wins over ambiguous relaxed-s
   assert.equal(result.candidate.family.configuratorId, "ZX610BI");
   assert.equal(result.evidence.exactInputEvidence, true);
 });
+
+test("uses a configurable-material identifier as generic current-family evidence", async () => {
+  const parsed = parseReference("ZX500B 20S/840 PSU-E WR WH PCO");
+  // Real APIs can return a seed/legacy description while materialName or
+  // productModelName already names the current configurable material.
+  const carrier = createProduct({
+    description: "ZX500B 20S/840 PSU-E WR WH PCO",
+    materialName: "ZX610BI",
+    productModelName: "ZX610BI_ZX610BI",
+    isConfigurable: true,
+  }, { query: parsed.input });
+  const distractor = createProduct({
+    description: "ZX572B 20S/840 PSD-E WR WH PCO",
+    materialName: "ZX572BI",
+  }, { query: "20S 840 DALI" });
+  const client = {
+    searchProducts: async ({ query }) => query === parsed.input
+      ? { products: [carrier], families: [] }
+      : { products: [distractor], families: [] },
+    searchFacets: async () => ({ products: [], families: [] }),
+  };
+  const result = await discoverSuccessorFamilies(client, parsed, { code: "ZX500B", name: "", raw: null });
+  assert.equal(carrier.configuratorId, "ZX610BI");
+  assert.equal(result.validated, true);
+  assert.equal(result.candidate.code, "ZX610B");
+  assert.equal(result.candidate.family.configuratorId, "ZX610BI");
+  assert.equal(result.evidence.exactInputEvidence, true);
+});
