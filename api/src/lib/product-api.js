@@ -106,10 +106,16 @@ function extractConfiguratorId(item) {
     "configurator_name",
     "configuratorName",
     "configurator",
+    "materialName",
+    "material_name",
+    "configurableMaterialName",
+    "configurable_material_name",
+    "productModelName",
+    "product_model_name",
   ]);
   const candidates = [
     ...asStrings(direct),
-    ...recursiveFieldValues(item, /configurator|configuratorId|configurator_name/i).flatMap(asStrings),
+    ...recursiveFieldValues(item, /configurator|configuratorId|configurator_name|materialName|configurableMaterialName|productModelName/i).flatMap(asStrings),
   ].map((entry) => entry.trim()).filter(Boolean);
 
   for (const candidate of candidates) {
@@ -171,6 +177,25 @@ function extractConfiguratorSeed(item) {
   return { configId: String(configId), existingAssignments };
 }
 
+function assignmentValue(item, variablePatterns) {
+  const assignments = recursiveFieldValues(item, /assignments|existingAssignments/i)
+    .flatMap((value) => Array.isArray(value) ? value : []);
+  for (const assignment of assignments) {
+    const variable = normalizeText(assignment?.variableName || assignment?.name || assignment?.characteristic || "");
+    if (!variablePatterns.some((pattern) => pattern.test(variable))) continue;
+    const value = String(assignment?.valueName || assignment?.value || assignment?.valueText || "").trim();
+    if (value) return value;
+  }
+  return "";
+}
+
+function familyFromOfficialItem(item, description) {
+  const assigned = assignmentValue(item, [/(?:^|_)PLM_PFC$/, /(?:^|_)PLM_PFAM$/, /(?:^|_)PFC$/, /(?:^|_)PFAM$/]);
+  if (assigned) return extractFamilyCode(assigned) || normalizeText(assigned);
+  const direct = String(getField(item, ["family_code", "familyCode", "product_family_code"]) || "").trim();
+  return familyCodeFromId(direct) || extractFamilyCode(description);
+}
+
 export function createProduct(item, evidence = {}) {
   const description = String(getField(item, [
     "displayed_order_code_description",
@@ -178,6 +203,7 @@ export function createProduct(item, evidence = {}) {
     "order_code_description",
     "commercial_description",
     "product_name",
+    "description",
     "name",
   ]) || "").trim();
   const marketingDescription = String(getField(item, ["name", "description", "long_description", "longDescription"]) || "").trim();
@@ -196,7 +222,7 @@ export function createProduct(item, evidence = {}) {
     marketingDescription,
     orderCode,
     is12nc: /^\d{12}$/.test(orderCode),
-    family: parsed.family || extractFamilyCode(description),
+    family: familyFromOfficialItem(item, description) || parsed.family || extractFamilyCode(description),
     familyIds,
     familyName: String(getField(item, ["family_name", "familyName", "product_family_name", "range_name"]) || "").trim(),
     configuratorId: extractConfiguratorId(item),

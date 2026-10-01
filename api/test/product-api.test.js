@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ProductApiClient, ProductApiError, familyCodeFromId } from "../src/lib/product-api.js";
+import { ProductApiClient, ProductApiError, createProduct, familyCodeFromId } from "../src/lib/product-api.js";
 
 test("rejects an empty Product API response with a structured error", async () => {
   const client = new ProductApiClient({
@@ -56,4 +56,23 @@ test("extracts family metadata and the official configurator id from enriched fa
   assert.equal(result.families[0].code, "DN610B");
   assert.equal(result.families[0].configuratorId, "DN610BI");
   assert.equal(familyCodeFromId("LP_CF_WT120C_EU"), "WT120C");
+});
+
+test("reads current family and configurator from a Quote-style configurable search result", () => {
+  const product = createProduct({
+    name: "000910500000001",
+    description: "ZX610B 20S/840UE PSU-E C WH PGO",
+    materialName: "ZX610BI",
+    productModelName: "ZX610BI_ZX610BI",
+    isConfigurable: true,
+    assignments: [
+      { variableName: "PLM_PFC", valueName: "ZX610B" },
+      { variableName: "PLM_TRAFO", valueName: "PSU-E" },
+    ],
+  }, { query: "ZX500B 20S/840 PSU-E WR WH PCO", controlClass: "DALI" });
+
+  assert.equal(product.description, "ZX610B 20S/840UE PSU-E C WH PGO");
+  assert.equal(product.family, "ZX610B");
+  assert.equal(product.configuratorId, "ZX610BI");
+  assert.equal(product.controlClass, "ON_OFF");
 });
