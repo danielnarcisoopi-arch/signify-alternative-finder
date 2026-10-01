@@ -106,6 +106,8 @@ function extractConfiguratorId(item) {
     "configurator_name",
     "configuratorName",
     "configurator",
+    "materialName",
+    "productModelName",
   ]);
   const candidates = [
     ...asStrings(direct),

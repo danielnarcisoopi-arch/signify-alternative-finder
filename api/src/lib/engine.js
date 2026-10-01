@@ -359,6 +359,14 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         if (!(quoteError instanceof QuoteApiError)) throw quoteError;
       }
 
+      // Always preserve the complete user reference in the first catalogue lookup.
+      // This is critical for retired families: the official search can return the
+      // current configurable family only when flux/colour/driver/options are kept.
+      let fullQueryDiscovery = { products: [], families: [] };
+      try {
+        fullQueryDiscovery = await productClient.searchProducts({ query: parsed.input, maxPages: 2, size: 100 });
+      } catch { /* the normal catalogue path below retains its existing error handling */ }
+
       const originalProduct = await resolveOriginal(productClient, parsed);
       const officialParsed = originalProduct ? parseReference(originalProduct.description) : null;
       const effectiveControl = originalProduct?.controlClass !== "UNKNOWN" ? originalProduct?.controlClass : officialParsed?.controlClass;
@@ -390,9 +398,31 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
       }
 
-      const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
+      const fullQueryConfigurables = (fullQueryDiscovery.products || []).filter((product) => product.configuratorId);
+      const configuratorPool = deduplicate([originalProduct, ...fullQueryConfigurables, ...sameFamily.products].filter(Boolean));
       const configuratorAttempts = [];
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
+
+      // A configurable product returned by the complete official search is stronger
+      // evidence than a family-only/facet sweep. Try it first and never enumerate
+      // unrelated configurators when this evidence exists.
+      if (fullQueryConfigurables.length) {
+        for (const carrier of fullQueryConfigurables.slice(0, 4)) {
+          const familyChanged = Boolean(carrier.family && effective.family && normalizeText(carrier.family) !== normalizeText(effective.family));
+          const directConfigured = await tryConfigurators(configuratorClient, effective, [carrier], {
+            allowFamilyChange: familyChanged, expectedFamily: carrier.family || undefined, originalProduct,
+            migrationEvidence: familyChanged ? { validated: true, evidence: { oldFamily: effective.family, currentFamily: carrier.family, discoveryMode: "FULL_REFERENCE_OFFICIAL_SEARCH" } } : undefined,
+          });
+          configuratorAttempts.push(...directConfigured.attempted);
+          if (directConfigured.result) return configurableResponse(effective, originalProduct, directConfigured);
+        }
+        return noResult(effective, {
+          originalProduct, configuratorAttempts, configurators: fullQueryConfigurables.map(p => p.configuratorId).filter(Boolean),
+          inspected: fullQueryConfigurables.length, reason: "OFFICIAL_CONFIGURABLE_RESULT_NOT_VALIDATED",
+          message: "A pesquisa oficial encontrou o configurador correspondente à referência completa, mas a configuração final não foi validada."
+        });
+      }
+
       let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
       {
         successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily || {

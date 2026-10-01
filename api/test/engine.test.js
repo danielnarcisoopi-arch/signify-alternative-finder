@@ -244,3 +244,21 @@ test("accepts SM350C description plus 12NC and returns PSU with SM350CI", async 
   assert.equal(result.recommended.orderCode, "910925868380");
   assert.equal(result.recommended.configuratorId, "SM350CI");
 });
+
+test("uses the complete reference for official discovery and does not brute-force unrelated configurators", async () => {
+  const calls = [];
+  const direct = product("DN610B 20S/840UE PSU-E C WH PGO", "", "ON_OFF");
+  direct.family = "DN610B";
+  direct.configuratorId = "ZX999I";
+  const productClient = {
+    searchProducts: async ({ query }) => { calls.push(query); return { products: query === "ZX100B LED40S/930H PSU-E C WH PGO" ? [direct] : [], families: [] }; },
+    searchFacets: async () => ({ products: [], families: [] }),
+    resolveFamilyMetadata: async () => null,
+  };
+  const attempted = [];
+  const configuratorClient = { validateControlChange: async ({ configuratorId }) => { attempted.push(configuratorId); return { validated:false, reason:"CONFIGURATOR_SESSION_NOT_AVAILABLE" }; } };
+  const result = await createEngine({ productClient, configuratorClient, quoteClient:null })("ZX100B LED40S/930H PSU-E C WH PGO");
+  assert.equal(calls[0], "ZX100B LED40S/930H PSU-E C WH PGO");
+  assert.deepEqual(attempted, ["ZX999I"]);
+  assert.equal(result.reason, "OFFICIAL_CONFIGURABLE_RESULT_NOT_VALIDATED");
+});
