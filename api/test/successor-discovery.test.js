@@ -101,3 +101,16 @@ test("can use repeated enriched-facet evidence for a configurator-only current f
   assert.equal(result.candidate.products.length, 0);
   assert.ok(result.evidence.queryEvidence >= 2);
 });
+
+
+test("finds a successor through relaxed API queries instead of a preloaded answer", async () => {
+  const current = product("ZX220B 40S/930UE PSD-E C WH PGO", "ExampleSpace Compact recessed", "LP_CF_ZX220B_EU");
+  const calls = [];
+  const client = {
+    searchProducts: async ({ query }) => { calls.push(query); const q=String(query).toUpperCase(); const hit=q.includes("40S")&&q.includes("930")&&q.includes("C")&&q.includes("WH")&&!q.includes("930H"); return {products:hit?[current]:[],families:[]}; },
+    searchFacets: async ({ query }) => { const q=String(query).toUpperCase(); const hit=q.includes("40S")&&q.includes("930")&&!q.includes("930H"); return {products:[],families:hit?[{code:"ZX220B",name:"ExampleSpace Compact recessed",configuratorId:"ZX220BI",source:{query}}]:[]}; },
+  };
+  const result = await discoverSuccessorFamilies(client, parseReference("ZX100B LED40S/930H PSU-E C WH PGO"), {code:"ZX100B",name:"ExampleSpace recessed",raw:{}});
+  assert.equal(result.validated,true); assert.equal(result.candidate.code,"ZX220B"); assert.equal(result.candidate.family.configuratorId,"ZX220BI");
+  assert.ok(calls.some((query)=>query.includes("40S 930")));
+});

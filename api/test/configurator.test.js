@@ -70,7 +70,7 @@ test("does not validate when an official configurator session cannot be bootstra
   const result = await client.validateControlChange({ configuratorId: "DN500BI", seed: null, sourceControlClass: "ON_OFF", targetControlClass: "DALI" });
   assert.equal(result.validated, false);
   assert.equal(result.reason, "CONFIGURATOR_SESSION_NOT_AVAILABLE");
-  assert.equal(calls, 3);
+  assert.equal(calls, 2);
 });
 
 test("reads a real-style hierarchical variable with values in child objects", async () => {
@@ -170,7 +170,7 @@ test("bootstraps DN610BI and returns the exact 930UE plus PSD-E configuration", 
   assert.equal(result.validated, true);
   assert.equal(result.description, "DN610B 40S/930UE PSD-E C WH PGO");
   assert.deepEqual(result.appliedRequirements, ["package", "color", "feature-0", "feature-1", "feature-2"]);
-  assert.equal(bodies[0].newAssignment.assignment.valueName, "DN610B");
+  assert.equal(bodies[0].newAssignment.assignment.valueName, "SIG");
   assert.deepEqual(bodies[0].existingAssignments, []);
   assert.equal(bodies.flatMap((body) => body.existingAssignments).some((entry) => entry.valueName === "[Other values]"), false);
   assert.equal(bodies[1].newAssignment.assignment.valueName, "930UE");
@@ -194,7 +194,21 @@ test("retries DN610BI bootstrap with valid internal baselines and a fresh sessio
   assert.equal(session.configId, "official-session");
   assert.equal(bodies.length, 2);
   assert.notEqual(bodies[0].configId, bodies[1].configId);
-  assert.equal(bodies[1].newAssignment.assignment.variableName, "Internal.PLM_BRD");
-  assert.equal(bodies[1].newAssignment.assignment.valueName, "SIG");
+  assert.equal(bodies[1].newAssignment.assignment.variableName, "Internal.SPADACTIVE");
+  assert.equal(bodies[1].newAssignment.assignment.valueName, "1");
   assert.equal(JSON.stringify(bodies).includes("[Other values]"), false);
+});
+
+
+test("continues the same live session to select a family exposed after generic bootstrap", async () => {
+  const bodies = [];
+  const client = new ConfiguratorApiClient({ fetchImpl: async (_url, options) => {
+    const body = JSON.parse(options.body); bodies.push(body);
+    if (bodies.length === 1) return jsonResponse({ configId: "live-session", variables: [{ variableName: "Product_Variant.PLM_PFC", values: [{ valueName: "ZZ100B", state: "selectable" }, { valueName: "ZZ200B", state: "selectable" }] }] });
+    return jsonResponse({ configId: "live-session", options: [{ variableName: "Product_Variant.PLM_PFC", valueName: "ZZ200B", state: "userSelected" }] });
+  }});
+  const session = await client.bootstrap("ZZ200BI", "ZZ200B");
+  assert.equal(session.configId, "live-session"); assert.equal(bodies.length, 2);
+  assert.equal(bodies[0].newAssignment.assignment.valueName, "SIG");
+  assert.equal(bodies[1].configId, "live-session"); assert.equal(bodies[1].newAssignment.assignment.valueName, "ZZ200B");
 });

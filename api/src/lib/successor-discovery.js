@@ -181,19 +181,36 @@ function rankGroups(parsed, legacyFamily, groups) {
 function buildQueries(parsed, legacyFamily) {
   const targetTerms = controlSearchTerms(parsed.targetControlClass, parsed.driver);
   const familyTerms = familyNameTokens(legacyFamily?.name).slice(0, 3);
-  const technical = [parsed.package, parsed.colorCode, parsed.length, ...(parsed.features || []).slice(0, 4)];
+  const stableFeatures = (parsed.features || []).filter((value) => value && value.length <= 8).slice(0, 5);
   const structuralPrefix = familyPrefix(parsed.family || legacyFamily?.code);
-  const queries = [
-    [...familyTerms, ...technical, targetTerms[0]],
-    [...familyTerms, parsed.package, parsed.colorCode, targetTerms[1] || targetTerms[0]],
-    [parsed.package, parsed.colorCode, parsed.length, ...(parsed.features || []), targetTerms[0]],
-    [parsed.packageCanonical || parsed.package, ...(parsed.features || []), "DALI"],
-    [structuralPrefix, parsed.packageCanonical || parsed.package, parsed.length, "DALI"],
-    [...(parsed.features || []), "DALI"],
-  ]
-    .map((parts) => parts.filter(Boolean).join(" ").trim())
-    .filter((query) => query.split(/\s+/).length >= 2);
-  return [...new Set(queries)];
+  const packageToken = parsed.packageCanonical || parsed.package;
+  const colorToken = parsed.colorCode || "";
+
+  // Search progressively: start with family-name evidence when it exists, then
+  // fall back to a technical fingerprint that deliberately removes legacy-only
+  // spelling (LED40S -> 40S, 930H -> 930).  No family replacement is encoded
+  // here; the Product API results still have to provide and validate the family.
+  const signatures = [
+    [...familyTerms, packageToken, colorToken, ...stableFeatures.slice(0, 3)],
+    [packageToken, colorToken, ...stableFeatures],
+    [packageToken, ...stableFeatures],
+    [colorToken, ...stableFeatures],
+    [structuralPrefix, packageToken, colorToken, ...stableFeatures.slice(0, 2)],
+    [...familyTerms, packageToken, colorToken],
+  ].filter((parts) => parts.filter(Boolean).length >= 2);
+
+  const queries = [];
+  for (const signature of signatures) {
+    for (const control of targetTerms.slice(0, 4)) {
+      queries.push([...signature, control].filter(Boolean).join(" ").trim());
+    }
+  }
+  // A control-neutral query is useful when the API's searchable description
+  // does not contain the generic word DALI/ON-OFF but the control facet does.
+  for (const signature of signatures.slice(0, 4)) {
+    queries.push(signature.filter(Boolean).join(" ").trim());
+  }
+  return [...new Set(queries)].filter((query) => query.split(/\s+/).length >= 2);
 }
 
 export function configuratorCarrier(rankedFamily) {

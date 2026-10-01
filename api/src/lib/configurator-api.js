@@ -281,50 +281,44 @@ export class ConfiguratorApiClient {
 
   async bootstrap(configuratorId, familyCode = "") {
     const createConfigId = () => globalThis.crypto?.randomUUID?.() || `cfg-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const familyAssignment = familyCode ? {
-      action: "updateValues",
-      assignment: { variableName: "Product_Variant.PLM_PFC", valueName: familyCode },
-    } : null;
-    const familyBaselines = [
-      [],
-      [{ variableName: "Internal.PLM_BRD", valueName: "SIG" }],
-      [
-        { variableName: "Internal.PLM_BRD", valueName: "SIG" },
-        { variableName: "Internal.SPADACTIVE", valueName: "1" },
-      ],
-      [{ variableName: "Internal.SPADACTIVE", valueName: "1" }],
-    ];
-    const bootstrapAssignments = [
-      ...(familyAssignment ? [familyAssignment] : []),
+    const familyValue = normalizeText(familyCode);
+    const starters = [
       { action: "updateValues", assignment: { variableName: "Internal.PLM_BRD", valueName: "SIG" } },
       { action: "updateValues", assignment: { variableName: "Internal.SPADACTIVE", valueName: "1" } },
+      ...(familyValue ? [{ action: "updateValues", assignment: { variableName: "Product_Variant.PLM_PFC", valueName: familyValue } }] : []),
     ];
-    const attempts = [
-      ...bootstrapAssignments.map((newAssignment) => ({
-        configId: createConfigId(),
-        name: configuratorId,
-        existingAssignments: [],
-        newAssignment,
-      })),
-      ...(familyAssignment ? familyBaselines.map((existingAssignments) => ({
-        configId: createConfigId(),
-        name: configuratorId,
-        existingAssignments,
-        newAssignment: familyAssignment,
-      })) : []),
-      { configId: createConfigId(), name: configuratorId, existingAssignments: [] },
-    ];
+
     let lastError = null;
-    for (const body of attempts) {
+    for (const newAssignment of starters) {
+      const body = { configId: createConfigId(), name: configuratorId, existingAssignments: [], newAssignment };
       try {
-        const payload = await this.update(configuratorId, body);
-        const assignments = collectAssignments(payload);
+        let payload = await this.update(configuratorId, body);
+        let assignments = collectAssignments(payload);
         if (!assignments.length) continue;
-        return {
-          configId: findText(payload, ["configid", "config_id"]) || body.configId,
-          existingAssignments: assignments.filter((assignment) => selectedState(assignment.state)),
-          payload,
-        };
+        let configId = findText(payload, ["configid", "config_id"]) || body.configId;
+        let existingAssignments = assignments.filter((assignment) => selectedState(assignment.state));
+
+        // Some configurators reject PLM_PFC as the very first assignment but
+        // expose it after their normal bootstrap variable has been selected.
+        // Discover the family option from that live payload and apply it in the
+        // same session.  This is data-driven and works for any family code.
+        if (familyValue) {
+          const familyOption = assignments.find((assignment) => (
+            normalizeText(assignment.valueName) === familyValue
+            && /PLM_PFC|PRODUCT.*FAMILY|FAMILY/i.test(assignment.variableName)
+          ));
+          const familySelected = existingAssignments.some((assignment) => (
+            normalizeText(assignment.valueName) === familyValue
+            && /PLM_PFC|PRODUCT.*FAMILY|FAMILY/i.test(assignment.variableName)
+          ));
+          if (familyOption && !familySelected) {
+            payload = await this.applyAssignment(configuratorId, configId, existingAssignments, familyOption);
+            assignments = collectAssignments(payload);
+            configId = findText(payload, ["configid", "config_id"]) || configId;
+            existingAssignments = selectedAssignments(payload, existingAssignments);
+          }
+        }
+        return { configId, existingAssignments, payload };
       } catch (error) {
         lastError = error;
       }
