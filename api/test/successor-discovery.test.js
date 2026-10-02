@@ -231,3 +231,23 @@ test("breaks an ambiguous family tie using bidirectional control continuity, wit
   assert.equal(runner.bidirectionalControlContinuity, false);
   assert.ok(result.candidate.score - runner.score >= 20);
 });
+
+test("does not treat unrelated BGP configurators as successors of a BVP family", async () => {
+  const wrong1 = product("BGP730 4000/730 PSD", "Unrelated road family", "LP_CF_BGP730_EU");
+  const wrong2 = product("BGP729 4000/730 PSD", "Another road family", "LP_CF_BGP729_EU");
+  const client = {
+    searchProducts: async () => ({ products: [wrong1, wrong2], families: [] }),
+    searchFacets: async () => ({ products: [], families: [
+      { code: "BGP730", name: "Unrelated road family", configuratorId: "BGP730I" },
+      { code: "BGP729", name: "Another road family", configuratorId: "BGP729I" },
+    ] }),
+  };
+  const result = await discoverSuccessorFamilies(
+    client,
+    parseReference("BVP656 LED400-4S/730 PSU II A35-MB GR"),
+    { code: "BVP656", name: "", raw: null },
+  );
+  assert.equal(result.validated, false);
+  assert.equal(result.reason, "NO_CURRENT_FAMILY_CANDIDATE");
+  assert.deepEqual(result.candidates, []);
+});

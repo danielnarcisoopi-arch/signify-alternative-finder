@@ -88,7 +88,7 @@ function Result({ result }) {
 
       <Validation validation={result.validation} />
 
-      {result.technicalValidation && <div className="tech-validation"><strong>Luminaire Configurator V2</strong>{result.technicalValidation.applicable && result.technicalValidation.verified ? <p>✓ Família Outdoor encontrada no motor técnico oficial ({result.technicalValidation.segment}). Validação técnica adicional ativa.</p> : <p>{result.technicalValidation.applicable ? "Motor Outdoor consultado; esta família não foi confirmada nos catálogos Road/Urban já mapeados." : "Não aplicável a esta família: o novo configurador cobre Urban, Road, Sports e Solar."}</p>}</div>}
+      {result.technicalValidation?.verified && <div className="tech-validation"><strong>Validação técnica Signify</strong><p>✓ Família Outdoor confirmada no Luminaire Configurator V2 ({result.technicalValidation.segment}).</p></div>}
 
       {result.familyMigration && (
         <div className="detail-block migration">

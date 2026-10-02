@@ -354,7 +354,15 @@ export async function discoverSuccessorFamilies(productClient, parsed, legacyFam
   if (!successful.length && settled.length) throw settled[0].reason;
   const products = successful.flatMap((value) => value.products || []);
   const families = successful.flatMap((value) => value.families || []);
-  const ranked = rankGroups(parsed, effectiveLegacyFamily, groupEvidence(families, products));
+  const rankedAll = rankGroups(parsed, effectiveLegacyFamily, groupEvidence(families, products));
+  // Never let a relaxed catalogue search migrate a product to an unrelated
+  // commercial family. A successor must keep the structural family prefix,
+  // have explicit successor metadata, or have very strong family-name evidence.
+  // This prevents e.g. BVP656 from being offered BGP730I/BGP729I simply because
+  // broad technical search terms happen to overlap.
+  const ranked = rankedAll.filter((candidate) =>
+    candidate.explicitSuccessor || candidate.samePrefix || candidate.nameSimilarity >= 0.75
+  );
   // A unique configurable family returned by the official Product API for the
   // exact, complete user reference is direct discovery evidence. Do not let
   // broader relaxed searches make that result ambiguous merely because they

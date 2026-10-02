@@ -63,15 +63,9 @@ export async function enrichWithLuminaireConfiguratorV2(result) {
   // Only Road/Urban contracts were captured and verified, so do not guess Sports/Solar routes.
   const outdoorLike = /^(?:BGP|BDP|EDP|BSP|BPS|BDS|BSS|BPP)\w*/i.test(family);
   if (!outdoorLike) {
-    return {
-      ...result,
-      technicalValidation: {
-        applicable: false,
-        source: "Signify Luminaire Configurator V2",
-        reason: "OUTDOOR_CONFIGURATOR_NOT_APPLICABLE_TO_THIS_FAMILY",
-        scope: "Urban / Road / Sports / Solar",
-      },
-    };
+    // Indoor families do not use this Outdoor configurator. Keep this internal
+    // instead of showing a noisy "not applicable" warning to the end user.
+    return result;
   }
   const evidence = await findOutdoorFamily(family);
   return {
@@ -82,8 +76,8 @@ export async function enrichWithLuminaireConfiguratorV2(result) {
           applicable: true,
           verified: false,
           source: "Signify Luminaire Configurator V2",
-          reason: "FAMILY_NOT_FOUND_IN_CAPTURED_ROAD_URBAN_CATALOGS",
-          scope: "Road + Urban contracts verified; Sports/Solar not guessed",
+          reason: "OUTDOOR_FAMILY_NOT_FOUND_IN_VERIFIED_CATALOGS",
+          scope: "Road + Urban contracts verified; Sports/Solar require captured contracts before they can be queried safely",
           checkedAt: new Date().toISOString(),
         },
   };
