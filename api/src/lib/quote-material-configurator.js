@@ -58,7 +58,7 @@ function preferredControl(variable, target, sourceDriver='') {
 
 export class QuoteMaterialConfiguratorClient {
   constructor({fetchImpl=globalThis.fetch,url=process.env.SIGNIFY_QUOTE_MATERIAL_API||DEFAULT_URL,materialInfoUrl=process.env.SIGNIFY_MATERIAL_INFO_API||MATERIAL_INFO_URL,templateUrl=process.env.SIGNIFY_MATERIAL_TEMPLATE_API||TEMPLATE_URL,timeoutMs=Number(process.env.SIGNIFY_API_TIMEOUT_MS||12000)}={}){this.fetchImpl=fetchImpl;this.url=url;this.materialInfoUrl=materialInfoUrl;this.templateUrl=templateUrl;this.timeoutMs=timeoutMs;this.metaCache=new Map();this.templateReady=new Set();}
-  headers(){return {'Content-Type':'application/json','Accept':'application/json, text/plain, */*','Origin':QUOTE_ORIGIN,'Referer':QUOTE_ORIGIN+'/'};}
+  headers(){return {'Content-Type':'application/json','Accept':'application/json, text/plain, */*','Origin':QUOTE_ORIGIN,'Referer':QUOTE_ORIGIN+'/quotes/','User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0','Accept-Language':'en-GB,en;q=0.9'};}
   buildDate(){
     if(process.env.SIGNIFY_BUILD_DATE) return process.env.SIGNIFY_BUILD_DATE;
     const now=new Date();
@@ -76,7 +76,7 @@ export class QuoteMaterialConfiguratorClient {
   async warmTemplate(model,plant){
     const key=`${model}|${plant}`; if(this.templateReady.has(key))return;
     const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs);
-    try{const body=this.templateBody(model,plant); const r=await this.fetchImpl(this.templateUrl,{method:'POST',headers:this.headers(),body:JSON.stringify(body),signal:c.signal}); if(!r.ok)throw new QuoteMaterialConfiguratorError('TEMPLATE_HTTP_ERROR',`Quote template returned HTTP ${r.status}`,{status:r.status,plant}); await r.json(); this.templateReady.add(key);} finally{clearTimeout(timer);}
+    try{const body=this.templateBody(model,plant); const r=await this.fetchImpl(this.templateUrl,{method:'POST',headers:this.headers(),body:JSON.stringify(body),signal:c.signal}); if(!r.ok){let text='';try{text=await r.text();}catch{} throw new QuoteMaterialConfiguratorError('TEMPLATE_HTTP_ERROR',`Quote template returned HTTP ${r.status}`,{status:r.status,plant,response:text.slice(0,500)});} await r.json(); this.templateReady.add(key);} finally{clearTimeout(timer);}
   }
   async request(model, assignments=[]){
     const meta=await this.metadata(model);
@@ -90,8 +90,11 @@ export class QuoteMaterialConfiguratorClient {
     for(const plant of plants){
       const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs);
       try {
-        await this.warmTemplate(model,plant); const r=await this.fetchImpl(this.url,{method:'POST',headers:this.headers(),body:JSON.stringify(this.body(model,assignments,plant)),signal:c.signal});
-        if(!r.ok){ last=new QuoteMaterialConfiguratorError('HTTP_ERROR',`Quote Configurator returned HTTP ${r.status}`,{status:r.status,plant}); continue; }
+        let templateWarning=null;
+        try { await this.warmTemplate(model,plant); }
+        catch(e){ templateWarning=e; }
+        const r=await this.fetchImpl(this.url,{method:'POST',headers:this.headers(),body:JSON.stringify(this.body(model,assignments,plant)),signal:c.signal});
+        if(!r.ok){ let text=''; try{text=await r.text();}catch{} last=new QuoteMaterialConfiguratorError('HTTP_ERROR',`Quote Configurator returned HTTP ${r.status}`,{status:r.status,plant,response:text.slice(0,500),templateWarning:templateWarning?.details||templateWarning?.code||null}); continue; }
         const data=await r.json();
         const root=data?.materialBomConfiguration?.root;
         if(root?.isConfigurable===false){ last=new QuoteMaterialConfiguratorError('NOT_CONFIGURABLE','Material is not configurable',{plant}); continue; }

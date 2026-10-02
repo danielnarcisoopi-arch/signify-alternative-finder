@@ -437,52 +437,62 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       // model itself prove whether it can reproduce the source family/attributes.
       const discoveredModelIds = new Set();
       const modelDiscoveryEvidence = [];
-      // First ask the Quote product service for configurable materials using the
-      // exact source family. This is the authoritative discovery stage and runs
-      // before broad catalogue/successor heuristics. A candidate is still not
-      // trusted until its Configit model proves the source family.
+      let authoritativeDiscovery = null;
+      // AUTHORITATIVE CURRENT-FAMILY PATH. This is the only path allowed to
+      // select a configurator before successor discovery. Exact search and the
+      // progressive-prefix search are both official Quote product-search flows;
+      // every candidate must still prove the original family in its Configit model.
       try {
-        const qd = await quoteProductDiscoveryClient.discover(effective.family, { familyName: originalProduct?.familyName || '' });
-        for (const candidate of qd.candidates || []) { discoveredModelIds.add(candidate.id); modelDiscoveryEvidence.push(candidate); }
-      } catch (e) { modelDiscoveryEvidence.push({source:'QUOTE_PRODUCTS_SEARCH',error:e?.message||String(e)}); }
-      // Generic exact-family hypothesis. This is NOT accepted as a mapping:
-      // it is only a candidate and must pass Configit model proof below. It lets
-      // families such as BGP702/BVP656 reach BGP702I/BVP656I even when the Quote
-      // product-search endpoint is unavailable from the Azure worker. Non-lexical
-      // carriers (for example BDS670 -> BDS650N) still come from progressive
-      // discovery and are likewise accepted only after model proof.
-      if (effective.family) discoveredModelIds.add(`${normalizeText(effective.family)}I`);
-      for (const p of configuratorPool) if (p?.configuratorId) discoveredModelIds.add(p.configuratorId);
-      try {
-        const discoveryQueries = [...new Set([effective.input, effective.family].filter(Boolean))];
-        for (const discoveryQuery of discoveryQueries) {
-          const discovered = await productClient.searchProducts({ query: discoveryQuery, maxPages: 2, size: 100 });
-          for (const p of discovered.products || []) if (p?.configuratorId) discoveredModelIds.add(p.configuratorId);
-          for (const f of discovered.families || []) if (f?.configuratorId) discoveredModelIds.add(f.configuratorId);
+        authoritativeDiscovery = await quoteProductDiscoveryClient.discover(effective.family, { familyName: originalProduct?.familyName || '' });
+        for (const candidate of authoritativeDiscovery.candidates || []) {
+          discoveredModelIds.add(candidate.id);
+          modelDiscoveryEvidence.push(candidate);
         }
-        const familyMeta = await resolveLegacyFamily(productClient, effective, originalProduct);
-        if (familyMeta?.configuratorId) discoveredModelIds.add(familyMeta.configuratorId);
-      } catch { /* discovery is best-effort; existing official candidates remain usable */ }
+      } catch (e) {
+        modelDiscoveryEvidence.push({source:'QUOTE_PRODUCTS_SEARCH',error:e?.message||String(e)});
+      }
+
       const materialModels = [...discoveredModelIds];
-      for (const model of materialModels.slice(0, 12)) {
+      let currentFamilyModelDiscovered = materialModels.length > 0;
+      let currentFamilyModelProven = false;
+      for (const model of materialModels) {
         try {
           const q = await quoteMaterialClient.validate({ model, parsed: effective, targetControlClass: effective.targetControlClass });
-          configuratorAttempts.push({ id:model, family:effective.family, validated:q.validated, familyProven:q.familyProven, reason:q.reason, source:'QUOTE_CONFIGIT_MODEL' });
+          if (q.familyProven) currentFamilyModelProven = true;
+          configuratorAttempts.push({ id:model, family:effective.family, validated:q.validated, familyProven:q.familyProven, reason:q.reason, unresolved:q.unresolved, source:'QUOTE_CONFIGIT_MODEL' });
           if (q.validated && q.familyProven && q.unresolved.length === 0) {
             const appliedValues = q.applied.map(a=>a.value).filter(Boolean);
             const tokens = [...new Set([effective.family, ...appliedValues.filter(v=>normalizeText(v)!==normalizeText(effective.family)), q.selectedControl].filter(Boolean))];
             return {
               status:'VERIFIED_CONFIGURABLE_PRODUCT', statusLabel:RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT, resultType:'VERIFIED_CONFIGURABLE_PRODUCT', compatibility:'CONFIGURABLE',
               original: originalProduct ? productSummary(originalProduct) : {input:effective.input,description:effective.reference||effective.input,family:effective.family,control:displayControl(effective.controlClass)},
-              recommended:{description:tokens.join(' '),orderCode:null,productCode:null,family:tokens[0]||effective.family,control:displayControl(effective.targetControlClass),configuratorId:model,productUrl:null,market:null,lifecycleStatus:null},
-              currentFamily:tokens[0]||effective.family, changes:[{field:'control',from:effective.driver||displayControl(effective.controlClass),to:q.selectedControl}], preserved:q.applied,
-              validation:{verified:true,source:'Signify Quote / Configit model',method:'Official variable domains + server-side constraint validation; only PLM_TRAFO changed after applying the original attributes.',checkedAt:new Date().toISOString(),complete:q.complete},
-              configurators:configuratorAttempts, modelDiscovery:modelDiscoveryEvidence, message:'Configuração validada diretamente pelo modelo Configit utilizado pelo Signify Quote.', recommendedDescription:tokens.join(' '), orderCode:null, differences:[`Control Gear: ${effective.driver||displayControl(effective.controlClass)} → ${q.selectedControl}`]
+              recommended:{description:tokens.join(' '),orderCode:null,productCode:null,family:effective.family,control:displayControl(effective.targetControlClass),configuratorId:model,productUrl:null,market:null,lifecycleStatus:null},
+              currentFamily:effective.family, familyMigration:null, changes:[{field:'control',from:effective.driver||displayControl(effective.controlClass),to:q.selectedControl}], preserved:q.applied,
+              validation:{verified:true,source:'Signify Quote / Configit model',method:'Current-family Configit model proved the original family and server-side constraints accepted the DALI control change.',checkedAt:new Date().toISOString(),complete:q.complete},
+              configurators:configuratorAttempts, modelDiscovery:modelDiscoveryEvidence, message:'Configuração validada diretamente no configurador da família original.', recommendedDescription:tokens.join(' '), orderCode:null, differences:[`Control Gear: ${effective.driver||displayControl(effective.controlClass)} → ${q.selectedControl}`]
             };
           }
         } catch (e) {
-          configuratorAttempts.push({id:model,family:effective.family,validated:false,reason:e.code||'QUOTE_CONFIGIT_MODEL_UNAVAILABLE',source:'QUOTE_CONFIGIT_MODEL'});
+          configuratorAttempts.push({id:model,family:effective.family,validated:false,familyProven:false,reason:e.code||'QUOTE_CONFIGIT_MODEL_UNAVAILABLE',details:e.details||null,source:'QUOTE_CONFIGIT_MODEL'});
         }
+      }
+
+      // Critical safety rule: if Quote has exposed a current-family configurable
+      // material, never allow the legacy successor/scoring pipeline to replace the
+      // family merely because the Configit endpoint is temporarily unavailable.
+      // This prevents BDS670 -> BDS492 and similar false migrations.
+      if (currentFamilyModelDiscovered) {
+        if (standardSameFamilyFallback) return standardSameFamilyFallback;
+        return noResult(effective, {
+          originalProduct,
+          configurators: materialModels,
+          configuratorAttempts,
+          diagnostics: { discoveryMode: authoritativeDiscovery?.mode || null, modelDiscovery: modelDiscoveryEvidence },
+          reason: currentFamilyModelProven ? 'CURRENT_FAMILY_CONFIGURATION_NOT_VALIDATED' : 'CURRENT_FAMILY_CONFIGURATOR_NOT_AVAILABLE',
+          message: currentFamilyModelProven
+            ? `O configurador da família ${effective.family} foi confirmado, mas a configuração DALI final não passou todos os requisitos de validação.`
+            : `Foi encontrado um configurador oficial para ${effective.family}, mas o modelo Configit não ficou disponível para validação. Não foi usado um sucessor como substituto.`
+        });
       }
       if (standardSameFamilyFallback) return standardSameFamilyFallback;
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);

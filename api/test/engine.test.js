@@ -260,3 +260,44 @@ test('unknown outdoor control defaults the requested alternative to DALI, not UN
  const fn=createEngine({productClient,quoteProductDiscoveryClient,quoteMaterialClient,configuratorClient:{validateControlChange:async()=>({validated:false})}});
  const r=await fn('BGP702 LED90/730 DX10P LGR 7035 SRG10 42'); assert.equal(r.status,'VERIFIED_CONFIGURABLE_PRODUCT'); assert.equal(r.recommended.configuratorId,'BGP702I');
 });
+
+test('site pipeline never replaces a discovered current-family Configit model with a successor', async () => {
+  let successorCalls = 0;
+  const productClient = {
+    searchProducts: async () => ({ products: [], families: [] }),
+    searchFamily: async () => [], resolveOrderCode: async () => null, verifyStandardProduct: async () => null,
+    resolveFamilyMetadata: async () => null,
+    searchFacets: async () => { successorCalls++; return {products:[],families:[{code:'BDS492',name:'wrong successor',configuratorId:'BDS490I'}]}; },
+  };
+  const quoteProductDiscoveryClient = { discover: async () => ({mode:'PROGRESSIVE_PREFIX',candidates:[{id:'BDS650N',evidence:'QUOTE_CONFIGURABLE_ITEM'}]}) };
+  const quoteMaterialClient = { validate: async () => { const e=new Error('blocked'); e.code='HTTP_ERROR'; e.details={status:403}; throw e; } };
+  const engine = createEngine({ productClient, configuratorClient:noConfigurator, quoteProductDiscoveryClient, quoteMaterialClient });
+  const result = await engine('BDS670 LED50/730 MDA BK SRT SRG10 60P');
+  assert.equal(result.status,'NO_VERIFIED_ALTERNATIVE');
+  assert.equal(result.configurators[0].id,'BDS650N');
+  assert.equal(result.currentFamily, undefined);
+  assert.equal(successorCalls,0);
+});
+
+for (const c of [
+  ['BGP702 LED90/730 DX10P LGR 7035 SRG10 42','BGP702I','BGP702','PSD'],
+  ['BVP656 LED400-4S/730 PSU II A35-MB GR','BVP656I','BVP656','PSD'],
+  ['BDS670 LED50/730 MDA BK SRT SRG10 60P','BDS650N','BDS670','PSD'],
+  ['BDS670 LED40/730 MDM BK SRT SRG10 60P','BDS650N','BDS670','PSD'],
+]) {
+  test(`full site engine returns current-family Configit result for ${c[0]}`, async () => {
+    const [input,model,family,control]=c;
+    const productClient={searchProducts:async()=>({products:[],families:[]}),searchFamily:async()=>[],resolveOrderCode:async()=>null,verifyStandardProduct:async()=>null,resolveFamilyMetadata:async()=>null};
+    const quoteProductDiscoveryClient={discover:async()=>({mode:'TEST',candidates:[{id:model,evidence:'QUOTE_CONFIGURABLE_ITEM'}]})};
+    const parsed=parseReference(input);
+    const applied=[{role:'FAMILY',value:family},{role:'FLUX',value:parsed.package},{role:'COLOR',value:parsed.colorCode},...(parsed.features||[]).map(value=>({role:'FEATURE',value}))];
+    const quoteMaterialClient={validate:async({model:m})=>({validated:true,familyProven:true,unresolved:[],applied,selectedControl:control,complete:true,model:m})};
+    const engine=createEngine({productClient,configuratorClient:noConfigurator,quoteProductDiscoveryClient,quoteMaterialClient});
+    const result=await engine(input);
+    assert.equal(result.status,'VERIFIED_CONFIGURABLE_PRODUCT');
+    assert.equal(result.recommended.configuratorId,model);
+    assert.equal(result.recommended.family,family);
+    assert.match(result.recommended.description,new RegExp(`^${family}\\b`));
+    assert.match(result.recommended.description,/PSD/);
+  });
+}
