@@ -29,14 +29,15 @@ function explicitModels(payload,family){
 }
 export class QuoteProductDiscoveryClient{
  constructor({fetchImpl=globalThis.fetch,baseUrl=process.env.SIGNIFY_QUOTE_PRODUCT_SEARCH||DEFAULT_BASE,timeoutMs=Number(process.env.SIGNIFY_API_TIMEOUT_MS||12000)}={}){this.fetchImpl=fetchImpl;this.baseUrl=baseUrl;this.timeoutMs=timeoutMs;}
- async search(query,{configurable=false}={}){ const u=new URL(this.baseUrl); u.searchParams.set('query',query);u.searchParams.set('page','0');u.searchParams.set('pageSize','6');u.searchParams.set('configurable',String(configurable));u.searchParams.set('language','en-GB');u.searchParams.set('salesOrganization','PT02');u.searchParams.set('distributionChannel','05');u.searchParams.set('soldTo','');u.searchParams.set('shipTo',''); const c=new AbortController(),t=setTimeout(()=>c.abort(),this.timeoutMs); try{const r=await this.fetchImpl(u,{headers:{Accept:'application/json'},signal:c.signal});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json();}finally{clearTimeout(t);} }
+ async search(query,{configurable=false,pageSize=6}={}){ const u=new URL(this.baseUrl); u.searchParams.set('query',query);u.searchParams.set('page','0');u.searchParams.set('pageSize',String(pageSize));u.searchParams.set('configurable',String(configurable));u.searchParams.set('language','en-GB');u.searchParams.set('salesOrganization','PT02');u.searchParams.set('distributionChannel','05');u.searchParams.set('soldTo','null');u.searchParams.set('shipTo','null'); const c=new AbortController(),t=setTimeout(()=>c.abort(),this.timeoutMs); try{const r=await this.fetchImpl(u,{headers:{Accept:'application/json'},signal:c.signal});if(!r.ok)throw new Error(`HTTP ${r.status}`);return await r.json();}finally{clearTimeout(t);} }
  async discover(family,{familyName=''}={}){
    const f=normalizeText(family); const all=[];
    // First replay the exact request pattern observed in the official Quote UI.
    // Do not broaden until exact family discovery has been exhausted.
    for(const configurable of [false,true]){ try{const p=await this.search(f,{configurable});for(const m of explicitModels(p,f))all.push({...m,query:f,configurable,source:'QUOTE_EXACT_FAMILY_SEARCH'});}catch(e){all.push({error:String(e),query:f,configurable,source:'QUOTE_EXACT_FAMILY_SEARCH'});} }
    const exact=[...new Map(all.filter(x=>x.id).map(x=>[x.id,x])).values()];
-   if(exact.length) return {candidates:exact.map(x=>({...x,score:300})),diagnostics:all,mode:'EXACT_FAMILY'};
+   const exactStrong=[...new Map(all.filter(x=>x.id&&(x.evidence==='QUOTE_CONFIGURABLE_ITEM'||x.evidence==='EXPLICIT_FIELD')).map(x=>[x.id,x])).values()];
+   if(exactStrong.length) return {candidates:exactStrong.map(x=>({...x,score:300})),diagnostics:all,mode:'EXACT_FAMILY'};
 
    // Progressive-prefix discovery mirrors the safe manual workflow used in Quote:
    // BDS670 -> BDS67 -> BDS6 -> ... . Prefix hits are ONLY candidates; the engine
@@ -49,21 +50,21 @@ export class QuoteProductDiscoveryClient{
    for(const q of prefixes){
      for(const configurable of [false,true]){
        try{
-         const p=await this.search(q,{configurable});
+         const p=await this.search(q,{configurable,pageSize:56});
          for(const m of explicitModels(p,f)) all.push({...m,query:q,configurable,source:'QUOTE_PROGRESSIVE_PREFIX',prefixLength:q.length});
        }catch(e){ all.push({error:String(e),query:q,configurable,source:'QUOTE_PROGRESSIVE_PREFIX'}); }
      }
      // Stop broadening once an official configurable material has been exposed.
      // Model proof in the engine will reject unrelated prefix siblings.
-     if(all.some(x=>x.id && x.source==='QUOTE_PROGRESSIVE_PREFIX' && x.query===q)) break;
+     if(all.some(x=>x.id && x.source==='QUOTE_PROGRESSIVE_PREFIX' && x.query===q && (x.evidence==='QUOTE_CONFIGURABLE_ITEM'||x.evidence==='EXPLICIT_FIELD'))) break;
    }
-   const prefixModels=[...new Map(all.filter(x=>x.id&&x.source==='QUOTE_PROGRESSIVE_PREFIX').map(x=>[x.id,x])).values()];
+   const prefixModels=[...new Map(all.filter(x=>x.id&&x.source==='QUOTE_PROGRESSIVE_PREFIX'&&(x.evidence==='QUOTE_CONFIGURABLE_ITEM'||x.evidence==='EXPLICIT_FIELD')).map(x=>[x.id,x])).values()];
    if(prefixModels.length) return {candidates:prefixModels.map(x=>({...x,score:240+x.prefixLength})),diagnostics:all,mode:'PROGRESSIVE_PREFIX'};
 
    // Only if exact and progressive-prefix discovery return no configurable material
    // do we use broader catalog text queries.
    const queries=[familyName&&`${f} ${familyName}`, `${f} CONFIGURATOR`, familyName&&`${familyName} CONFIGURATOR`].filter(Boolean);
-   for(const q of [...new Set(queries)]) for(const configurable of [false,true]){ try{const p=await this.search(q,{configurable});for(const m of explicitModels(p,f))all.push({...m,query:q,configurable,source:'QUOTE_CATALOG_DISCOVERY'});}catch(e){all.push({error:String(e),query:q,configurable,source:'QUOTE_CATALOG_DISCOVERY'});} }
+   for(const q of [...new Set(queries)]) for(const configurable of [false,true]){ try{const p=await this.search(q,{configurable,pageSize:56});for(const m of explicitModels(p,f))all.push({...m,query:q,configurable,source:'QUOTE_CATALOG_DISCOVERY'});}catch(e){all.push({error:String(e),query:q,configurable,source:'QUOTE_CATALOG_DISCOVERY'});} }
    const scored=new Map(); for(const m of all){if(!m.id)continue;let s=m.explicit?180:90;if(m.evidence==='CATALOG_TEXT')s+=40;const cur=scored.get(m.id);if(!cur||s>cur.score)scored.set(m.id,{...m,score:s});}
    return {candidates:[...scored.values()].sort((a,b)=>b.score-a.score),diagnostics:all,mode:'FALLBACK'};
  }

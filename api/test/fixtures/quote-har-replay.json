@@ -1,0 +1,4800 @@
+{
+  "https://www.quote.signify.com/api/products/search?query=BGP702&page=0&pageSize=6&configurable=false&language=en-GB&salesOrganization=PT02&distributionChannel=05&soldTo=null&shipTo=null": {
+    "query": "BGP702",
+    "currentPage": 0,
+    "orderBy": null,
+    "totalCount": 1,
+    "moreToLoad": false,
+    "items": [
+      {
+        "externalId": "BGP702I",
+        "name": "BGP702I",
+        "productModelName": "BGP702I_BGP702I",
+        "materialName": "",
+        "webImagePath": null,
+        "imageId": null,
+        "description": "Luma gen2 Micro",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": ""
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Configuration material"
+          },
+          {
+            "name": "NetWeight",
+            "value": "0.000"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": ""
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": ""
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": ""
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": ""
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "4560"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "66"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": "2026-09-18 09:09:08"
+          },
+          {
+            "name": "ModelVersion",
+            "value": "236.0"
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": "PR2"
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "AT02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "DE02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "DK02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "GB02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "IT02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "NO02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PL02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "SE02",
+            "distributionChannel": "02"
+          }
+        ],
+        "isVariant": false
+      }
+    ]
+  },
+  "https://www.quote.signify.com/api/products/search?query=BDS670&page=0&pageSize=6&configurable=false&language=en-GB&salesOrganization=PT02&distributionChannel=05&soldTo=null&shipTo=null": {
+    "query": "BDS670",
+    "currentPage": 0,
+    "orderBy": null,
+    "totalCount": 2,
+    "moreToLoad": false,
+    "items": [
+      {
+        "externalId": "000000910925868187",
+        "name": "000910925868187",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0017",
+        "imageId": null,
+        "description": "BDS670 LED80-4S/740 I MDM D9 STD 60",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000000000000199828/000000000019982800/000008719514199828/000871951419982800"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "16.610"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "SO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED CONE FLUID"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-01-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Industrial.ZZSOFF",
+            "valueName": "SO",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS670",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "740",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED80",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDM",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "I",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "D9",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "60",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "BV",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "64",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "166_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      },
+      {
+        "externalId": "000000910925868198",
+        "name": "000910925868198",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0017",
+        "imageId": null,
+        "description": "BDS670 LED80/722 I MDM SRT 60",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000000000000199934/000000000019993400/000008719514199934/000871951419993400"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "16.610"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "EO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED CONE FLUID"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-03-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Industrial.ZZSOFF",
+            "valueName": "SO",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS670",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "722",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED80",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDM",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "I",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD-SR",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "60",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "SRT",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "SRTB",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "HSR",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "64",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "125_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      }
+    ]
+  },
+  "https://www.quote.signify.com/api/products/search?query=BDS6&page=0&pageSize=56&configurable=false&language=en-GB&salesOrganization=PT02&distributionChannel=05&soldTo=null&shipTo=null": {
+    "query": "BDS6",
+    "currentPage": 0,
+    "orderBy": null,
+    "totalCount": 8,
+    "moreToLoad": false,
+    "items": [
+      {
+        "externalId": "000000910925868147",
+        "name": "000910925868147",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0001",
+        "imageId": null,
+        "description": "BDS650 LED40-4S/740 I MDS D9 STD 76",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000008719514199422/000000000019942200/000000000000199422/000871951419942200"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "11.468"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "SO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED TORCH"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-03-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "740",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED40",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDS",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "I",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "D9",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "76",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "BV",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "16",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "168_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      },
+      {
+        "externalId": "000000910925868151",
+        "name": "000910925868151",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0007",
+        "imageId": null,
+        "description": "BDS651 LED20-4S/740 I MDS CLO D9 STD 60",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000000000000199460/000000000019946000/000008719514199460/000871951419946000"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "12.568"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "SO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED TORCH"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-03-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Industrial.ZZSOFF",
+            "valueName": "SO",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS651",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "740",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED20",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDS",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "I",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "CLO",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "D9",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "60",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "BV",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "16",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "168_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      },
+      {
+        "externalId": "000000910925868155",
+        "name": "000910925868155",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0013",
+        "imageId": null,
+        "description": "BDS660 LED20-4S/740 I MDM D9 STD 60",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000008719514199507/000000000019950700/000000000000199507/000871951419950700"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "16.326"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "SO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED CONE SHARP"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-03-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Industrial.ZZSOFF",
+            "valueName": "SO",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS660",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "740",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED20",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDM",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "I",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "D9",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "60",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "BV",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "16",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "168_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      },
+      {
+        "externalId": "000000910925868187",
+        "name": "000910925868187",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0017",
+        "imageId": null,
+        "description": "BDS670 LED80-4S/740 I MDM D9 STD 60",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000000000000199828/000000000019982800/000008719514199828/000871951419982800"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "16.610"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "SO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED CONE FLUID"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-01-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Industrial.ZZSOFF",
+            "valueName": "SO",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS670",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "740",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED80",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDM",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "I",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "D9",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "60",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "BV",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "64",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "166_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      },
+      {
+        "externalId": "000000910925868198",
+        "name": "000910925868198",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0017",
+        "imageId": null,
+        "description": "BDS670 LED80/722 I MDM SRT 60",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000000000000199934/000000000019993400/000008719514199934/000871951419993400"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "16.610"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "EO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED CONE FLUID"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-03-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Industrial.ZZSOFF",
+            "valueName": "SO",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS670",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "722",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED80",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDM",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "I",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD-SR",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "60",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STD",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "SRT",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "SRTB",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "HSR",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "64",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "125_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      },
+      {
+        "externalId": "000000910925868203",
+        "name": "000910925868203",
+        "productModelName": "BDS650I_BDS650I",
+        "materialName": "BDS650I",
+        "webImagePath": "https://www.assets.signify.com/is/image/Signify/OPPR1_BDS650I_0013",
+        "imageId": null,
+        "description": "BDS660 LED80/730 II MDW SRT C500 60",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000000000000199972/000000000019997200/000008719514199972/000871951419997200"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "16.432"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "SIG"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "SO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "METRONOMIS LED CONE SHARP"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "SIG"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "SIGNIFY"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2026-03-13 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [
+          {
+            "variableName": "Industrial.ZZSOFF",
+            "valueName": "SO",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.BRD",
+            "valueName": "SIG",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.PFAM",
+            "valueName": "BDS650",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFC",
+            "valueName": "BDS660",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLR",
+            "valueName": "GR-10714",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLRCH",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.RAL",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COATING",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LINE",
+            "valueName": "LED",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.COLLAMP",
+            "valueName": "730",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LAMPFAM",
+            "valueName": "LED80",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NAMEEXT",
+            "valueName": "4S",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTE",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.OPTC",
+            "valueName": "MDW",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEFREQ",
+            "valueName": "50-60",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CLS",
+            "valueName": "II",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CVRFINISH",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TRAFO",
+            "valueName": "PSD-SR",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LRPERC",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.LR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.FS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.MDEV",
+            "valueName": "60",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABL",
+            "valueName": "H07RN-F-2X1.5",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Info.LINEVOLT",
+            "valueName": "220-240",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.PFCEXT",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.SRGPROT",
+            "valueName": "STDE",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.GLAREACC",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_TOPSNSR",
+            "valueName": "SRT",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_BTMSNSR",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABEL",
+            "valueName": "N",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELPOS",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SpecialLabel.RL_SPLABELTXT",
+            "valueName": "NA",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Socket.RL_SRINT",
+            "valueName": "SRTB",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.HOUSCONF",
+            "valueName": "HSR",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.CABLLENGTH",
+            "valueName": "0.5",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.TYPDESCR",
+            "valueName": ".",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.NLP",
+            "valueName": "64",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "Required.DRVCODE",
+            "valueName": "125_0_0",
+            "updatedValues": null,
+            "isDefault": false,
+            "exclusion": false,
+            "isLive": false
+          },
+          {
+            "variableName": "SPAD.SPADACTIVE",
+            "valueName": "0",
+            "updatedValues": null,
+            "isDefault": true,
+            "exclusion": false,
+            "isLive": false
+          }
+        ],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": true
+      },
+      {
+        "externalId": "000000992200112714",
+        "name": "000992200112714",
+        "productModelName": null,
+        "materialName": "",
+        "webImagePath": null,
+        "imageId": null,
+        "description": "BDS660/670 DIFFUSING PLATE ASSY",
+        "longText": "",
+        "isConfigurable": false,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": false,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": "000000000000319184/000000000031918400/000008718291319184"
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Luminaires"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Finished products"
+          },
+          {
+            "name": "NetWeight",
+            "value": "0.860"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": "PHL"
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": "SO"
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": "Spare Parts Outdoor Lighting"
+          },
+          {
+            "name": "Brand_Name",
+            "value": "PHL"
+          },
+          {
+            "name": "BrandDescription",
+            "value": "PHILIPS"
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": "ZO"
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": "2030-12-31 00:00:00"
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6518"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "01"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": ""
+          },
+          {
+            "name": "ModelVersion",
+            "value": ""
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": ""
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "AT02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "DE02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "DE02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "PL02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          }
+        ],
+        "isVariant": false
+      },
+      {
+        "externalId": "BDS650N",
+        "name": "BDS650N",
+        "productModelName": "BDS650N_BDS650N",
+        "materialName": "",
+        "webImagePath": null,
+        "imageId": null,
+        "description": "Metronomis LED",
+        "longText": "",
+        "isConfigurable": true,
+        "baseUnit": "ST",
+        "materialGroup": "4LK000",
+        "plant": null,
+        "enableVariantMatching": true,
+        "properties": [
+          {
+            "name": "CountryOfOrigin",
+            "value": ""
+          },
+          {
+            "name": "CustomerMaterialData",
+            "value": ""
+          },
+          {
+            "name": "EocCode",
+            "value": ""
+          },
+          {
+            "name": "PricingViewDisplayValue",
+            "value": ""
+          },
+          {
+            "name": "IndustrySector",
+            "value": "Lighting"
+          },
+          {
+            "name": "MaterialType",
+            "value": "Configuration material"
+          },
+          {
+            "name": "NetWeight",
+            "value": "0.000"
+          },
+          {
+            "name": "UnitOfWeight",
+            "value": "KG"
+          },
+          {
+            "name": "Division",
+            "value": "01"
+          },
+          {
+            "name": "ItemCategory",
+            "value": ""
+          },
+          {
+            "name": "SalesUnit",
+            "value": ""
+          },
+          {
+            "name": "VolumeRebateGroup",
+            "value": "E1"
+          },
+          {
+            "name": "PriceResponsible",
+            "value": "0000780603"
+          },
+          {
+            "name": "Brand",
+            "value": ""
+          },
+          {
+            "name": "MaterialServiceOffer",
+            "value": ""
+          },
+          {
+            "name": "ProductFamilyApproval",
+            "value": ""
+          },
+          {
+            "name": "Brand_Name",
+            "value": ""
+          },
+          {
+            "name": "BrandDescription",
+            "value": ""
+          },
+          {
+            "name": "UnitOfMeasure",
+            "value": ""
+          },
+          {
+            "name": "MaterialStatus",
+            "value": ""
+          },
+          {
+            "name": "InformationText",
+            "value": ""
+          },
+          {
+            "name": "MaterialSuccessor",
+            "value": ""
+          },
+          {
+            "name": "PhaseOutDate",
+            "value": ""
+          },
+          {
+            "name": "Labor",
+            "value": "KZ1"
+          },
+          {
+            "name": "ProductHierarchyLevel4",
+            "value": "6643"
+          },
+          {
+            "name": "ProductHierarchyLevel5",
+            "value": "04"
+          },
+          {
+            "name": "MaterialCategoryGroup",
+            "value": ""
+          },
+          {
+            "name": "MaterialPresentationName",
+            "value": ""
+          },
+          {
+            "name": "ModelDate",
+            "value": "2026.10.01 15:13:53"
+          },
+          {
+            "name": "ModelVersion",
+            "value": "44.0"
+          },
+          {
+            "name": "TargetEnvironment",
+            "value": "PR2"
+          },
+          {
+            "name": "PricingGroup",
+            "value": "AMARILLO"
+          },
+          {
+            "name": "LuciaActive",
+            "value": "False"
+          },
+          {
+            "name": "LocalProductCode",
+            "value": ""
+          }
+        ],
+        "assignments": [],
+        "materialSalesAreas": [
+          {
+            "salesOrganization": "AT02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "BE02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "DE02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "DK02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "ES02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "FI02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "FR02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "GB02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "NL01",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "NO02",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PL02",
+            "distributionChannel": "04"
+          },
+          {
+            "salesOrganization": "PL05",
+            "distributionChannel": "02"
+          },
+          {
+            "salesOrganization": "PT02",
+            "distributionChannel": "05"
+          },
+          {
+            "salesOrganization": "SE02",
+            "distributionChannel": "02"
+          }
+        ],
+        "isVariant": false
+      }
+    ]
+  }
+}

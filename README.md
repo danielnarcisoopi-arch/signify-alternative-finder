@@ -18,3 +18,15 @@ The exact BGP702 discovery shape was verified against the supplied Quote HAR: an
 `cd api && npm test`
 
 The test suite is local/contract coverage only. It is not presented as live Signify validation.
+
+## v23 - HAR replay fixes
+
+This release fixes configurator discovery using captured traffic from the real Signify Quote UI.
+
+- Product Search now sends `soldTo=null&shipTo=null`, matching the real Quote request exactly.
+- Exact discovery is authoritative only when Quote exposes a strong configurable-material field/item; weak model text no longer stops discovery too early.
+- Progressive prefix discovery uses a larger result page (`pageSize=56`) so a carrier such as `BDS650N` is not hidden beyond the first six BDS6 results.
+- Progressive discovery stops only on strong official configurable-material evidence, then Configit model proof remains mandatory.
+- Added sanitized HAR replay fixtures/tests for `BGP702 -> BGP702I` and `BDS670 -> BDS650N`.
+
+The HAR replay tests are integration-replay tests against captured Signify responses, not live authenticated tests. `BVP656` was not present in the captured HAR, so its live path is not claimed as replay-verified in this release.
