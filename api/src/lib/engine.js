@@ -400,7 +400,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
               ? oppositeControl(effectiveControl)
               : "DALI",
           }
-        : parsed;
+        : {...parsed, targetControlClass: parsed.controlClass && parsed.controlClass !== 'UNKNOWN' ? parsed.targetControlClass : 'DALI'};
       if (!effective.family) {
         return {
           httpStatus: 422,

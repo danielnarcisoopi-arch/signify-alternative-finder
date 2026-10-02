@@ -41,3 +41,10 @@ test('proves a differently named outdoor configurator by reproducing BDS670 in t
   assert.equal(r.validated,true); assert.equal(r.familyProven,true); assert.equal(r.selectedControl,'PSD'); assert.equal(r.unresolved.length,0);
   assert.ok(r.assignments.some(a=>a.variableName==='FAM'&&a.valueName==='BDS670'));
 });
+
+test('uses materialinfo delivering plant instead of hardcoded PL06',async()=>{
+ const calls=[];
+ const fetchImpl=async(u,o)=>{ calls.push({u:String(u),body:JSON.parse(o.body)}); if(String(u).endsWith('/materialinfo')) return {ok:true,json:async()=>[{name:'BGP702I',isConfigurable:true,materialDeliveringPlant:'PL02'}]}; return {ok:true,json:async()=>payload([])}; };
+ const c=new QuoteMaterialConfiguratorClient({fetchImpl}); await c.request('BGP702I',[]);
+ assert.equal(calls[1].body.plant,'PL02'); assert.equal(calls[1].body.rootConfiguration.materialName,'BGP702I');
+});

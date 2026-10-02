@@ -22,3 +22,28 @@ test('does not invent family plus I when official payload contains no configurat
  const c=new QuoteProductDiscoveryClient({fetchImpl}); const r=await c.discover('BGP702',{familyName:'Luma gen2'});
  assert.equal(r.candidates.some(x=>x.id==='BGP702I'),false);
 });
+
+test('real Quote shape: exact BGP702 search discovers BGP702I from configurable item externalId',async()=>{
+ const fetchImpl=async()=>response({query:'BGP702',totalCount:1,items:[{externalId:'BGP702I',name:'BGP702I',description:'Luma gen2 Micro',isConfigurable:true,materialName:'',plant:null}]});
+ const c=new QuoteProductDiscoveryClient({fetchImpl}); const r=await c.discover('BGP702');
+ assert.equal(r.mode,'EXACT_FAMILY'); assert.equal(r.candidates[0].id,'BGP702I'); assert.equal(r.candidates[0].evidence,'QUOTE_CONFIGURABLE_ITEM');
+});
+
+test('progressively shortens family query to discover non-lexical configurable carrier',async()=>{
+ const calls=[];
+ const fetchImpl=async u=>{
+   const url=new URL(String(u)); const q=url.searchParams.get('query'); calls.push(q);
+   if(q==='BDS6') return response({items:[{externalId:'BDS650N',name:'BDS650N',description:'City family configurator',isConfigurable:true}]});
+   return response({items:[]});
+ };
+ const r=await new QuoteProductDiscoveryClient({fetchImpl}).discover('BDS670');
+ assert.equal(r.mode,'PROGRESSIVE_PREFIX');
+ assert.equal(r.candidates[0].id,'BDS650N');
+ assert.deepEqual([...new Set(calls)].slice(0,4),['BDS670','BDS67','BDS6']);
+});
+
+test('progressive prefix does not invent a configurator when no official configurable item is returned',async()=>{
+ const fetchImpl=async()=>response({items:[{externalId:'BDS650',name:'BDS650',isConfigurable:false}]});
+ const r=await new QuoteProductDiscoveryClient({fetchImpl}).discover('BDS670');
+ assert.equal(r.candidates.some(x=>x.id==='BDS650N'),false);
+});

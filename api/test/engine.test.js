@@ -252,3 +252,11 @@ test("surfaces a current-family configuration when the official successor is kno
   assert.equal(result.configurators.length, 1);
   assert.equal(result.configurators[0].httpStatus, 500);
 });
+
+test('unknown outdoor control defaults the requested alternative to DALI, not UNKNOWN', async()=>{
+ const productClient={searchProducts:async()=>({products:[],families:[]}),searchFamily:async()=>[],verifyStandardProduct:async()=>null};
+ const quoteProductDiscoveryClient={discover:async()=>({candidates:[{id:'BGP702I'}],diagnostics:[]})};
+ const quoteMaterialClient={validate:async({model,parsed,targetControlClass})=>({validated:true,familyProven:true,unresolved:[],applied:[{role:'FAMILY',value:'BGP702'},{role:'FLUX',value:'LED90'},{role:'COLOR',value:'730'}],selectedControl:'PSD',complete:true})};
+ const fn=createEngine({productClient,quoteProductDiscoveryClient,quoteMaterialClient,configuratorClient:{validateControlChange:async()=>({validated:false})}});
+ const r=await fn('BGP702 LED90/730 DX10P LGR 7035 SRG10 42'); assert.equal(r.status,'VERIFIED_CONFIGURABLE_PRODUCT'); assert.equal(r.recommended.configuratorId,'BGP702I');
+});

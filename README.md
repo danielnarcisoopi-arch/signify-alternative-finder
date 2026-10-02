@@ -1,21 +1,20 @@
-# Signify Alternative Finder v20 - Catalog Evidence Resolver
+# Signify Alternative Finder v22 — Progressive Prefix Configit Discovery
 
-This version fixes the discovery order before PSU/PSD conversion.
+This version is focused on configurator discovery before control conversion.
 
-## Core change
-The backend no longer treats broad Product Search similarity as proof of a configurator. It first searches official Quote payloads for explicit configurable-material/configurator evidence, including catalogue-style text fields that can contain comma-separated configurator lists. It never manufactures `<family>I`.
+## Discovery order
+1. Exact family search in the official Quote product service.
+2. If no configurable material is returned, progressively shorten the family query one character at a time (for example `BDS670 -> BDS67 -> BDS6`).
+3. A prefix hit is only a **candidate**. The Configit model must prove that it contains the original family before it is accepted.
+4. Only after model proof are the original attributes reconstructed and the control/driver changed to the requested DALI/On-Off class.
+5. Broad successor/catalog heuristics are last-resort fallback only.
 
-Pipeline:
-1. Parse exact family from the input.
-2. Query official Quote search with exact family and catalog/configurator-oriented queries.
-3. Extract only configurator/material identifiers actually present in returned official payloads (dedicated fields or explicit catalogue/configurator text).
-4. Open each candidate in the Quote Configit model endpoint.
-5. Accept the candidate only when the model itself can reproduce/prove the original family.
-6. Reconstruct original attributes from model domains.
-7. Change only the semantic control/driver variable to a selectable DALI option.
-8. Accept only server-valid, conflict-free configurations.
+This means there is no hardcoded `BDS670 -> BDS650N`, `BGP702 -> BGP702I`, or `BVP656 -> BVP656I` mapping.
 
-This supports relationships whose names differ (for example a family represented by a differently named configurable material) without a hard-coded family map.
+## Grounding
+The exact BGP702 discovery shape was verified against the supplied Quote HAR: an exact `BGP702` search returns configurable material `BGP702I`. The BDS670 progressive-prefix strategy is implemented from the user's observed Quote workflow; it still requires live Configit model proof before a result can be presented as verified.
 
-## Important
-The automated test suite is local/mocked contract testing; it is not a live Signify acceptance test. Live correctness must be verified against the authenticated Signify Quote/catalog environment.
+## Tests
+`cd api && npm test`
+
+The test suite is local/contract coverage only. It is not presented as live Signify validation.

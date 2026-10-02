@@ -1,6 +1,6 @@
 {
   "name": "signify-alternative-finder",
-  "version": "20.0.0",
+  "version": "22.0.0",
   "private": true,
   "engines": {
     "node": ">=20.19.0"
