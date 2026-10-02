@@ -13,6 +13,7 @@ const STATUS_LABELS = {
   SOURCE_UNAVAILABLE: "Fonte oficial indisponível",
   NEEDS_REVIEW: "Referência por rever",
   ERROR: "Erro",
+  OFFICIAL_CONFIGURATOR_IDENTIFIED: "Configurador oficial identificado",
 };
 
 const CONFIGURATOR_REASON_LABELS = {
@@ -39,6 +40,8 @@ function ProductCard({ title, product, recommended = false }) {
         {product.family && <><dt>Família</dt><dd>{product.family}</dd></>}
         
         {product.configuratorId && <><dt>Configurador</dt><dd>{product.configuratorId}</dd></>}
+        {product.familyName && <><dt>Família catálogo</dt><dd>{product.familyName}</dd></>}
+        {product.catalogPage && <><dt>Página catálogo</dt><dd>{product.catalogPage}</dd></>}
       </dl>
       {product.productUrl && (
         <a className="product-link" href={product.productUrl} target="_blank" rel="noreferrer">
@@ -68,7 +71,7 @@ function Validation({ validation }) {
 
 function Result({ result }) {
   const isSuccess = Boolean(result.recommended && result.validation?.verified);
-  const hasIdentifiedConfiguration = Boolean(result.recommended && result.status === "CURRENT_FAMILY_CONFIGURATION_IDENTIFIED");
+  const hasIdentifiedConfiguration = Boolean(result.recommended && ["CURRENT_FAMILY_CONFIGURATION_IDENTIFIED", "OFFICIAL_CONFIGURATOR_IDENTIFIED"].includes(result.status));
   const showRecommended = isSuccess || hasIdentifiedConfiguration;
   const statusClass = isSuccess ? "success" : hasIdentifiedConfiguration ? "warning" : result.status === "SOURCE_UNAVAILABLE" ? "warning" : "neutral";
   return (
@@ -215,7 +218,7 @@ function App() {
         <div>
           <p className="eyebrow">QUOTE SUPPORT · PROFESSIONAL LIGHTING</p>
           <h1>Signify Alternative Finder</h1>
-          <p className="subtitle">Descobre a família e o configurador através de evidência pública oficial da Signify, sem depender da sessão do Quote.</p>
+          <p className="subtitle">Descobre a família e o configurador através do Catálogo de Iluminação Profissional Signify 2026, sem depender da sessão do Quote.</p>
         </div>
       </header>
       <div style={{fontSize:'12px',opacity:.65,margin:'-10px 0 14px'}}>Engine: {health ? `${health.version} · ${health.pipeline} · ${health.fingerprint}` : 'a verificar...'}</div>
@@ -241,7 +244,7 @@ function App() {
       {result && <Result result={result} />}
 
       <footer>
-        <strong>Regra de segurança:</strong> a ferramenta não transforma PSU em PSD por texto. a ferramenta não inventa relações família → configurador. Só marca como oficial o que consegue sustentar com evidência pública Signify.
+        <strong>Regra de segurança:</strong> a ferramenta não transforma PSU em PSD por texto e não inventa relações família → configurador. A descoberta usa um índice local extraído do catálogo Signify 2026.
       </footer>
     </main>
   );
