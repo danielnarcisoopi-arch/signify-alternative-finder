@@ -420,7 +420,9 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       const sameFamily = await collectSameFamilyCandidates(productClient, effective, originalProduct);
       const verifiedSameFamily = await verifyRanked(productClient, effective, originalProduct, sameFamily.products);
       const safeSameFamily = verifiedSameFamily.filter((assessment) => assessment.safeToRecommend);
-      if (safeSameFamily.length) return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
+      // Configit-first: keep a verified standard same-family match as fallback,
+      // but do not return before family/configurator resolution has had a chance to run.
+      const standardSameFamilyFallback = safeSameFamily.length ? standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2)) : null;
 
       const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
       const configuratorAttempts = [];
@@ -443,6 +445,13 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         const qd = await quoteProductDiscoveryClient.discover(effective.family, { familyName: originalProduct?.familyName || '' });
         for (const candidate of qd.candidates || []) { discoveredModelIds.add(candidate.id); modelDiscoveryEvidence.push(candidate); }
       } catch (e) { modelDiscoveryEvidence.push({source:'QUOTE_PRODUCTS_SEARCH',error:e?.message||String(e)}); }
+      // Generic exact-family hypothesis. This is NOT accepted as a mapping:
+      // it is only a candidate and must pass Configit model proof below. It lets
+      // families such as BGP702/BVP656 reach BGP702I/BVP656I even when the Quote
+      // product-search endpoint is unavailable from the Azure worker. Non-lexical
+      // carriers (for example BDS670 -> BDS650N) still come from progressive
+      // discovery and are likewise accepted only after model proof.
+      if (effective.family) discoveredModelIds.add(`${normalizeText(effective.family)}I`);
       for (const p of configuratorPool) if (p?.configuratorId) discoveredModelIds.add(p.configuratorId);
       try {
         const discoveryQueries = [...new Set([effective.input, effective.family].filter(Boolean))];
@@ -475,6 +484,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
           configuratorAttempts.push({id:model,family:effective.family,validated:false,reason:e.code||'QUOTE_CONFIGIT_MODEL_UNAVAILABLE',source:'QUOTE_CONFIGIT_MODEL'});
         }
       }
+      if (standardSameFamilyFallback) return standardSameFamilyFallback;
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
       let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
       {

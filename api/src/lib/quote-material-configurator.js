@@ -58,7 +58,29 @@ export class QuoteMaterialConfiguratorClient {
   constructor({fetchImpl=globalThis.fetch,url=process.env.SIGNIFY_QUOTE_MATERIAL_API||DEFAULT_URL,materialInfoUrl=process.env.SIGNIFY_MATERIAL_INFO_API||MATERIAL_INFO_URL,timeoutMs=Number(process.env.SIGNIFY_API_TIMEOUT_MS||12000)}={}){this.fetchImpl=fetchImpl;this.url=url;this.materialInfoUrl=materialInfoUrl;this.timeoutMs=timeoutMs;this.metaCache=new Map();}
   body(model, assignments=[], plant='PL06'){ return {name:model,plant,usage:'5',languages:['en-GB','en'],rootConfiguration:{existingAssignments:assignments.map(a=>({isDefault:false,isLive:true,isUserAssignment:true,variableName:a.variableName,valueName:a.valueName})),itemId:'',materialName:model,configurableMaterialName:model,useServerDefaultValues:true,bomItemAssignments:[]},salesAreaName:'CSU Portugal',salesAreaId:'PT02/05/01',soldTo:null,shipTo:null,environment:{rootEnvironment:{salesArea:{salesOrganization:'PT02',distributionChannel:'05'},salesDocumentType:'ZQU'},materialEnvironment:[]}}; }
   async metadata(model){ if(this.metaCache.has(model))return this.metaCache.get(model); try { const r=await this.fetchImpl(this.materialInfoUrl,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({salesAreaId:'PT02/05/01',salesAreaName:'CSU Portugal',soldTo:null,shipTo:null,materials:[{materialName:model}]})}); if(!r.ok)throw new Error(`HTTP ${r.status}`); const data=await r.json(); const row=Array.isArray(data)?data[0]:data; const meta={plant:row?.materialDeliveringPlant||process.env.SIGNIFY_PLANT||'PL06',isConfigurable:row?.isConfigurable!==false,name:row?.name||model}; this.metaCache.set(model,meta); return meta; } catch { const meta={plant:process.env.SIGNIFY_PLANT||'PL06',isConfigurable:true,name:model}; this.metaCache.set(model,meta); return meta; } }
-  async request(model, assignments=[]){ const meta=await this.metadata(model); const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs); try { const r=await this.fetchImpl(this.url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(this.body(model,assignments,meta.plant)),signal:c.signal}); if(!r.ok) throw new QuoteMaterialConfiguratorError('HTTP_ERROR',`Quote Configurator returned HTTP ${r.status}`,{status:r.status}); return await r.json(); } catch(e){ if(e instanceof QuoteMaterialConfiguratorError) throw e; throw new QuoteMaterialConfiguratorError(e?.name==='AbortError'?'TIMEOUT':'NETWORK_ERROR','Quote Configurator model could not be loaded',{cause:String(e)}); } finally {clearTimeout(timer);} }
+  async request(model, assignments=[]){
+    const meta=await this.metadata(model);
+    // The Quote HAR shows that the delivering plant is material-specific (for
+    // example BGP702I/BDS650N use PL02 while DN500BI uses PL06). If materialinfo
+    // cannot be reached from the Azure worker, do not lock the model to a wrong
+    // generic plant: retry the two observed production plants and accept only a
+    // server-validated model response.
+    const plants=[...new Set([meta.plant, process.env.SIGNIFY_PLANT, 'PL02', 'PL06'].filter(Boolean))];
+    let last=null;
+    for(const plant of plants){
+      const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs);
+      try {
+        const r=await this.fetchImpl(this.url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(this.body(model,assignments,plant)),signal:c.signal});
+        if(!r.ok){ last=new QuoteMaterialConfiguratorError('HTTP_ERROR',`Quote Configurator returned HTTP ${r.status}`,{status:r.status,plant}); continue; }
+        const data=await r.json();
+        const root=data?.materialBomConfiguration?.root;
+        if(root?.isConfigurable===false){ last=new QuoteMaterialConfiguratorError('NOT_CONFIGURABLE','Material is not configurable',{plant}); continue; }
+        return data;
+      } catch(e){ last=e instanceof QuoteMaterialConfiguratorError?e:new QuoteMaterialConfiguratorError(e?.name==='AbortError'?'TIMEOUT':'NETWORK_ERROR','Quote Configurator model could not be loaded',{cause:String(e),plant}); }
+      finally {clearTimeout(timer);}
+    }
+    throw last||new QuoteMaterialConfiguratorError('MODEL_UNAVAILABLE','Quote Configurator model could not be loaded');
+  }
   async validate({model, parsed, targetControlClass}){
     let assignments=[]; let payload=await this.request(model,assignments); let map=variableMap(payload); const applied=[]; const unresolved=[];
     const roleCandidates = {
