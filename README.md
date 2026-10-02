@@ -83,3 +83,11 @@ Use the Azure Static Web Apps CLI when testing the frontend and API together.
 ## Tests
 
 The test suite covers standard same-family alternatives, Product API pagination and family enrichment, generic successor discovery, ambiguous-family prevention, Configurator bootstrap without fixed variable names, configurable-only products without a 12NC, inverse DALI → On/Off conversion, and regressions for DN142B, WT120C and BY120P.
+
+## V16 - constraint-first Configit engine
+
+V16 changes the core resolution strategy. The finder now prefers the same Signify Quote material-model endpoint observed in the official Configit workflow (`/api/material/getFromExistingConfigurationWithStatus`) when an official configurable material is discovered.
+
+The engine applies the parsed original attributes to the live model using official variable domains (for example `PLM_PFC`, `PLM_LAMPFAM`, `PLM_COLLAMP`, `PLM_OPTGRP`, `PLM_CVR`), resolves remaining commercial tokens only when there is a unique model option, and changes `PLM_TRAFO` only after the original attributes have been applied. A DALI result is accepted only when the model keeps the configuration valid and conflict-free. The older configurator/session and Product API paths remain as fallbacks.
+
+This is intentionally constraint-first: search results discover candidate products/configurators; the Configit model decides whether the requested configuration is valid.

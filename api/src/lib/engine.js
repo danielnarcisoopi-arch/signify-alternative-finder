@@ -2,6 +2,7 @@ import { ConfiguratorApiClient, ConfiguratorApiError } from "./configurator-api.
 import { assessCandidate, canValidateFamilyMigration, rankCandidates } from "./matcher.js";
 import { controlSearchTerms, displayControl, normalizeText, oppositeControl, parseReference } from "./normalization.js";
 import { ProductApiClient, ProductApiError } from "./product-api.js";
+import { QuoteMaterialConfiguratorClient, QuoteMaterialConfiguratorError } from "./quote-material-configurator.js";
 import { configuratorCarrier, discoverSuccessorFamilies } from "./successor-discovery.js";
 
 const RESULT_LABELS = {
@@ -376,7 +377,7 @@ async function collectMigrationCandidates(productClient, parsed, originalProduct
   return products.filter((product) => product.controlClass === parsed.targetControlClass && product.family !== parsed.family);
 }
 
-export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient() } = {}) {
+export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient(), quoteMaterialClient = new QuoteMaterialConfiguratorClient() } = {}) {
   return async function engine(query) {
     const parsed = parseReference(query);
     if (!parsed.input) return { httpStatus: 400, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Introduza uma referência Signify ou um 12NC." };
@@ -422,6 +423,31 @@ export function createEngine({ productClient = new ProductApiClient(), configura
 
       const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
       const configuratorAttempts = [];
+
+      // Preferred Configit path: use the same Quote material model endpoint that feeds
+      // the official configurator UI. It exposes the authoritative variable/value
+      // domains (PLM_PFC, PLM_LAMPFAM, PLM_COLLAMP, PLM_OPTGRP, PLM_CVR, PLM_TRAFO).
+      // Validate attributes first, then change only PLM_TRAFO. No textual PSU->PSD substitution.
+      const materialModels = [...new Set(configuratorPool.map(p => p?.configuratorId).filter(Boolean))];
+      for (const model of materialModels.slice(0, 4)) {
+        try {
+          const q = await quoteMaterialClient.validate({ model, parsed: effective, targetControlClass: effective.targetControlClass });
+          configuratorAttempts.push({ id:model, family:effective.family, validated:q.validated, reason:q.reason, source:'QUOTE_CONFIGIT_MODEL' });
+          if (q.validated && q.unresolved.length === 0) {
+            const tokens = q.assignments.filter(a=>['PLM_PFC','PLM_LAMPFAM','PLM_COLLAMP','PLM_TRAFO','PLM_OPTGRP','PLM_CVR'].includes(a.variableName)).map(a=>a.valueName);
+            return {
+              status:'VERIFIED_CONFIGURABLE_PRODUCT', statusLabel:RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT, resultType:'VERIFIED_CONFIGURABLE_PRODUCT', compatibility:'CONFIGURABLE',
+              original: originalProduct ? productSummary(originalProduct) : {input:effective.input,description:effective.reference||effective.input,family:effective.family,control:displayControl(effective.controlClass)},
+              recommended:{description:tokens.join(' '),orderCode:null,productCode:null,family:tokens[0]||effective.family,control:displayControl(effective.targetControlClass),configuratorId:model,productUrl:null,market:null,lifecycleStatus:null},
+              currentFamily:tokens[0]||effective.family, changes:[{field:'control',from:effective.driver||displayControl(effective.controlClass),to:q.selectedControl}], preserved:q.applied,
+              validation:{verified:true,source:'Signify Quote / Configit model',method:'Official variable domains + server-side constraint validation; only PLM_TRAFO changed after applying the original attributes.',checkedAt:new Date().toISOString(),complete:q.complete},
+              configurators:configuratorAttempts, message:'Configuração validada diretamente pelo modelo Configit utilizado pelo Signify Quote.', recommendedDescription:tokens.join(' '), orderCode:null, differences:[`Control Gear: ${effective.driver||displayControl(effective.controlClass)} → ${q.selectedControl}`]
+            };
+          }
+        } catch (e) {
+          configuratorAttempts.push({id:model,family:effective.family,validated:false,reason:e.code||'QUOTE_CONFIGIT_MODEL_UNAVAILABLE',source:'QUOTE_CONFIGIT_MODEL'});
+        }
+      }
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
       let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
       {
@@ -515,7 +541,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
             : "A família original não foi confirmada no catálogo oficial atual e a pesquisa técnica não encontrou um sucessor único e validável.",
       });
     } catch (error) {
-      if (error instanceof ProductApiError || error instanceof ConfiguratorApiError) {
+      if (error instanceof ProductApiError || error instanceof ConfiguratorApiError || error instanceof QuoteMaterialConfiguratorError) {
         return { httpStatus: 503, status: "SOURCE_UNAVAILABLE", statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, resultType: "SOURCE_UNAVAILABLE", message: error.message, errorCode: error.code };
       }
       console.error("Alternative engine failed", error);
