@@ -31,7 +31,7 @@ This release fixes configurator discovery using captured traffic from the real S
 
 The HAR replay tests are integration-replay tests against captured Signify responses, not live authenticated tests. `BVP656` was not present in the captured HAR, so its live path is not claimed as replay-verified in this release.
 
-## V24 - Configit-first resolver fix
+## V25 - Configit-first resolver fix
 
 This build integrates family/configurator discovery into the main `/api/alternative` path before legacy successor fallbacks. It also retries Configit initialization with material-specific/observed plants (including PL02 and PL06) when `materialinfo` cannot be reached from the Azure worker. Exact-family `<family>I` is used only as a hypothesis and is never accepted without Configit model proof; non-lexical carriers such as BDS670 -> BDS650N still require progressive discovery + model proof.
 

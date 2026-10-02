@@ -48,3 +48,21 @@ test('uses materialinfo delivering plant instead of hardcoded PL06',async()=>{
  const c=new QuoteMaterialConfiguratorClient({fetchImpl}); await c.request('BGP702I',[]);
  assert.equal(calls[1].body.plant,'PL02'); assert.equal(calls[1].body.rootConfiguration.materialName,'BGP702I');
 });
+
+test('replays official Quote bootstrap order: materialinfo -> template -> configuration using delivering plant', async()=>{
+  const calls=[];
+  const fetchImpl=async(u,o)=>{
+    const url=String(u); const body=JSON.parse(o.body); calls.push({url,body,headers:o.headers});
+    if(url.endsWith('/materialinfo')) return {ok:true,json:async()=>[{name:'BGP702I',isConfigurable:true,materialDeliveringPlant:'PL02'}]};
+    if(url.includes('getMaterialTemplateData')) return {ok:true,json:async()=>({templates:[{name:'BGP702I'}]})};
+    return {ok:true,json:async()=>payload([])};
+  };
+  const c=new QuoteMaterialConfiguratorClient({fetchImpl}); await c.request('BGP702I',[]);
+  assert.equal(calls.length,3);
+  assert.ok(calls[0].url.endsWith('/materialinfo'));
+  assert.ok(calls[1].url.includes('getMaterialTemplateData'));
+  assert.ok(calls[2].url.includes('getFromExistingConfigurationWithStatus'));
+  assert.equal(calls[1].body.plant,'PL02'); assert.equal(calls[2].body.plant,'PL02');
+  assert.equal(calls[1].body.environment,undefined); assert.equal(calls[2].body.environment.rootEnvironment.salesArea.salesOrganization,'PT02');
+  assert.equal(calls[2].headers.Origin,'https://www.quote.signify.com');
+});

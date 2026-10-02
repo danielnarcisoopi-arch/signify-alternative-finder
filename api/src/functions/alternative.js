@@ -10,8 +10,8 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "24.0.0",
-          mode: "configit-first-family-proof-plant-retry",
+          version: "25.0.0",
+          mode: "quote-bootstrap-sequence-configit-first",
         },
       };
     }
