@@ -10,8 +10,8 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "14.0.0",
-          mode: "strict-family-product-cpq-luminaire-configurator-v2",
+          version: "15.0.0",
+          mode: "strict-family-product-cpq-luminaire-configurator-v2-all-outdoor-segments",
         },
       };
     }

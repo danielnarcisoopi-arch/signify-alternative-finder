@@ -3,6 +3,8 @@ const BASE_URL = "https://luminaireconfigurator-v2.azurewebsites.net/api";
 const KNOWN_CATALOGS = [
   { segment: "Road", role: 2 },
   { segment: "Urban", role: 1 },
+  { segment: "Sports", role: 3 },
+  { segment: "Solar", role: 4 },
 ];
 
 function timeoutSignal(ms = 5000) {
@@ -60,7 +62,8 @@ export async function enrichWithLuminaireConfiguratorV2(result) {
   const family = result?.recommended?.family || result?.original?.family;
   if (!family) return result;
   // The V2 site discovered today covers Outdoor (Urban/Road/Sports/Solar).
-  // Only Road/Urban contracts were captured and verified, so do not guess Sports/Solar routes.
+  // The segment number follows the segment IDs exposed by the configurator catalogs:
+  // Urban=1, Road=2, Sports=3, Solar=4.
   const outdoorLike = /^(?:BGP|BDP|EDP|BSP|BPS|BDS|BSS|BPP)\w*/i.test(family);
   if (!outdoorLike) {
     // Indoor families do not use this Outdoor configurator. Keep this internal
@@ -76,8 +79,8 @@ export async function enrichWithLuminaireConfiguratorV2(result) {
           applicable: true,
           verified: false,
           source: "Signify Luminaire Configurator V2",
-          reason: "OUTDOOR_FAMILY_NOT_FOUND_IN_VERIFIED_CATALOGS",
-          scope: "Road + Urban contracts verified; Sports/Solar require captured contracts before they can be queried safely",
+          reason: "OUTDOOR_FAMILY_NOT_FOUND_IN_CONFIGURATOR_V2",
+          scope: "Urban + Road + Sports + Solar catalogs checked",
           checkedAt: new Date().toISOString(),
         },
   };

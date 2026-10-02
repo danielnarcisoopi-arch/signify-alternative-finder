@@ -57,3 +57,10 @@ test("recognizes trailing current-generation efficiency markers", () => {
   assert.equal(parsed.efficiency, "UE");
   assert.equal(parsed.colorSuffix, "");
 });
+
+test("keeps outdoor references without an explicit control token parseable", () => {
+  const parsed = parseReference("BDS670 LED50/730 MDA BK SRT SRG10 60P");
+  assert.equal(parsed.family, "BDS670");
+  assert.equal(parsed.controlClass, "UNKNOWN");
+  assert.equal(parsed.colorCode, "730");
+});

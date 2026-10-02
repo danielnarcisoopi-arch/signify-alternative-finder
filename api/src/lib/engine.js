@@ -390,17 +390,28 @@ export function createEngine({ productClient = new ProductApiClient(), configura
             input: parsed.input,
             orderCode: parsed.orderCode || originalProduct.orderCode,
             family: officialParsed.family || originalProduct.family,
-            controlClass: effectiveControl,
-            targetControlClass: oppositeControl(effectiveControl),
+            controlClass: effectiveControl || "UNKNOWN",
+            // If the commercial reference does not encode a control gear token,
+            // keep the source as Unknown but search specifically for a verified
+            // DALI alternative. This does not claim the original is On/Off.
+            targetControlClass: effectiveControl && effectiveControl !== "UNKNOWN"
+              ? oppositeControl(effectiveControl)
+              : "DALI",
           }
         : parsed;
-      if (!effective.family || effective.controlClass === "UNKNOWN") {
+      if (!effective.family) {
         return {
           httpStatus: 422,
           status: "NEEDS_REVIEW",
           statusLabel: RESULT_LABELS.NEEDS_REVIEW,
-          message: parsed.orderCode ? "O 12NC não foi encontrado no catálogo oficial Signify." : "Não foi possível identificar com segurança a família ou o tipo de controlo.",
-          original: { input: parsed.input, orderCode: parsed.orderCode || null },
+          message: parsed.orderCode ? "O 12NC não foi encontrado no catálogo oficial Signify." : "Não foi possível identificar com segurança a família.",
+          original: {
+            input: parsed.input,
+            description: parsed.reference || parsed.input,
+            orderCode: parsed.orderCode || null,
+            family: parsed.family || null,
+            control: displayControl(effective.controlClass),
+          },
         };
       }
 
