@@ -1,0 +1,4 @@
+import { app } from '@azure/functions';
+import { publicCatalogEngine } from '../lib/public-catalog-engine.js';
+const CASES=['BGP702 LED90/730 DX10P LGR 7035 SRG10 42','BVP656 LED400-4S/730 PSU II A35-MB GR','BDS670 LED50/730 MDA BK SRT SRG10 60P','BDS670 LED40/730 MDM BK SRT SRG10 60P','DN500B 20S/840 PSU-E WR WH PCO','DN610B 40S/930UE PSD-E C WH PGO','SM350C 50S/840 PSD PCS L1500 WH'];
+app.http('selftest',{methods:['GET'],authLevel:'anonymous',handler:async()=>{const results=[];for(const query of CASES){const r=await publicCatalogEngine(query);results.push({query,status:r.status,family:r.original?.family,configurator:r.recommended?.configuratorId,verified:r.validation?.verified,page:r.validation?.catalogPage});}return{jsonBody:{status:results.every(x=>x.verified)?'PASS':'PARTIAL',version:'34.0.0',pipeline:'CATALOG_2026_EMBEDDED_INDEX_V2',results}};}});
