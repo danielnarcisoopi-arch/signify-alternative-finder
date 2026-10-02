@@ -33,10 +33,11 @@ function ProductCard({ title, product, recommended = false }) {
     <article className={recommended ? "product-card recommended" : "product-card"}>
       <div className="card-label">{title}</div>
       <h3>{product.description || product.input || "Referência não disponível"}</h3>
+      {product.control && <span className={recommended ? "control-badge target" : "control-badge"}>{product.control}</span>}
       <dl>
         {product.orderCode && <><dt>12NC</dt><dd>{product.orderCode}</dd></>}
         {product.family && <><dt>Família</dt><dd>{product.family}</dd></>}
-        {product.control && <><dt>Controlo</dt><dd>{product.control}</dd></>}
+        
         {product.configuratorId && <><dt>Configurador</dt><dd>{product.configuratorId}</dd></>}
       </dl>
       {product.productUrl && (
@@ -78,11 +79,16 @@ function Result({ result }) {
       </div>
 
       <div className={showRecommended ? "comparison" : "comparison single"}>
-        <ProductCard title="Original" product={result.original} />
-        {showRecommended && <ProductCard title={isSuccess ? "Alternativa recomendada" : "Configuração identificada"} product={result.recommended} recommended />}
+        <ProductCard title="Referência pesquisada" product={result.original} />
+        {showRecommended && <div className="change-arrow" aria-hidden="true">→</div>}
+        {showRecommended && <ProductCard title={isSuccess ? "Mesma versão com controlo alternativo" : "Configuração identificada"} product={result.recommended} recommended />}
       </div>
 
+      {showRecommended && <div className="control-summary"><strong>{result.original?.control || "Original"}</strong><span>→</span><strong>{result.recommended?.control || "Alternativa"}</strong><small>As restantes características são preservadas sempre que a validação oficial o permite.</small></div>}
+
       <Validation validation={result.validation} />
+
+      {result.technicalValidation && <div className="tech-validation"><strong>Luminaire Configurator V2</strong>{result.technicalValidation.applicable && result.technicalValidation.verified ? <p>✓ Família Outdoor encontrada no motor técnico oficial ({result.technicalValidation.segment}). Validação técnica adicional ativa.</p> : <p>{result.technicalValidation.applicable ? "Motor Outdoor consultado; esta família não foi confirmada nos catálogos Road/Urban já mapeados." : "Não aplicável a esta família: o novo configurador cobre Urban, Road, Sports e Solar."}</p>}</div>}
 
       {result.familyMigration && (
         <div className="detail-block migration">
@@ -201,7 +207,7 @@ function App() {
         <div>
           <p className="eyebrow">QUOTE SUPPORT · PROFESSIONAL LIGHTING</p>
           <h1>Signify Alternative Finder</h1>
-          <p className="subtitle">Encontra a alternativa PSU ↔ DALI mais próxima e só recomenda produtos validados em fontes oficiais.</p>
+          <p className="subtitle">Compara a referência atual com a mesma versão em PSU ↔ PSD/DALI, usando catálogo, CPQ/Configurator e validação técnica Outdoor quando aplicável.</p>
         </div>
       </header>
 
@@ -220,13 +226,13 @@ function App() {
             {loading ? <><span className="spinner" />A validar…</> : "Encontrar alternativa"}
           </button>
         </div>
-        <p className="hint">A pesquisa pode demorar alguns segundos: um artigo standard é confirmado pelo 12NC; uma solução configurável é confirmada pelo Configurator.</p>
+        <p className="hint">A referência original fica sempre visível. A alternativa só é apresentada como confirmada quando existe evidência oficial suficiente.</p>
       </form>
 
       {result && <Result result={result} />}
 
       <footer>
-        <strong>Regra de segurança:</strong> nenhuma referência gerada por texto é apresentada como produto. É necessária validação pelo Product API ou pelo Configurator API.
+        <strong>Regra de segurança:</strong> a ferramenta não transforma PSU em PSD por texto. Product API/CPQ validam a referência comercial e o Luminaire Configurator V2 acrescenta validação técnica às famílias Outdoor suportadas.
       </footer>
     </main>
   );

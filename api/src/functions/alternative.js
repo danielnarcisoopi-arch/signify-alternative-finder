@@ -1,5 +1,6 @@
 import { app } from "@azure/functions";
 import { engine } from "../lib/engine.js";
+import { enrichWithLuminaireConfiguratorV2 } from "../lib/luminaire-configurator-v2.js";
 
 app.http("alternative", {
   methods: ["GET", "POST"],
@@ -9,8 +10,8 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "11.7.0-diagnostic",
-          mode: "discover-successor-and-validate",
+          version: "13.0.0",
+          mode: "hybrid-product-cpq-luminaire-configurator-v2",
         },
       };
     }
@@ -36,7 +37,8 @@ app.http("alternative", {
       };
     }
 
-    const result = await engine(query);
+    const baseResult = await engine(query);
+    const result = await enrichWithLuminaireConfiguratorV2(baseResult);
     const { httpStatus = 200, ...jsonBody } = result;
     return { status: httpStatus, jsonBody };
   },
