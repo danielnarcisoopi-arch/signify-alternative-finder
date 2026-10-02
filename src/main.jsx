@@ -200,7 +200,7 @@ function App() {
         message: error?.name === "AbortError"
           ? "A pesquisa excedeu o tempo limite. Tente novamente."
           : error.message || "Não foi possível concluir a pesquisa.",
-        validation: { verified: false, source: "Signify APIs" },
+        validation: { verified: false, source: "Signify public catalog" },
       });
     } finally {
       clearTimeout(timer);
@@ -215,7 +215,7 @@ function App() {
         <div>
           <p className="eyebrow">QUOTE SUPPORT · PROFESSIONAL LIGHTING</p>
           <h1>Signify Alternative Finder</h1>
-          <p className="subtitle">Compara a referência atual com a mesma versão em PSU ↔ PSD/DALI, usando catálogo, CPQ/Configurator e validação técnica Outdoor quando aplicável.</p>
+          <p className="subtitle">Descobre a família e o configurador através de evidência pública oficial da Signify, sem depender da sessão do Quote.</p>
         </div>
       </header>
       <div style={{fontSize:'12px',opacity:.65,margin:'-10px 0 14px'}}>Engine: {health ? `${health.version} · ${health.pipeline} · ${health.fingerprint}` : 'a verificar...'}</div>
@@ -241,7 +241,7 @@ function App() {
       {result && <Result result={result} />}
 
       <footer>
-        <strong>Regra de segurança:</strong> a ferramenta não transforma PSU em PSD por texto. Product API/CPQ validam a referência comercial e o Luminaire Configurator V2 acrescenta validação técnica às famílias Outdoor suportadas.
+        <strong>Regra de segurança:</strong> a ferramenta não transforma PSU em PSD por texto. a ferramenta não inventa relações família → configurador. Só marca como oficial o que consegue sustentar com evidência pública Signify.
       </footer>
     </main>
   );
