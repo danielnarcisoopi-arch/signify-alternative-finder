@@ -428,13 +428,29 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       // the official configurator UI. It exposes the authoritative variable/value
       // domains (PLM_PFC, PLM_LAMPFAM, PLM_COLLAMP, PLM_OPTGRP, PLM_CVR, PLM_TRAFO).
       // Validate attributes first, then change only PLM_TRAFO. No textual PSU->PSD substitution.
-      const materialModels = [...new Set(configuratorPool.map(p => p?.configuratorId).filter(Boolean))];
-      for (const model of materialModels.slice(0, 4)) {
+      // Discover Configit models dynamically from official Product API evidence.
+      // Never assume <family>I: collect configurable-material identifiers returned by
+      // exact family/reference searches and family metadata, then let the Configit
+      // model itself prove whether it can reproduce the source family/attributes.
+      const discoveredModelIds = new Set(configuratorPool.map(p => p?.configuratorId).filter(Boolean));
+      try {
+        const discoveryQueries = [...new Set([effective.input, effective.family].filter(Boolean))];
+        for (const discoveryQuery of discoveryQueries) {
+          const discovered = await productClient.searchProducts({ query: discoveryQuery, maxPages: 2, size: 100 });
+          for (const p of discovered.products || []) if (p?.configuratorId) discoveredModelIds.add(p.configuratorId);
+          for (const f of discovered.families || []) if (f?.configuratorId) discoveredModelIds.add(f.configuratorId);
+        }
+        const familyMeta = await resolveLegacyFamily(productClient, effective, originalProduct);
+        if (familyMeta?.configuratorId) discoveredModelIds.add(familyMeta.configuratorId);
+      } catch { /* discovery is best-effort; existing official candidates remain usable */ }
+      const materialModels = [...discoveredModelIds];
+      for (const model of materialModels.slice(0, 12)) {
         try {
           const q = await quoteMaterialClient.validate({ model, parsed: effective, targetControlClass: effective.targetControlClass });
           configuratorAttempts.push({ id:model, family:effective.family, validated:q.validated, reason:q.reason, source:'QUOTE_CONFIGIT_MODEL' });
           if (q.validated && q.unresolved.length === 0) {
-            const tokens = q.assignments.filter(a=>['PLM_PFC','PLM_LAMPFAM','PLM_COLLAMP','PLM_TRAFO','PLM_OPTGRP','PLM_CVR'].includes(a.variableName)).map(a=>a.valueName);
+            const appliedValues = q.applied.map(a=>a.value).filter(Boolean);
+            const tokens = [...new Set([effective.family, ...appliedValues.filter(v=>normalizeText(v)!==normalizeText(effective.family)), q.selectedControl].filter(Boolean))];
             return {
               status:'VERIFIED_CONFIGURABLE_PRODUCT', statusLabel:RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT, resultType:'VERIFIED_CONFIGURABLE_PRODUCT', compatibility:'CONFIGURABLE',
               original: originalProduct ? productSummary(originalProduct) : {input:effective.input,description:effective.reference||effective.input,family:effective.family,control:displayControl(effective.controlClass)},

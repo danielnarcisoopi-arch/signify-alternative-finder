@@ -15,7 +15,23 @@ function variables(payload) {
 }
 function fq(v) { return v?.fullyQualifiedName || ''; }
 function options(v) { return (v?.valueStates || []).map(x=>({ id:x.name, text:x.text||x.name, state:x.state, available:stateIsAvailable(x.state), selected:stateIsSelected(x.state) })); }
-function variableMap(payload) { return new Map(variables(payload).map(v=>[fq(v), { id:fq(v), displayName:v.displayName||'', required:Boolean(v.required), valid:v.valid!==false, options:options(v) }])); }
+function variableMap(payload) {
+  const links = new Map((payload?.materialBomConfiguration?.root?.configuration?.variableLinks || []).map(x => [x.reference, x.displayName || '']));
+  return new Map(variables(payload).map(v=>[fq(v), { id:fq(v), displayName:v.displayName||links.get(fq(v))||'', required:Boolean(v.required), valid:v.valid!==false, show:v.show!==false, options:options(v) }]));
+}
+function semanticRole(variable) {
+  const key = normalizeText(`${variable.id} ${variable.displayName}`);
+  if (/CONTROL GEAR|DRIVER|TRAFO/.test(key)) return 'CONTROL';
+  if (/HOUSING VARIANT|PRODUCT FAMILY CODE|PLM_PFC|PLM_PFAM/.test(key)) return 'FAMILY';
+  if (/LUMINOUS FLUX|LED FAMILY CODE|LAMPFAM/.test(key)) return 'FLUX';
+  if (/LIGHT SOURCE COLOR|LAMP COLOR|COLLAMP/.test(key)) return 'COLOR';
+  if (/OPTIC TYPE|OPTIC$|OPTGRP/.test(key)) return 'OPTIC';
+  if (/OPTICAL COVER|LUMINAIRE \/ OPTICAL COVER|COVER|PLM_CVR/.test(key)) return 'COVER';
+  return 'FEATURE';
+}
+function variableForRole(map, role) {
+  return [...map.values()].filter(v=>semanticRole(v)===role).sort((a,b)=>Number(b.show)-Number(a.show))[0] || null;
+}
 
 const DIRECT = {
   PLM_PFC: p=>[p.family], PLM_LAMPFAM:p=>[p.package,p.packageCanonical], PLM_COLLAMP:p=>[`${p.colorCode||''}${p.colorSuffix||''}`,p.colorCode],
@@ -43,38 +59,36 @@ export class QuoteMaterialConfiguratorClient {
   async request(model, assignments=[]){ const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs); try { const r=await this.fetchImpl(this.url,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(this.body(model,assignments)),signal:c.signal}); if(!r.ok) throw new QuoteMaterialConfiguratorError('HTTP_ERROR',`Quote Configurator returned HTTP ${r.status}`,{status:r.status}); return await r.json(); } catch(e){ if(e instanceof QuoteMaterialConfiguratorError) throw e; throw new QuoteMaterialConfiguratorError(e?.name==='AbortError'?'TIMEOUT':'NETWORK_ERROR','Quote Configurator model could not be loaded',{cause:String(e)}); } finally {clearTimeout(timer);} }
   async validate({model, parsed, targetControlClass}){
     let assignments=[]; let payload=await this.request(model,assignments); let map=variableMap(payload); const applied=[]; const unresolved=[];
-    const ordered=['PLM_PFC','PLM_LAMPFAM','PLM_COLLAMP','PLM_OPTGRP','PLM_CVR'];
-    for(const id of ordered){ const variable=map.get(id); if(!variable) continue; const candidate=matchOption(variable,(DIRECT[id]?.(parsed)||[])); if(!candidate){ if(id==='PLM_PFC'||id==='PLM_LAMPFAM'||id==='PLM_COLLAMP') unresolved.push(id); continue; } assignments.push({variableName:id,valueName:candidate.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:id,value:candidate.id}); }
-    // Preserve remaining commercial tokens by resolving them against the live model,
-    // not against a family-specific dictionary. A token is applied only when it has
-    // one unique official option match. Short colour tokens (WH/BK/GR) may match a
-    // unique option prefix only in colour/material variables (e.g. WH201).
-    const already = new Set(applied.map(x=>clean(x.value)));
-    const featureUnresolved=[];
+    const roleCandidates = {
+      FAMILY: [parsed.family],
+      FLUX: [parsed.package, parsed.packageCanonical],
+      COLOR: [`${parsed.colorCode||''}${parsed.colorSuffix||''}`, parsed.colorCode],
+      OPTIC: parsed.features||[],
+      COVER: parsed.features||[],
+    };
+    for (const role of ['FAMILY','FLUX','COLOR','OPTIC','COVER']) {
+      const variable=variableForRole(map,role); if(!variable) continue;
+      const candidate=matchOption(variable,roleCandidates[role]);
+      if(!candidate){ if(['FAMILY','FLUX','COLOR'].includes(role)) unresolved.push(role); continue; }
+      assignments.push({variableName:variable.id,valueName:candidate.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:variable.id,value:candidate.id,role});
+    }
+    const already = new Set(applied.map(x=>clean(x.value))); const featureUnresolved=[];
     for (const feature of (parsed.features||[])) {
-      if (already.has(clean(feature))) continue;
-      const matches=[];
+      if (already.has(clean(feature))) continue; const matches=[];
       for (const variable of map.values()) {
-        if (['PLM_TRAFO','PLM_PFC','PLM_LAMPFAM','PLM_COLLAMP'].includes(variable.id)) continue;
-        for (const o of variable.options) {
-          if (!o.available) continue;
-          const exact=clean(o.id)===clean(feature);
-          const safeShort=/^(WH|BK|GR)$/i.test(feature) && /CLR|COL|MAT/i.test(variable.id) && clean(o.id).startsWith(clean(feature));
-          if (exact||safeShort) matches.push({variable,option:o});
-        }
+        if (semanticRole(variable)==='CONTROL' || ['FAMILY','FLUX','COLOR'].includes(semanticRole(variable))) continue;
+        for (const o of variable.options) { if(!o.available) continue; const exact=clean(o.id)===clean(feature); const safeShort=/^(WH|BK|GR)$/i.test(feature) && /CLR|COL|MAT|COLOR/i.test(`${variable.id} ${variable.displayName}`) && clean(o.id).startsWith(clean(feature)); if(exact||safeShort) matches.push({variable,option:o}); }
       }
       const unique=[...new Map(matches.map(m=>[m.variable.id+'\0'+m.option.id,m])).values()];
-      if (unique.length!==1) { featureUnresolved.push(feature); continue; }
-      const m=unique[0]; assignments.push({variableName:m.variable.id,valueName:m.option.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:m.variable.id,value:m.option.id,sourceToken:feature});
+      if(unique.length!==1){ featureUnresolved.push(feature); continue; }
+      const m=unique[0]; assignments.push({variableName:m.variable.id,valueName:m.option.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:m.variable.id,value:m.option.id,sourceToken:feature,role:'FEATURE'});
     }
     unresolved.push(...featureUnresolved.map(x=>'feature:'+x));
-
-    const trafo=map.get('PLM_TRAFO'); if(!trafo) return {validated:false,reason:'CONTROL_VARIABLE_NOT_DISCOVERED',applied,unresolved};
-    const target=preferredControl(trafo,targetControlClass,parsed.driver); if(!target) return {validated:false,reason:'TARGET_CONTROL_NOT_SELECTABLE',applied,unresolved,availableControls:trafo.options.filter(o=>o.available).map(o=>o.id)};
-    assignments.push({variableName:'PLM_TRAFO',valueName:target.id}); payload=await this.request(model,assignments); map=variableMap(payload);
-    const status=payload?.bomStatus?.configurationStatus || {}; const root=payload?.materialBomConfiguration?.root?.configuration || {};
-    const finalTrafo=map.get('PLM_TRAFO'); const selected=finalTrafo?.options.some(o=>o.id===target.id && o.available);
-    const conflict=Boolean(status.hasConflict||root.hasConflict); const valid=status.valid!==false && root.valid!==false && !conflict && selected;
-    return {validated:Boolean(valid),reason:valid?null:'CONFIGURATION_REJECTED',model,selectedControl:target.id,assignments,applied,unresolved,complete:Boolean(status.complete||root.complete),valid:Boolean(valid),hasConflict:conflict,availableControls:finalTrafo?.options.filter(o=>o.available).map(o=>o.id)||[],validationSource:'SIGNIFY_QUOTE_CONFIGIT_MODEL'};
+    const control=variableForRole(map,'CONTROL'); if(!control) return {validated:false,reason:'CONTROL_VARIABLE_NOT_DISCOVERED',applied,unresolved};
+    const target=preferredControl(control,targetControlClass,parsed.driver); if(!target) return {validated:false,reason:'TARGET_CONTROL_NOT_SELECTABLE',applied,unresolved,availableControls:control.options.filter(o=>o.available).map(o=>o.id)};
+    assignments.push({variableName:control.id,valueName:target.id}); payload=await this.request(model,assignments); map=variableMap(payload);
+    const status=payload?.bomStatus?.configurationStatus || {}; const root=payload?.materialBomConfiguration?.root?.configuration || {}; const finalControl=variableForRole(map,'CONTROL');
+    const selected=finalControl?.options.some(o=>o.id===target.id && o.available); const conflict=Boolean(status.hasConflict||root.hasConflict); const valid=status.valid!==false && root.valid!==false && !conflict && selected;
+    return {validated:Boolean(valid),reason:valid?null:'CONFIGURATION_REJECTED',model,controlVariable:control.id,selectedControl:target.id,assignments,applied,unresolved,complete:Boolean(status.complete||root.complete),valid:Boolean(valid),hasConflict:conflict,availableControls:finalControl?.options.filter(o=>o.available).map(o=>o.id)||[],validationSource:'SIGNIFY_QUOTE_CONFIGIT_MODEL'};
   }
 }

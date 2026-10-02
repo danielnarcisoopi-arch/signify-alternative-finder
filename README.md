@@ -91,3 +91,11 @@ V16 changes the core resolution strategy. The finder now prefers the same Signif
 The engine applies the parsed original attributes to the live model using official variable domains (for example `PLM_PFC`, `PLM_LAMPFAM`, `PLM_COLLAMP`, `PLM_OPTGRP`, `PLM_CVR`), resolves remaining commercial tokens only when there is a unique model option, and changes `PLM_TRAFO` only after the original attributes have been applied. A DALI result is accepted only when the model keeps the configuration valid and conflict-free. The older configurator/session and Product API paths remain as fallbacks.
 
 This is intentionally constraint-first: search results discover candidate products/configurators; the Configit model decides whether the requested configuration is valid.
+
+## V17 - Configit-first universal resolver
+
+V17 removes the Indoor/Outdoor split from the core resolution logic. Configit models are discovered from official Product API search/family metadata rather than by assuming that a family code becomes a configurator by appending `I`.
+
+The model is inspected semantically from Configit metadata/display names, so different families may use different variable IDs for family/housing, flux or LED family, light-source color, optic, cover and control/driver. Original attributes are applied first; only then is control changed. Server-side validity/conflict state remains authoritative.
+
+Luminaire Configurator V2 remains optional corroborating evidence for supported Outdoor products, not a substitute for Configit discovery.
