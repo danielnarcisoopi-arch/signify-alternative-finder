@@ -105,3 +105,9 @@ Luminaire Configurator V2 remains optional corroborating evidence for supported 
 V18 removes the assumption that a configurable material must be named `<family>I`. Configurator discovery now accepts explicit configurable-material identifiers returned by Signify data even when the model code is different from the commercial family. The relationship is not trusted by name: the Configit model must prove it by exposing the source family and accepting the original technical attributes.
 
 This supports cases such as a commercial family being represented by a differently named configurable material, without adding a family-to-configurator lookup table. Outdoor tokens can also be matched to model-specific options when the match is unique, after which the control/driver variable is changed to an available DALI option and validated server-side.
+
+## V19 - Family -> Configurator resolution first
+
+V19 changes the order of the engine. Before successor heuristics, it queries the Signify Quote product search with the exact family and `configurable=true/false`, extracts configurable-material evidence, then opens candidate Configit models. A model is accepted only if the model itself exposes and selects the source family. This supports both same-name models (for example a family whose configurator happens to share its code) and differently named models, without a hard-coded family map.
+
+Broad successor candidates are now secondary evidence. They cannot produce a verified configurable result unless the Configit model proves the family and reconstructs the required attributes.

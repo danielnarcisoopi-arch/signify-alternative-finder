@@ -4,6 +4,7 @@ import { controlSearchTerms, displayControl, normalizeText, oppositeControl, par
 import { ProductApiClient, ProductApiError } from "./product-api.js";
 import { QuoteMaterialConfiguratorClient, QuoteMaterialConfiguratorError } from "./quote-material-configurator.js";
 import { configuratorCarrier, discoverSuccessorFamilies } from "./successor-discovery.js";
+import { QuoteProductDiscoveryClient } from "./quote-product-discovery.js";
 
 const RESULT_LABELS = {
   DIRECT_VERIFIED_MATCH: "Direct verified match",
@@ -377,7 +378,7 @@ async function collectMigrationCandidates(productClient, parsed, originalProduct
   return products.filter((product) => product.controlClass === parsed.targetControlClass && product.family !== parsed.family);
 }
 
-export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient(), quoteMaterialClient = new QuoteMaterialConfiguratorClient() } = {}) {
+export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient(), quoteMaterialClient = new QuoteMaterialConfiguratorClient(), quoteProductDiscoveryClient = new QuoteProductDiscoveryClient() } = {}) {
   return async function engine(query) {
     const parsed = parseReference(query);
     if (!parsed.input) return { httpStatus: 400, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Introduza uma referência Signify ou um 12NC." };
@@ -432,7 +433,17 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       // Never assume <family>I: collect configurable-material identifiers returned by
       // exact family/reference searches and family metadata, then let the Configit
       // model itself prove whether it can reproduce the source family/attributes.
-      const discoveredModelIds = new Set(configuratorPool.map(p => p?.configuratorId).filter(Boolean));
+      const discoveredModelIds = new Set();
+      const modelDiscoveryEvidence = [];
+      // First ask the Quote product service for configurable materials using the
+      // exact source family. This is the authoritative discovery stage and runs
+      // before broad catalogue/successor heuristics. A candidate is still not
+      // trusted until its Configit model proves the source family.
+      try {
+        const qd = await quoteProductDiscoveryClient.discover(effective.family);
+        for (const candidate of qd.candidates || []) { discoveredModelIds.add(candidate.id); modelDiscoveryEvidence.push(candidate); }
+      } catch (e) { modelDiscoveryEvidence.push({source:'QUOTE_PRODUCTS_SEARCH',error:e?.message||String(e)}); }
+      for (const p of configuratorPool) if (p?.configuratorId) discoveredModelIds.add(p.configuratorId);
       try {
         const discoveryQueries = [...new Set([effective.input, effective.family].filter(Boolean))];
         for (const discoveryQuery of discoveryQueries) {
@@ -447,8 +458,8 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       for (const model of materialModels.slice(0, 12)) {
         try {
           const q = await quoteMaterialClient.validate({ model, parsed: effective, targetControlClass: effective.targetControlClass });
-          configuratorAttempts.push({ id:model, family:effective.family, validated:q.validated, reason:q.reason, source:'QUOTE_CONFIGIT_MODEL' });
-          if (q.validated && q.unresolved.length === 0) {
+          configuratorAttempts.push({ id:model, family:effective.family, validated:q.validated, familyProven:q.familyProven, reason:q.reason, source:'QUOTE_CONFIGIT_MODEL' });
+          if (q.validated && q.familyProven && q.unresolved.length === 0) {
             const appliedValues = q.applied.map(a=>a.value).filter(Boolean);
             const tokens = [...new Set([effective.family, ...appliedValues.filter(v=>normalizeText(v)!==normalizeText(effective.family)), q.selectedControl].filter(Boolean))];
             return {
@@ -457,7 +468,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
               recommended:{description:tokens.join(' '),orderCode:null,productCode:null,family:tokens[0]||effective.family,control:displayControl(effective.targetControlClass),configuratorId:model,productUrl:null,market:null,lifecycleStatus:null},
               currentFamily:tokens[0]||effective.family, changes:[{field:'control',from:effective.driver||displayControl(effective.controlClass),to:q.selectedControl}], preserved:q.applied,
               validation:{verified:true,source:'Signify Quote / Configit model',method:'Official variable domains + server-side constraint validation; only PLM_TRAFO changed after applying the original attributes.',checkedAt:new Date().toISOString(),complete:q.complete},
-              configurators:configuratorAttempts, message:'Configuração validada diretamente pelo modelo Configit utilizado pelo Signify Quote.', recommendedDescription:tokens.join(' '), orderCode:null, differences:[`Control Gear: ${effective.driver||displayControl(effective.controlClass)} → ${q.selectedControl}`]
+              configurators:configuratorAttempts, modelDiscovery:modelDiscoveryEvidence, message:'Configuração validada diretamente pelo modelo Configit utilizado pelo Signify Quote.', recommendedDescription:tokens.join(' '), orderCode:null, differences:[`Control Gear: ${effective.driver||displayControl(effective.controlClass)} → ${q.selectedControl}`]
             };
           }
         } catch (e) {
