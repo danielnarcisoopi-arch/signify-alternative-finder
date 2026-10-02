@@ -10,8 +10,8 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "29.0.0",
-          mode: "current-family-configit-authoritative",
+          version: "30.0.0",
+          mode: "CONFIGIT_ONLY_CURRENT_FAMILY_V1",
         },
       };
     }

@@ -380,9 +380,14 @@ async function collectMigrationCandidates(productClient, parsed, originalProduct
 
 export function createEngine({ productClient = new ProductApiClient(), configuratorClient = new ConfiguratorApiClient(), quoteMaterialClient = new QuoteMaterialConfiguratorClient(), quoteProductDiscoveryClient = new QuoteProductDiscoveryClient() } = {}) {
   return async function engine(query) {
+    const trace = [];
+    const pushTrace = (stage, status, details = {}) => trace.push({ stage, status, ...details });
+    const withTrace = (result) => ({ ...result, engineVersion: '30.0.0', pipeline: 'CONFIGIT_ONLY_CURRENT_FAMILY_V1', trace });
     const parsed = parseReference(query);
-    if (!parsed.input) return { httpStatus: 400, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Introduza uma referência Signify ou um 12NC." };
-    if (!parsed.family && !parsed.orderCode) return { httpStatus: 422, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Não foi possível identificar com segurança a família." };
+    pushTrace('INPUT', 'OK', { query });
+    pushTrace('PARSE', parsed.family || parsed.orderCode ? 'PASS' : 'FAIL', { family: parsed.family || null, orderCode: parsed.orderCode || null, controlClass: parsed.controlClass || null });
+    if (!parsed.input) return withTrace({ httpStatus: 400, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Introduza uma referência Signify ou um 12NC." });
+    if (!parsed.family && !parsed.orderCode) return withTrace({ httpStatus: 422, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Não foi possível identificar com segurança a família." });
 
     try {
       // V29 AUTHORITATIVE ORDER: resolve the CURRENT FAMILY in Quote/Configit before
@@ -394,21 +399,28 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       if (effective.family) {
         try {
           discovery = await quoteProductDiscoveryClient.discover(effective.family, { familyName: '' });
+          pushTrace('CONFIGURATOR_DISCOVERY', (discovery?.candidates || []).length ? 'PASS' : 'MISS', { family: effective.family, mode: discovery?.mode || null, candidates: (discovery?.candidates || []).map(c => c.id) });
         } catch (e) {
           discovery = { candidates: [], diagnostics: [{ source: 'QUOTE_DISCOVERY', error: e?.message || String(e) }], mode: 'ERROR' };
+          pushTrace('CONFIGURATOR_DISCOVERY', 'ERROR', { family: effective.family, error: e?.message || String(e) });
         }
 
         const models = [...new Set((discovery?.candidates || []).map(c => c.id).filter(Boolean))];
         let familyProven = false;
         for (const model of models) {
           try {
+            pushTrace('MODEL_OPEN', 'START', { model, family: effective.family });
             const q = await quoteMaterialClient.validate({ model, parsed: effective, targetControlClass: effective.targetControlClass });
+            pushTrace('MODEL_OPEN', q.familyProven ? 'PASS' : 'FAIL', { model, familyProven: q.familyProven, validated: q.validated, selectedControl: q.selectedControl || null, unresolved: q.unresolved || [], reason: q.reason || null });
             if (q.familyProven) familyProven = true;
             configuratorAttempts.push({ id: model, family: effective.family, validated: q.validated, familyProven: q.familyProven, reason: q.reason || null, unresolved: q.unresolved || [], source: 'QUOTE_CONFIGIT_MODEL' });
             if (q.validated && q.familyProven && (q.unresolved || []).length === 0) {
               const appliedValues = q.applied.map(a => a.value).filter(Boolean);
               const tokens = [...new Set([effective.family, ...appliedValues.filter(v => normalizeText(v) !== normalizeText(effective.family)), q.selectedControl].filter(Boolean))];
-              return {
+              pushTrace('CURRENT_FAMILY_CONFIRMED', 'PASS', { family: effective.family, model });
+              pushTrace('SUCCESSOR_SEARCH', 'SKIPPED', { reason: 'CURRENT_FAMILY_CONFIGIT_CONFIRMED' });
+              pushTrace('FINAL_VALIDATION', 'PASS', { family: effective.family, model, control: q.selectedControl });
+              return withTrace({
                 status: 'VERIFIED_CONFIGURABLE_PRODUCT', statusLabel: RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT,
                 resultType: 'VERIFIED_CONFIGURABLE_PRODUCT', compatibility: 'CONFIGURABLE',
                 original: { input: effective.input, description: effective.reference || effective.input, orderCode: effective.orderCode || null, family: effective.family, control: displayControl(effective.controlClass) },
@@ -419,10 +431,11 @@ export function createEngine({ productClient = new ProductApiClient(), configura
                 configurators: configuratorAttempts, diagnostics: { discoveryMode: discovery?.mode || null, modelDiscovery: discovery?.candidates || [] },
                 message: 'Configuração validada diretamente no configurador da família original.', recommendedDescription: tokens.join(' '), orderCode: null,
                 differences: [`Control Gear: ${effective.driver || displayControl(effective.controlClass)} → ${q.selectedControl}`]
-              };
+              });
             }
           } catch (e) {
             configuratorAttempts.push({ id: model, family: effective.family, validated: false, familyProven: false, reason: e.code || 'QUOTE_CONFIGIT_MODEL_UNAVAILABLE', details: e.details || null, source: 'QUOTE_CONFIGIT_MODEL' });
+            pushTrace('MODEL_OPEN', 'ERROR', { model, code: e.code || 'QUOTE_CONFIGIT_MODEL_UNAVAILABLE', details: e.details || null });
           }
         }
 
@@ -430,14 +443,16 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         // family, successor logic is forbidden. A temporary Configit HTTP failure
         // must never turn BDS670 into BDS492 (or any other family).
         if (models.length) {
-          return noResult(effective, {
+          pushTrace('SUCCESSOR_SEARCH', 'SKIPPED', { reason: 'CURRENT_FAMILY_CONFIGURATOR_DISCOVERED', models });
+          pushTrace('FINAL_VALIDATION', 'FAIL', { reason: familyProven ? 'CURRENT_FAMILY_CONFIGURATION_NOT_VALIDATED' : 'CURRENT_FAMILY_CONFIGURATOR_NOT_AVAILABLE' });
+          return withTrace(noResult(effective, {
             configurators: models, configuratorAttempts,
             diagnostics: { discoveryMode: discovery?.mode || null, modelDiscovery: discovery?.candidates || [], discoveryDiagnostics: discovery?.diagnostics || [] },
             reason: familyProven ? 'CURRENT_FAMILY_CONFIGURATION_NOT_VALIDATED' : 'CURRENT_FAMILY_CONFIGURATOR_NOT_AVAILABLE',
             message: familyProven
               ? `O configurador da família ${effective.family} foi confirmado, mas a configuração DALI final não passou todos os requisitos de validação.`
               : `Foi encontrado um configurador oficial para ${effective.family}, mas o modelo Configit não ficou disponível para validação. Não foi usado um sucessor como substituto.`
-          });
+          }));
         }
       }
 
@@ -480,6 +495,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         });
       }
 
+      pushTrace('SUCCESSOR_SEARCH', 'START', { reason: 'NO_CURRENT_FAMILY_CONFIGURATOR' });
       const successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily || { code: effective.family, name: '', raw: null });
       if (successorDiscovery.validated) {
         const successor = successorDiscovery.candidate;
@@ -496,15 +512,17 @@ export function createEngine({ productClient = new ProductApiClient(), configura
         }
       }
 
-      return noResult(effective, {
+      pushTrace('FINAL_VALIDATION', 'FAIL', { reason: originalProduct ? 'NO_TECHNICALLY_SAFE_MATCH' : 'ORIGINAL_FAMILY_NOT_VERIFIED' });
+      return withTrace(noResult(effective, {
         originalProduct, configuratorAttempts,
         diagnostics: { discoveryMode: discovery?.mode || null, discoveryDiagnostics: discovery?.diagnostics || [] },
         reason: originalProduct ? 'NO_TECHNICALLY_SAFE_MATCH' : 'ORIGINAL_FAMILY_NOT_VERIFIED',
         message: 'Nenhuma alternativa preservou as características técnicas necessárias e passou a validação oficial.'
-      });
+      }));
     } catch (error) {
       if (error instanceof ProductApiError || error instanceof ConfiguratorApiError || error instanceof QuoteMaterialConfiguratorError) {
-        return { httpStatus: 502, status: 'SOURCE_UNAVAILABLE', statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, message: error.message, details: error.details || null };
+        pushTrace('UNHANDLED_SOURCE_ERROR', 'FAIL', { name: error.name, message: error.message, details: error.details || null });
+        return withTrace({ httpStatus: 502, status: 'SOURCE_UNAVAILABLE', statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, message: error.message, details: error.details || null });
       }
       throw error;
     }

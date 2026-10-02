@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 
@@ -161,6 +161,14 @@ function App() {
   const [query, setQuery] = useState("");
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [health, setHealth] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/health', { headers: { Accept: 'application/json' } })
+      .then(r => r.ok ? r.json() : null)
+      .then(setHealth)
+      .catch(() => setHealth(null));
+  }, []);
 
   async function search(event) {
     event?.preventDefault();
@@ -210,6 +218,7 @@ function App() {
           <p className="subtitle">Compara a referência atual com a mesma versão em PSU ↔ PSD/DALI, usando catálogo, CPQ/Configurator e validação técnica Outdoor quando aplicável.</p>
         </div>
       </header>
+      <div style={{fontSize:'12px',opacity:.65,margin:'-10px 0 14px'}}>Engine: {health ? `${health.version} · ${health.pipeline} · ${health.fingerprint}` : 'a verificar...'}</div>
 
       <form className="search" onSubmit={search}>
         <label htmlFor="reference">Referência Signify / Philips ou 12NC</label>
