@@ -66,3 +66,21 @@ test('replays official Quote bootstrap order: materialinfo -> template -> config
   assert.equal(calls[1].body.environment,undefined); assert.equal(calls[2].body.environment.rootEnvironment.salesArea.salesOrganization,'PT02');
   assert.equal(calls[2].headers.Origin,'https://www.quote.signify.com');
 });
+
+test('bootstrap payload matches official HAR: template has mapped build date, configuration starts with no assignments', async()=>{
+  const calls=[];
+  const fetchImpl=async(u,o)=>{
+    calls.push({url:String(u),body:JSON.parse(o.body)});
+    if(String(u).endsWith('/materialinfo')) return {ok:true,json:async()=>[{name:'BGP702I',isConfigurable:true,materialDeliveringPlant:'PL02'}]};
+    if(String(u).includes('getMaterialTemplateData')) return {ok:true,json:async()=>({templates:[{name:'BGP702I'}]})};
+    return {ok:true,json:async()=>payload([])};
+  };
+  const c=new QuoteMaterialConfiguratorClient({fetchImpl});
+  await c.request('BGP702I',[]);
+  const template=calls.find(x=>x.url.includes('getMaterialTemplateData'));
+  const init=calls.find(x=>x.url.includes('getFromExistingConfigurationWithStatus'));
+  const a=template.body.rootConfiguration.existingAssignments.find(x=>x.variableName==='DIM_BUILDDATE');
+  assert.ok(a,'DIM_BUILDDATE must be sent to template bootstrap');
+  assert.equal(a.fromAssignmentMapping,true);
+  assert.deepEqual(init.body.rootConfiguration.existingAssignments,[]);
+});

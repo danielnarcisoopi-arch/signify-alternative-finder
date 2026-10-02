@@ -59,12 +59,24 @@ function preferredControl(variable, target, sourceDriver='') {
 export class QuoteMaterialConfiguratorClient {
   constructor({fetchImpl=globalThis.fetch,url=process.env.SIGNIFY_QUOTE_MATERIAL_API||DEFAULT_URL,materialInfoUrl=process.env.SIGNIFY_MATERIAL_INFO_API||MATERIAL_INFO_URL,templateUrl=process.env.SIGNIFY_MATERIAL_TEMPLATE_API||TEMPLATE_URL,timeoutMs=Number(process.env.SIGNIFY_API_TIMEOUT_MS||12000)}={}){this.fetchImpl=fetchImpl;this.url=url;this.materialInfoUrl=materialInfoUrl;this.templateUrl=templateUrl;this.timeoutMs=timeoutMs;this.metaCache=new Map();this.templateReady=new Set();}
   headers(){return {'Content-Type':'application/json','Accept':'application/json, text/plain, */*','Origin':QUOTE_ORIGIN,'Referer':QUOTE_ORIGIN+'/'};}
-  body(model, assignments=[], plant='PL06'){ return {name:model,plant,usage:'5',languages:['en-GB','en'],rootConfiguration:{existingAssignments:assignments.map(a=>({isDefault:false,isLive:true,isUserAssignment:true,variableName:a.variableName,valueName:a.valueName})),itemId:'',materialName:model,configurableMaterialName:model,useServerDefaultValues:true,bomItemAssignments:[]},salesAreaName:'CSU Portugal',salesAreaId:'PT02/05/01',soldTo:null,shipTo:null,environment:{rootEnvironment:{salesArea:{salesOrganization:'PT02',distributionChannel:'05'},salesDocumentType:'ZQU'},materialEnvironment:[]}}; }
+  buildDate(){
+    if(process.env.SIGNIFY_BUILD_DATE) return process.env.SIGNIFY_BUILD_DATE;
+    const now=new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(),11,31,12,0,0,0)).toISOString();
+  }
+  body(model, assignments=[], plant='PL06'){
+    return {name:model,plant,usage:'5',languages:['en-GB','en'],rootConfiguration:{existingAssignments:assignments.map(a=>({isDefault:false,isLive:true,isUserAssignment:true,variableName:a.variableName,valueName:a.valueName,...(a.fromAssignmentMapping?{fromAssignmentMapping:true}:{})})),itemId:'',materialName:model,configurableMaterialName:model,useServerDefaultValues:true,bomItemAssignments:[]},salesAreaName:'CSU Portugal',salesAreaId:'PT02/05/01',soldTo:null,shipTo:null,environment:{rootEnvironment:{salesArea:{salesOrganization:'PT02',distributionChannel:'05'},salesDocumentType:'ZQU'},materialEnvironment:[]}};
+  }
+  templateBody(model,plant){
+    const body=this.body(model,[{variableName:'DIM_BUILDDATE',valueName:this.buildDate(),fromAssignmentMapping:true}],plant);
+    delete body.environment;
+    return body;
+  }
   async metadata(model){ if(this.metaCache.has(model))return this.metaCache.get(model); try { const r=await this.fetchImpl(this.materialInfoUrl,{method:'POST',headers:this.headers(),body:JSON.stringify({salesAreaId:'PT02/05/01',salesAreaName:'CSU Portugal',soldTo:null,shipTo:null,materials:[{materialName:model}]})}); if(!r.ok)throw new Error(`HTTP ${r.status}`); const data=await r.json(); const row=Array.isArray(data)?data[0]:data; const meta={plant:row?.materialDeliveringPlant||process.env.SIGNIFY_PLANT||'PL06',isConfigurable:row?.isConfigurable!==false,name:row?.name||model}; this.metaCache.set(model,meta); return meta; } catch { const meta={plant:process.env.SIGNIFY_PLANT||'PL06',isConfigurable:true,name:model}; this.metaCache.set(model,meta); return meta; } }
   async warmTemplate(model,plant){
     const key=`${model}|${plant}`; if(this.templateReady.has(key))return;
     const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs);
-    try{const body=this.body(model,[],plant); delete body.environment; const r=await this.fetchImpl(this.templateUrl,{method:'POST',headers:this.headers(),body:JSON.stringify(body),signal:c.signal}); if(!r.ok)throw new QuoteMaterialConfiguratorError('TEMPLATE_HTTP_ERROR',`Quote template returned HTTP ${r.status}`,{status:r.status,plant}); await r.json(); this.templateReady.add(key);} finally{clearTimeout(timer);}
+    try{const body=this.templateBody(model,plant); const r=await this.fetchImpl(this.templateUrl,{method:'POST',headers:this.headers(),body:JSON.stringify(body),signal:c.signal}); if(!r.ok)throw new QuoteMaterialConfiguratorError('TEMPLATE_HTTP_ERROR',`Quote template returned HTTP ${r.status}`,{status:r.status,plant}); await r.json(); this.templateReady.add(key);} finally{clearTimeout(timer);}
   }
   async request(model, assignments=[]){
     const meta=await this.metadata(model);

@@ -1,3 +1,16 @@
+# V26 - HAR exact Quote bootstrap
+
+This build fixes the live `template http error` observed in V25. The official Quote HAR proves that `getMaterialTemplateData` requires a `DIM_BUILDDATE` assignment with `fromAssignmentMapping: true`, while the following `getFromExistingConfigurationWithStatus` bootstrap starts with no assignments. V26 reproduces that sequence exactly, uses the delivering plant from `materialinfo`, and preserves the Configit-first family/configurator resolver.
+
+Validation performed before packaging:
+- 58/58 local API tests passed.
+- HAR replay bootstrap against the user's real Quote captures passed for BGP702I (PL02, valid=true, configurable=true).
+- HAR replay bootstrap passed for BDS650N (PL02, valid=true, configurable=true).
+- Real captured model domains contain BGP702 + LED90 + 730 + DX10P + LGR + 7035 + SRG10 + mounting token 42 and PSD.
+- Real captured BDS650N model domains contain BDS670 + LED50/LED40 + 730 + MDA/MDM + BK + SRT + SRG10 + 60P and PSD.
+
+The container cannot resolve www.quote.signify.com directly, so final live Azure validation still has to occur after deployment. The replay uses the exact responses captured from the user's authenticated Quote session, not synthetic product data.
+
 # Signify Alternative Finder v22 — Progressive Prefix Configit Discovery
 
 This version is focused on configurator discovery before control conversion.
