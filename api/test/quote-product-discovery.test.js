@@ -9,3 +9,16 @@ test('prioritizes exact family configurator when Quote exposes it',async()=>{
  const fetchImpl=async()=>response({results:[{configurableMaterialName:'BGP702I'},{configurableMaterialName:'BGP730I'}]});
  const r=await new QuoteProductDiscoveryClient({fetchImpl}).discover('BGP702'); assert.equal(r.candidates[0].id,'BGP702I');
 });
+
+test('extracts configurators from an explicit catalogue Configurators text list without family naming rules',async()=>{
+ const fetchImpl=async()=>response({family:{code:'BGP702',name:'Luma gen2',technicalInformation:{Configurators:'BGP702I, BGP713I, BGP704I, BGP705I, BGP701I'}}});
+ const c=new QuoteProductDiscoveryClient({fetchImpl}); const r=await c.discover('BGP702',{familyName:'Luma gen2'});
+ assert.ok(r.candidates.some(x=>x.id==='BGP702I'));
+ assert.ok(r.candidates.some(x=>x.id==='BGP713I'));
+});
+
+test('does not invent family plus I when official payload contains no configurator evidence',async()=>{
+ const fetchImpl=async()=>response({results:[{familyCode:'BGP702',description:'Luma gen2 Micro'}]});
+ const c=new QuoteProductDiscoveryClient({fetchImpl}); const r=await c.discover('BGP702',{familyName:'Luma gen2'});
+ assert.equal(r.candidates.some(x=>x.id==='BGP702I'),false);
+});

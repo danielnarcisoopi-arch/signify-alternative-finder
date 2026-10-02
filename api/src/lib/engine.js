@@ -440,7 +440,7 @@ export function createEngine({ productClient = new ProductApiClient(), configura
       // before broad catalogue/successor heuristics. A candidate is still not
       // trusted until its Configit model proves the source family.
       try {
-        const qd = await quoteProductDiscoveryClient.discover(effective.family);
+        const qd = await quoteProductDiscoveryClient.discover(effective.family, { familyName: originalProduct?.familyName || '' });
         for (const candidate of qd.candidates || []) { discoveredModelIds.add(candidate.id); modelDiscoveryEvidence.push(candidate); }
       } catch (e) { modelDiscoveryEvidence.push({source:'QUOTE_PRODUCTS_SEARCH',error:e?.message||String(e)}); }
       for (const p of configuratorPool) if (p?.configuratorId) discoveredModelIds.add(p.configuratorId);
