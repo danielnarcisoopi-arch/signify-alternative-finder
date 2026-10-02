@@ -57,15 +57,15 @@ function preferredControl(variable, target, sourceDriver='') {
 }
 
 export class QuoteMaterialConfiguratorClient {
-  constructor({fetchImpl=globalThis.fetch,url=process.env.SIGNIFY_QUOTE_MATERIAL_API||DEFAULT_URL,materialInfoUrl=process.env.SIGNIFY_MATERIAL_INFO_API||MATERIAL_INFO_URL,templateUrl=process.env.SIGNIFY_MATERIAL_TEMPLATE_API||TEMPLATE_URL,timeoutMs=Number(process.env.SIGNIFY_API_TIMEOUT_MS||12000)}={}){this.fetchImpl=fetchImpl;this.url=url;this.materialInfoUrl=materialInfoUrl;this.templateUrl=templateUrl;this.timeoutMs=timeoutMs;this.metaCache=new Map();this.templateReady=new Set();}
+  constructor({fetchImpl=globalThis.fetch,url=process.env.SIGNIFY_QUOTE_MATERIAL_API||DEFAULT_URL,materialInfoUrl=process.env.SIGNIFY_MATERIAL_INFO_API||MATERIAL_INFO_URL,templateUrl=process.env.SIGNIFY_MATERIAL_TEMPLATE_API||TEMPLATE_URL,timeoutMs=Number(process.env.SIGNIFY_API_TIMEOUT_MS||12000)}={}){this.fetchImpl=fetchImpl;this.url=url;this.materialInfoUrl=materialInfoUrl;this.templateUrl=templateUrl;this.timeoutMs=timeoutMs;this.metaCache=new Map();this.templateReady=new Map();}
   headers(){return {'Content-Type':'application/json','Accept':'application/json, text/plain, */*','Origin':QUOTE_ORIGIN,'Referer':QUOTE_ORIGIN+'/quotes/','User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36 Edg/154.0.0.0','Accept-Language':'en-GB,en;q=0.9'};}
   buildDate(){
     if(process.env.SIGNIFY_BUILD_DATE) return process.env.SIGNIFY_BUILD_DATE;
     const now=new Date();
     return new Date(Date.UTC(now.getUTCFullYear(),11,31,12,0,0,0)).toISOString();
   }
-  body(model, assignments=[], plant='PL06'){
-    return {name:model,plant,usage:'5',languages:['en-GB','en'],rootConfiguration:{existingAssignments:assignments.map(a=>({isDefault:false,isLive:true,isUserAssignment:true,variableName:a.variableName,valueName:a.valueName,...(a.fromAssignmentMapping?{fromAssignmentMapping:true}:{})})),itemId:'',materialName:model,configurableMaterialName:model,useServerDefaultValues:true,bomItemAssignments:[]},salesAreaName:'CSU Portugal',salesAreaId:'PT02/05/01',soldTo:null,shipTo:null,environment:{rootEnvironment:{salesArea:{salesOrganization:'PT02',distributionChannel:'05'},salesDocumentType:'ZQU'},materialEnvironment:[]}};
+  body(model, assignments=[], plant='PL06', materialEnvironment=[]){
+    return {name:model,plant,usage:'5',languages:['en-GB','en'],rootConfiguration:{existingAssignments:assignments.map(a=>({isDefault:false,isLive:true,isUserAssignment:true,variableName:a.variableName,valueName:a.valueName,...(a.fromAssignmentMapping?{fromAssignmentMapping:true}:{})})),itemId:'',materialName:model,configurableMaterialName:model,useServerDefaultValues:true,bomItemAssignments:[]},salesAreaName:'CSU Portugal',salesAreaId:'PT02/05/01',soldTo:null,shipTo:null,environment:{rootEnvironment:{salesArea:{salesOrganization:'PT02',distributionChannel:'05'},salesDocumentType:'ZQU'},materialEnvironment}};
   }
   templateBody(model,plant){
     const body=this.body(model,[{variableName:'DIM_BUILDDATE',valueName:this.buildDate(),fromAssignmentMapping:true}],plant);
@@ -74,9 +74,27 @@ export class QuoteMaterialConfiguratorClient {
   }
   async metadata(model){ if(this.metaCache.has(model))return this.metaCache.get(model); try { const r=await this.fetchImpl(this.materialInfoUrl,{method:'POST',headers:this.headers(),body:JSON.stringify({salesAreaId:'PT02/05/01',salesAreaName:'CSU Portugal',soldTo:null,shipTo:null,materials:[{materialName:model}]})}); if(!r.ok)throw new Error(`HTTP ${r.status}`); const data=await r.json(); const row=Array.isArray(data)?data[0]:data; const meta={plant:row?.materialDeliveringPlant||process.env.SIGNIFY_PLANT||'PL06',isConfigurable:row?.isConfigurable!==false,name:row?.name||model}; this.metaCache.set(model,meta); return meta; } catch { const meta={plant:process.env.SIGNIFY_PLANT||'PL06',isConfigurable:true,name:model}; this.metaCache.set(model,meta); return meta; } }
   async warmTemplate(model,plant){
-    const key=`${model}|${plant}`; if(this.templateReady.has(key))return;
+    const key=`${model}|${plant}`; if(this.templateReady.has(key))return this.templateReady.get(key);
     const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs);
-    try{const body=this.templateBody(model,plant); const r=await this.fetchImpl(this.templateUrl,{method:'POST',headers:this.headers(),body:JSON.stringify(body),signal:c.signal}); if(!r.ok){let text='';try{text=await r.text();}catch{} throw new QuoteMaterialConfiguratorError('TEMPLATE_HTTP_ERROR',`Quote template returned HTTP ${r.status}`,{status:r.status,plant,response:text.slice(0,500)});} await r.json(); this.templateReady.add(key);} finally{clearTimeout(timer);}
+    try{
+      const body=this.templateBody(model,plant);
+      const r=await this.fetchImpl(this.templateUrl,{method:'POST',headers:this.headers(),body:JSON.stringify(body),signal:c.signal});
+      if(!r.ok){let text='';try{text=await r.text();}catch{} throw new QuoteMaterialConfiguratorError('TEMPLATE_HTTP_ERROR',`Quote template returned HTTP ${r.status}`,{status:r.status,plant,response:text.slice(0,500)});}
+      const data=await r.json();
+      // The template response declares model-specific material environment keys.
+      // Example observed in the real BDS650N HAR: [{name:'BDS650N', environment:['Quantity']}].
+      // Recreate the environment generically instead of hardcoding a family.
+      const declared=data?.environment?.materialEnvironment || data?.materialEnvironment || [];
+      const materialEnvironment=(Array.isArray(declared)?declared:[]).map(entry=>{
+        const env={};
+        for(const keyName of (entry?.environment||[])){
+          if(String(keyName).toLowerCase()==='quantity') env.quantity=1;
+        }
+        return entry?.name ? {name:entry.name,environment:env} : null;
+      }).filter(Boolean);
+      this.templateReady.set(key,{materialEnvironment});
+      return {materialEnvironment};
+    } finally{clearTimeout(timer);}
   }
   async request(model, assignments=[]){
     const meta=await this.metadata(model);
@@ -90,10 +108,10 @@ export class QuoteMaterialConfiguratorClient {
     for(const plant of plants){
       const c=new AbortController(); const timer=setTimeout(()=>c.abort(),this.timeoutMs);
       try {
-        let templateWarning=null;
-        try { await this.warmTemplate(model,plant); }
+        let templateWarning=null; let templateContext={materialEnvironment:[]};
+        try { templateContext=await this.warmTemplate(model,plant); }
         catch(e){ templateWarning=e; }
-        const r=await this.fetchImpl(this.url,{method:'POST',headers:this.headers(),body:JSON.stringify(this.body(model,assignments,plant)),signal:c.signal});
+        const r=await this.fetchImpl(this.url,{method:'POST',headers:this.headers(),body:JSON.stringify(this.body(model,assignments,plant,templateContext?.materialEnvironment||[])),signal:c.signal});
         if(!r.ok){ let text=''; try{text=await r.text();}catch{} last=new QuoteMaterialConfiguratorError('HTTP_ERROR',`Quote Configurator returned HTTP ${r.status}`,{status:r.status,plant,response:text.slice(0,500),templateWarning:templateWarning?.details||templateWarning?.code||null}); continue; }
         const data=await r.json();
         const root=data?.materialBomConfiguration?.root;
@@ -117,30 +135,50 @@ export class QuoteMaterialConfiguratorClient {
       const variable=variableForRole(map,role); if(!variable) continue;
       const candidate=matchOption(variable,roleCandidates[role]);
       if(!candidate){ if(['FAMILY','FLUX','COLOR'].includes(role)) unresolved.push(role); continue; }
-      assignments.push({variableName:variable.id,valueName:candidate.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:variable.id,value:candidate.id,role});
+      assignments.push({variableName:variable.id,valueName:candidate.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:variable.id,value:candidate.id,text:candidate.text,role});
     }
     const already = new Set(applied.map(x=>clean(x.value))); const featureUnresolved=[];
     for (const feature of (parsed.features||[])) {
-      if (already.has(clean(feature))) continue; const matches=[];
+      if (already.has(clean(feature))) continue;
+      const escaped=normalizeText(feature).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+      const boundaryRe=escaped.length>=3 ? new RegExp(`(^|[^A-Z0-9])${escaped}([^A-Z0-9]|$)`) : null;
+      // A token can be a human-readable expansion of an already selected code
+      // (e.g. LGR has text 'RAL 7035'). In that case it is already represented.
+      if (boundaryRe && applied.some(a=>boundaryRe.test(normalizeText(`${a.value||''} ${a.text||''}`)))) {
+        applied.push({variable:null,value:feature,text:feature,sourceToken:feature,role:'REPRESENTED_BY_SELECTED_OPTION'});
+        continue;
+      }
+      const exactMatches=[]; const fuzzyMatches=[];
       for (const variable of map.values()) {
         if (semanticRole(variable)==='CONTROL' || ['FAMILY','FLUX','COLOR'].includes(semanticRole(variable))) continue;
         for (const o of variable.options) {
           if(!o.available) continue;
           const exact=clean(o.id)===clean(feature);
           const safeShort=/^(WH|BK|GR)$/i.test(feature) && /CLR|COL|MAT|COLOR/i.test(`${variable.id} ${variable.displayName}`) && clean(o.id).startsWith(clean(feature));
-          // Many outdoor models encode a commercial token inside a longer option
-          // label. Accept it only when the token occurs as a real boundary and the
-          // match is globally unique across the model. This preserves strictness
-          // while allowing codes such as DX10P, MDM, SRT, SRG10 and 60P to map to
-          // model-specific variables without family-specific code.
-          const escaped=normalizeText(feature).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-          const boundary=escaped.length>=3 && new RegExp(`(^|[^A-Z0-9])${escaped}([^A-Z0-9]|$)`).test(normalizeText(`${o.id} ${o.text}`));
-          if(exact||safeShort||boundary) matches.push({variable,option:o});
+          const boundary=boundaryRe && boundaryRe.test(normalizeText(`${o.id} ${o.text}`));
+          const rec={variable,option:o};
+          if(exact) exactMatches.push(rec); else if(safeShort||boundary) fuzzyMatches.push(rec);
         }
       }
-      const unique=[...new Map(matches.map(m=>[m.variable.id+'\0'+m.option.id,m])).values()];
-      if(unique.length!==1){ featureUnresolved.push(feature); continue; }
-      const m=unique[0]; assignments.push({variableName:m.variable.id,valueName:m.option.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:m.variable.id,value:m.option.id,sourceToken:feature,role:'FEATURE'});
+      let pool=exactMatches.length?exactMatches:fuzzyMatches;
+      pool=[...new Map(pool.map(m=>[m.variable.id+'\0'+m.option.id,m])).values()];
+      if(pool.length>1 && exactMatches.length){
+        // If the same exact commercial code exists in an optional/internal and a
+        // required variable, prefer the required variable (observed for SRG10).
+        const required=pool.filter(m=>m.variable.required);
+        if(required.length===1) pool=required;
+      }
+      if(pool.length!==1){
+        // Pure numeric suffixes can be descriptive/calculated data rather than a
+        // selectable Configit option. Preserve them in the output but do not invent
+        // an assignment when the model offers no unique exact value.
+        if(/^\d+$/.test(String(feature)) && exactMatches.length===0){
+          applied.push({variable:null,value:feature,text:feature,sourceToken:feature,role:'OPAQUE_PRESERVED',validatedByModel:false});
+          continue;
+        }
+        featureUnresolved.push(feature); continue;
+      }
+      const m=pool[0]; assignments.push({variableName:m.variable.id,valueName:m.option.id}); payload=await this.request(model,assignments); map=variableMap(payload); applied.push({variable:m.variable.id,value:m.option.id,text:m.option.text,sourceToken:feature,role:'FEATURE'});
     }
     unresolved.push(...featureUnresolved.map(x=>'feature:'+x));
     const control=variableForRole(map,'CONTROL'); if(!control) return {validated:false,reason:'CONTROL_VARIABLE_NOT_DISCOVERED',applied,unresolved};

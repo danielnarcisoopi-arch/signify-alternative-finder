@@ -84,3 +84,18 @@ test('bootstrap payload matches official HAR: template has mapped build date, co
   assert.equal(a.fromAssignmentMapping,true);
   assert.deepEqual(init.body.rootConfiguration.existingAssignments,[]);
 });
+
+test('uses material environment declared by the template response for BDS-style models', async () => {
+  const calls=[];
+  const fetchImpl=async (url,opts={})=>{
+    calls.push({url:String(url),body:opts.body?JSON.parse(opts.body):null});
+    if(String(url).endsWith('/api/materialinfo')) return {ok:true,status:200,json:async()=>[{materialDeliveringPlant:'PL02',isConfigurable:true,name:'BDS650N'}]};
+    if(String(url).includes('getMaterialTemplateData')) return {ok:true,status:200,json:async()=>({environment:{materialEnvironment:[{name:'BDS650N',environment:['Quantity']}]}})};
+    if(String(url).includes('getFromExistingConfigurationWithStatus')) return {ok:true,status:200,json:async()=>({materialBomConfiguration:{root:{isConfigurable:true,configuration:{valid:true,hasConflict:false,variableLinks:[],variableStates:[]}}}})};
+    throw new Error('unexpected '+url);
+  };
+  const client=new QuoteMaterialConfiguratorClient({fetchImpl});
+  await client.request('BDS650N',[]);
+  const configCall=calls.find(c=>c.url.includes('getFromExistingConfigurationWithStatus'));
+  assert.deepEqual(configCall.body.environment.materialEnvironment,[{name:'BDS650N',environment:{quantity:1}}]);
+});

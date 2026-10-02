@@ -10,8 +10,8 @@ app.http("alternative", {
       return {
         jsonBody: {
           status: "OK",
-          version: "28.0.0",
-          mode: "single-pipeline-current-family-configit-frontend-restored",
+          version: "29.0.0",
+          mode: "current-family-configit-authoritative",
         },
       };
     }

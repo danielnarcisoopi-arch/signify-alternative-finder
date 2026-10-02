@@ -382,217 +382,131 @@ export function createEngine({ productClient = new ProductApiClient(), configura
   return async function engine(query) {
     const parsed = parseReference(query);
     if (!parsed.input) return { httpStatus: 400, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Introduza uma referência Signify ou um 12NC." };
+    if (!parsed.family && !parsed.orderCode) return { httpStatus: 422, status: "NEEDS_REVIEW", statusLabel: RESULT_LABELS.NEEDS_REVIEW, message: "Não foi possível identificar com segurança a família." };
+
     try {
+      // V29 AUTHORITATIVE ORDER: resolve the CURRENT FAMILY in Quote/Configit before
+      // any Product API successor/scoring logic is allowed to run. This is the same
+      // order used when manually resolving BGP702/BDS670 from the official Quote UI.
+      let effective = { ...parsed, targetControlClass: parsed.controlClass && parsed.controlClass !== 'UNKNOWN' ? parsed.targetControlClass : 'DALI' };
+      const configuratorAttempts = [];
+      let discovery = null;
+      if (effective.family) {
+        try {
+          discovery = await quoteProductDiscoveryClient.discover(effective.family, { familyName: '' });
+        } catch (e) {
+          discovery = { candidates: [], diagnostics: [{ source: 'QUOTE_DISCOVERY', error: e?.message || String(e) }], mode: 'ERROR' };
+        }
+
+        const models = [...new Set((discovery?.candidates || []).map(c => c.id).filter(Boolean))];
+        let familyProven = false;
+        for (const model of models) {
+          try {
+            const q = await quoteMaterialClient.validate({ model, parsed: effective, targetControlClass: effective.targetControlClass });
+            if (q.familyProven) familyProven = true;
+            configuratorAttempts.push({ id: model, family: effective.family, validated: q.validated, familyProven: q.familyProven, reason: q.reason || null, unresolved: q.unresolved || [], source: 'QUOTE_CONFIGIT_MODEL' });
+            if (q.validated && q.familyProven && (q.unresolved || []).length === 0) {
+              const appliedValues = q.applied.map(a => a.value).filter(Boolean);
+              const tokens = [...new Set([effective.family, ...appliedValues.filter(v => normalizeText(v) !== normalizeText(effective.family)), q.selectedControl].filter(Boolean))];
+              return {
+                status: 'VERIFIED_CONFIGURABLE_PRODUCT', statusLabel: RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT,
+                resultType: 'VERIFIED_CONFIGURABLE_PRODUCT', compatibility: 'CONFIGURABLE',
+                original: { input: effective.input, description: effective.reference || effective.input, orderCode: effective.orderCode || null, family: effective.family, control: displayControl(effective.controlClass) },
+                recommended: { description: tokens.join(' '), orderCode: null, productCode: null, family: effective.family, control: displayControl(effective.targetControlClass), configuratorId: model, productUrl: null, market: null, lifecycleStatus: null },
+                currentFamily: effective.family, familyMigration: null,
+                changes: [{ field: 'control', from: effective.driver || displayControl(effective.controlClass), to: q.selectedControl }], preserved: q.applied,
+                validation: { verified: true, source: 'Signify Quote / Configit model', method: 'Current-family Configit model proved the original family and accepted the DALI control change.', checkedAt: new Date().toISOString(), complete: q.complete },
+                configurators: configuratorAttempts, diagnostics: { discoveryMode: discovery?.mode || null, modelDiscovery: discovery?.candidates || [] },
+                message: 'Configuração validada diretamente no configurador da família original.', recommendedDescription: tokens.join(' '), orderCode: null,
+                differences: [`Control Gear: ${effective.driver || displayControl(effective.controlClass)} → ${q.selectedControl}`]
+              };
+            }
+          } catch (e) {
+            configuratorAttempts.push({ id: model, family: effective.family, validated: false, familyProven: false, reason: e.code || 'QUOTE_CONFIGIT_MODEL_UNAVAILABLE', details: e.details || null, source: 'QUOTE_CONFIGIT_MODEL' });
+          }
+        }
+
+        // HARD GATE: once Quote exposes a configurable material for the current
+        // family, successor logic is forbidden. A temporary Configit HTTP failure
+        // must never turn BDS670 into BDS492 (or any other family).
+        if (models.length) {
+          return noResult(effective, {
+            configurators: models, configuratorAttempts,
+            diagnostics: { discoveryMode: discovery?.mode || null, modelDiscovery: discovery?.candidates || [], discoveryDiagnostics: discovery?.diagnostics || [] },
+            reason: familyProven ? 'CURRENT_FAMILY_CONFIGURATION_NOT_VALIDATED' : 'CURRENT_FAMILY_CONFIGURATOR_NOT_AVAILABLE',
+            message: familyProven
+              ? `O configurador da família ${effective.family} foi confirmado, mas a configuração DALI final não passou todos os requisitos de validação.`
+              : `Foi encontrado um configurador oficial para ${effective.family}, mas o modelo Configit não ficou disponível para validação. Não foi usado um sucessor como substituto.`
+          });
+        }
+      }
+
+      // Only now may the legacy Product API participate. It is retained for
+      // standard 12NC matches and genuine successor-only families (e.g. old indoor
+      // families with no current Configit model discoverable in Quote).
       const originalProduct = await resolveOriginal(productClient, parsed);
       const officialParsed = originalProduct ? parseReference(originalProduct.description) : null;
-      const effectiveControl = originalProduct?.controlClass !== "UNKNOWN" ? originalProduct?.controlClass : officialParsed?.controlClass;
-      const effective = originalProduct
-        ? {
-            ...officialParsed,
-            input: parsed.input,
-            orderCode: parsed.orderCode || originalProduct.orderCode,
-            family: officialParsed.family || originalProduct.family,
-            controlClass: effectiveControl || "UNKNOWN",
-            // If the commercial reference does not encode a control gear token,
-            // keep the source as Unknown but search specifically for a verified
-            // DALI alternative. This does not claim the original is On/Off.
-            targetControlClass: effectiveControl && effectiveControl !== "UNKNOWN"
-              ? oppositeControl(effectiveControl)
-              : "DALI",
-          }
-        : {...parsed, targetControlClass: parsed.controlClass && parsed.controlClass !== 'UNKNOWN' ? parsed.targetControlClass : 'DALI'};
-      if (!effective.family) {
-        return {
-          httpStatus: 422,
-          status: "NEEDS_REVIEW",
-          statusLabel: RESULT_LABELS.NEEDS_REVIEW,
-          message: parsed.orderCode ? "O 12NC não foi encontrado no catálogo oficial Signify." : "Não foi possível identificar com segurança a família.",
-          original: {
-            input: parsed.input,
-            description: parsed.reference || parsed.input,
-            orderCode: parsed.orderCode || null,
-            family: parsed.family || null,
-            control: displayControl(effective.controlClass),
-          },
-        };
-      }
+      const effectiveControl = originalProduct?.controlClass !== 'UNKNOWN' ? originalProduct?.controlClass : officialParsed?.controlClass;
+      effective = originalProduct ? {
+        ...officialParsed, input: parsed.input, orderCode: parsed.orderCode || originalProduct.orderCode,
+        family: officialParsed.family || originalProduct.family, controlClass: effectiveControl || 'UNKNOWN',
+        targetControlClass: effectiveControl && effectiveControl !== 'UNKNOWN' ? oppositeControl(effectiveControl) : 'DALI'
+      } : effective;
 
       const sameFamily = await collectSameFamilyCandidates(productClient, effective, originalProduct);
       const verifiedSameFamily = await verifyRanked(productClient, effective, originalProduct, sameFamily.products);
-      const safeSameFamily = verifiedSameFamily.filter((assessment) => assessment.safeToRecommend);
-      // Configit-first: keep a verified standard same-family match as fallback,
-      // but do not return before family/configurator resolution has had a chance to run.
-      const standardSameFamilyFallback = safeSameFamily.length ? standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2)) : null;
+      const safeSameFamily = verifiedSameFamily.filter(a => a.safeToRecommend);
+      if (safeSameFamily.length) return standardResponse(effective, originalProduct, safeSameFamily[0], safeSameFamily.slice(1, 2));
 
-      const configuratorPool = deduplicate([originalProduct, ...sameFamily.products].filter(Boolean));
-      const configuratorAttempts = [];
-
-      // Preferred Configit path: use the same Quote material model endpoint that feeds
-      // the official configurator UI. It exposes the authoritative variable/value
-      // domains (PLM_PFC, PLM_LAMPFAM, PLM_COLLAMP, PLM_OPTGRP, PLM_CVR, PLM_TRAFO).
-      // Validate attributes first, then change only PLM_TRAFO. No textual PSU->PSD substitution.
-      // Discover Configit models dynamically from official Product API evidence.
-      // Never assume <family>I: collect configurable-material identifiers returned by
-      // exact family/reference searches and family metadata, then let the Configit
-      // model itself prove whether it can reproduce the source family/attributes.
-      const discoveredModelIds = new Set();
-      const modelDiscoveryEvidence = [];
-      let authoritativeDiscovery = null;
-      // AUTHORITATIVE CURRENT-FAMILY PATH. This is the only path allowed to
-      // select a configurator before successor discovery. Exact search and the
-      // progressive-prefix search are both official Quote product-search flows;
-      // every candidate must still prove the original family in its Configit model.
-      try {
-        authoritativeDiscovery = await quoteProductDiscoveryClient.discover(effective.family, { familyName: originalProduct?.familyName || '' });
-        for (const candidate of authoritativeDiscovery.candidates || []) {
-          discoveredModelIds.add(candidate.id);
-          modelDiscoveryEvidence.push(candidate);
-        }
-      } catch (e) {
-        modelDiscoveryEvidence.push({source:'QUOTE_PRODUCTS_SEARCH',error:e?.message||String(e)});
-      }
-
-      const materialModels = [...discoveredModelIds];
-      let currentFamilyModelDiscovered = materialModels.length > 0;
-      let currentFamilyModelProven = false;
-      for (const model of materialModels) {
-        try {
-          const q = await quoteMaterialClient.validate({ model, parsed: effective, targetControlClass: effective.targetControlClass });
-          if (q.familyProven) currentFamilyModelProven = true;
-          configuratorAttempts.push({ id:model, family:effective.family, validated:q.validated, familyProven:q.familyProven, reason:q.reason, unresolved:q.unresolved, source:'QUOTE_CONFIGIT_MODEL' });
-          if (q.validated && q.familyProven && q.unresolved.length === 0) {
-            const appliedValues = q.applied.map(a=>a.value).filter(Boolean);
-            const tokens = [...new Set([effective.family, ...appliedValues.filter(v=>normalizeText(v)!==normalizeText(effective.family)), q.selectedControl].filter(Boolean))];
-            return {
-              status:'VERIFIED_CONFIGURABLE_PRODUCT', statusLabel:RESULT_LABELS.VERIFIED_CONFIGURABLE_PRODUCT, resultType:'VERIFIED_CONFIGURABLE_PRODUCT', compatibility:'CONFIGURABLE',
-              original: originalProduct ? productSummary(originalProduct) : {input:effective.input,description:effective.reference||effective.input,family:effective.family,control:displayControl(effective.controlClass)},
-              recommended:{description:tokens.join(' '),orderCode:null,productCode:null,family:effective.family,control:displayControl(effective.targetControlClass),configuratorId:model,productUrl:null,market:null,lifecycleStatus:null},
-              currentFamily:effective.family, familyMigration:null, changes:[{field:'control',from:effective.driver||displayControl(effective.controlClass),to:q.selectedControl}], preserved:q.applied,
-              validation:{verified:true,source:'Signify Quote / Configit model',method:'Current-family Configit model proved the original family and server-side constraints accepted the DALI control change.',checkedAt:new Date().toISOString(),complete:q.complete},
-              configurators:configuratorAttempts, modelDiscovery:modelDiscoveryEvidence, message:'Configuração validada diretamente no configurador da família original.', recommendedDescription:tokens.join(' '), orderCode:null, differences:[`Control Gear: ${effective.driver||displayControl(effective.controlClass)} → ${q.selectedControl}`]
-            };
-          }
-        } catch (e) {
-          configuratorAttempts.push({id:model,family:effective.family,validated:false,familyProven:false,reason:e.code||'QUOTE_CONFIGIT_MODEL_UNAVAILABLE',details:e.details||null,source:'QUOTE_CONFIGIT_MODEL'});
-        }
-      }
-
-      // Critical safety rule: if Quote has exposed a current-family configurable
-      // material, never allow the legacy successor/scoring pipeline to replace the
-      // family merely because the Configit endpoint is temporarily unavailable.
-      // This prevents BDS670 -> BDS492 and similar false migrations.
-      if (currentFamilyModelDiscovered) {
-        if (standardSameFamilyFallback) return standardSameFamilyFallback;
-        return noResult(effective, {
-          originalProduct,
-          configurators: materialModels,
-          configuratorAttempts,
-          diagnostics: { discoveryMode: authoritativeDiscovery?.mode || null, modelDiscovery: modelDiscoveryEvidence },
-          reason: currentFamilyModelProven ? 'CURRENT_FAMILY_CONFIGURATION_NOT_VALIDATED' : 'CURRENT_FAMILY_CONFIGURATOR_NOT_AVAILABLE',
-          message: currentFamilyModelProven
-            ? `O configurador da família ${effective.family} foi confirmado, mas a configuração DALI final não passou todos os requisitos de validação.`
-            : `Foi encontrado um configurador oficial para ${effective.family}, mas o modelo Configit não ficou disponível para validação. Não foi usado um sucessor como substituto.`
-        });
-      }
-      if (standardSameFamilyFallback) return standardSameFamilyFallback;
       const legacyFamily = await resolveLegacyFamily(productClient, effective, originalProduct);
-      let successorDiscovery = { validated: false, candidates: [], reason: "LEGACY_FAMILY_METADATA_NOT_AVAILABLE" };
-      {
-        successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily || {
-          code: effective.family,
-          name: "",
-          raw: null,
+
+      // Official same-family metadata may expose a configurator even when the Quote
+      // product-search endpoint did not. This is still current-family evidence and
+      // must be attempted before any successor logic.
+      if (legacyFamily?.configuratorId && normalizeText(legacyFamily.code) === normalizeText(effective.family)) {
+        const carrier = {
+          description: effective.reference || effective.input, orderCode: '', is12nc: false,
+          family: effective.family, configuratorId: legacyFamily.configuratorId,
+          configuratorSeed: legacyFamily.configuratorSeed || null, parsed: effective,
+          controlClass: effective.controlClass, source: legacyFamily.source || { system: 'PRODUCT_FAMILY_METADATA' },
+        };
+        const configuredCurrent = await tryConfigurators(configuratorClient, effective, [carrier], { allowFamilyChange: false, expectedFamily: effective.family, originalProduct });
+        configuratorAttempts.push(...configuredCurrent.attempted);
+        if (configuredCurrent.result) return configurableResponse(effective, originalProduct, configuredCurrent);
+        return noResult(effective, {
+          originalProduct, configurators: [legacyFamily.configuratorId], configuratorAttempts,
+          reason: 'CURRENT_FAMILY_CONFIGURATION_NOT_VALIDATED',
+          message: `O configurador oficial ${legacyFamily.configuratorId} da família ${effective.family} foi encontrado, mas a configuração final não foi validada.`
         });
-        if (successorDiscovery.validated) {
-          const successor = successorDiscovery.candidate;
-          const verifiedSuccessor = await verifyRanked(productClient, effective, originalProduct, successor.products, {
-            allowFamilyChange: true,
-            migrationEvidence: successorDiscovery,
-          });
-          const safeSuccessor = verifiedSuccessor.filter((assessment) => assessment.safeToRecommend);
-          if (safeSuccessor.length) {
-            return standardResponse(effective, originalProduct, safeSuccessor[0], safeSuccessor.slice(1, 2), successorDiscovery.evidence);
-          }
+      }
 
-          const carrier = configuratorCarrier(successor);
-          const successorPool = deduplicate([carrier, ...successor.products].filter(Boolean));
-          const configuredSuccessor = await tryConfigurators(configuratorClient, effective, successorPool, {
-            allowFamilyChange: true,
-            expectedFamily: successor.code,
-            originalProduct,
-            migrationEvidence: successorDiscovery,
-          });
-          configuratorAttempts.push(...configuredSuccessor.attempted);
-          if (configuredSuccessor.result) return configurableResponse(effective, originalProduct, configuredSuccessor);
-
-          // The official catalogue has already established the current family and
-          // configurator. If only the Configurator session itself is unavailable
-          // (for example HTTP 500), do not throw that discovery away. Surface the
-          // reconstructed current-family configuration as identified-but-unverified.
-          const primaryAttempt = configuredSuccessor.attempted.find((attempt) => attempt.id === carrier?.configuratorId);
-          if (primaryAttempt?.reason === 'CONFIGURATOR_SESSION_NOT_AVAILABLE') {
-            const inferred = inferredCurrentFamilyConfiguration(effective, successorDiscovery);
-            if (inferred) {
-              return {
-                ...inferred,
-                original: originalProduct ? productSummary(originalProduct) : { input: effective.input, description: effective.reference, family: effective.family, control: displayControl(effective.controlClass) },
-                configurators: configuredSuccessor.attempted,
-              };
-            }
-          }
+      const successorDiscovery = await discoverSuccessorFamilies(productClient, effective, legacyFamily || { code: effective.family, name: '', raw: null });
+      if (successorDiscovery.validated) {
+        const successor = successorDiscovery.candidate;
+        const verifiedSuccessor = await verifyRanked(productClient, effective, originalProduct, successor.products, { allowFamilyChange: true, migrationEvidence: successorDiscovery });
+        const safeSuccessor = verifiedSuccessor.filter(a => a.safeToRecommend);
+        if (safeSuccessor.length) return standardResponse(effective, originalProduct, safeSuccessor[0], safeSuccessor.slice(1, 2), successorDiscovery.evidence);
+        const carrier = configuratorCarrier(successor);
+        const configuredSuccessor = await tryConfigurators(configuratorClient, effective, deduplicate([carrier, ...successor.products].filter(Boolean)), { allowFamilyChange: true, expectedFamily: successor.code, originalProduct, migrationEvidence: successorDiscovery });
+        if (configuredSuccessor.result) return configurableResponse(effective, originalProduct, configuredSuccessor);
+        const primaryAttempt = configuredSuccessor.attempted.find(a => a.id === carrier?.configuratorId);
+        if (primaryAttempt?.reason === 'CONFIGURATOR_SESSION_NOT_AVAILABLE') {
+          const inferred = inferredCurrentFamilyConfiguration(effective, successorDiscovery);
+          if (inferred) return { ...inferred, original: originalProduct ? productSummary(originalProduct) : { input: effective.input, description: effective.reference, family: effective.family, control: displayControl(effective.controlClass) }, configurators: configuredSuccessor.attempted };
         }
       }
 
-      const configured = await tryConfigurators(configuratorClient, effective, configuratorPool);
-      configuratorAttempts.push(...configured.attempted);
-      if (configured.result) return configurableResponse(effective, originalProduct, configured);
-      if (legacyFamily?.configuratorId) {
-        const familyConfigurator = configuratorCarrier({ family: legacyFamily, products: [] });
-        const configuredCurrentFamily = await tryConfigurators(configuratorClient, effective, [familyConfigurator].filter(Boolean), {
-          expectedFamily: effective.family,
-          originalProduct,
-        });
-        configuratorAttempts.push(...configuredCurrentFamily.attempted);
-        if (configuredCurrentFamily.result) return configurableResponse(effective, originalProduct, configuredCurrentFamily);
-      }
-
-      const migrationCandidates = await collectMigrationCandidates(productClient, effective, originalProduct);
-      if (migrationCandidates.length) {
-        const verifiedMigration = await verifyRanked(productClient, effective, originalProduct, migrationCandidates, { allowFamilyChange: true });
-        const safeMigration = verifiedMigration.filter((assessment) => assessment.safeToRecommend);
-        if (safeMigration.length) return standardResponse(effective, originalProduct, safeMigration[0], safeMigration.slice(1, 2));
-      }
-
-      const configurators = [...new Set(configuratorPool.map((product) => product.configuratorId).filter(Boolean))];
-      const discoveredConfigurators = successorDiscovery.candidates
-        .flatMap((candidate) => [candidate.family?.configuratorId, ...candidate.products.map((product) => product.configuratorId)])
-        .filter(Boolean);
-      configurators.push(...discoveredConfigurators.filter((id) => !configurators.includes(id)));
-      const familyKnown = Boolean(originalProduct || sameFamily.products.length || legacyFamily || successorDiscovery.candidates.length);
       return noResult(effective, {
-        originalProduct,
-        familyMigration: successorDiscovery.evidence || null,
-        configurators,
-        configuratorAttempts,
-        inspected: sameFamily.products.length + migrationCandidates.length + successorDiscovery.candidates.length,
-        diagnostics: successorDiscovery.diagnostics || null,
-        reason: successorDiscovery.validated
-          ? "SUCCESSOR_FOUND_CONFIGURATION_NOT_VALIDATED"
-          : successorDiscovery.reason === "SUCCESSOR_CANDIDATES_AMBIGUOUS"
-          ? "SUCCESSOR_CANDIDATES_AMBIGUOUS"
-          : familyKnown ? "NO_TECHNICALLY_SAFE_MATCH" : "ORIGINAL_FAMILY_NOT_VERIFIED",
-        message: successorDiscovery.validated
-          ? `A família atual ${successorDiscovery.candidate.code} foi identificada, mas a configuração final não foi confirmada pela Configurator API.`
-          : familyKnown
-            ? "Nenhum candidato preservou as características técnicas necessárias e passou a validação oficial."
-            : "A família original não foi confirmada no catálogo oficial atual e a pesquisa técnica não encontrou um sucessor único e validável.",
+        originalProduct, configuratorAttempts,
+        diagnostics: { discoveryMode: discovery?.mode || null, discoveryDiagnostics: discovery?.diagnostics || [] },
+        reason: originalProduct ? 'NO_TECHNICALLY_SAFE_MATCH' : 'ORIGINAL_FAMILY_NOT_VERIFIED',
+        message: 'Nenhuma alternativa preservou as características técnicas necessárias e passou a validação oficial.'
       });
     } catch (error) {
       if (error instanceof ProductApiError || error instanceof ConfiguratorApiError || error instanceof QuoteMaterialConfiguratorError) {
-        return { httpStatus: 503, status: "SOURCE_UNAVAILABLE", statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, resultType: "SOURCE_UNAVAILABLE", message: error.message, errorCode: error.code };
+        return { httpStatus: 502, status: 'SOURCE_UNAVAILABLE', statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, message: error.message, details: error.details || null };
       }
-      console.error("Alternative engine failed", error);
-      return { httpStatus: 500, status: "SOURCE_UNAVAILABLE", statusLabel: RESULT_LABELS.SOURCE_UNAVAILABLE, resultType: "SOURCE_UNAVAILABLE", message: "Não foi possível concluir a pesquisa com segurança.", errorCode: "UNEXPECTED_ERROR" };
+      throw error;
     }
   };
 }
