@@ -111,33 +111,31 @@ export function familyCodeFromConfiguratorId(value) {
 }
 
 function extractConfiguratorId(item) {
-  const direct = getField(item, [
-    "configurator_id",
-    "configuratorId",
-    "configurator_name",
-    "configuratorName",
-    "configurator",
-    "materialName",
-    "material_name",
-    "configurableMaterialName",
-    "configurable_material_name",
-    "productModelName",
-    "product_model_name",
-  ]);
-  const candidates = [
-    ...asStrings(direct),
-    ...recursiveFieldValues(item, /configurator|configuratorId|configurator_name|materialName|configurableMaterialName|productModelName/i).flatMap(asStrings),
-  ].map((entry) => entry.trim()).filter(Boolean);
+  // A configurable material is NOT necessarily <family>I. Signify models can
+  // have independent material codes (for example a commercial family can be
+  // represented by a differently named configurable material). Explicit
+  // configurator/configurable-material fields are therefore authoritative and
+  // may end in I, N, or another suffix. The Configit model later proves the
+  // relationship by exposing the source family as a selectable value.
+  const explicit = recursiveFieldValues(item, /^(configurator_id|configuratorId|configurator_name|configuratorName|configurator|configurableMaterialName|configurable_material_name|productModelName|product_model_name)$/i)
+    .flatMap(asStrings).map(x=>x.trim()).filter(Boolean);
+  const modelToken = (candidate) => {
+    const normalized = normalizeText(candidate);
+    if (/^[A-Z]{1,8}\d{2,5}[A-Z]{0,5}$/i.test(normalized)) return normalized;
+    const fromUrl = normalized.match(/(?:CONFIGURATOR|CONFIGURATION)[^/?#]*[/?#=]([A-Z]{1,8}\d{2,5}[A-Z]{0,5})\b/i);
+    if (fromUrl?.[1]) return fromUrl[1];
+    const embedded = normalized.match(/(?:^|[^A-Z0-9])([A-Z]{1,8}\d{2,5}[A-Z]{0,5})(?=$|[^A-Z0-9])/i);
+    return embedded?.[1] || "";
+  };
+  for (const candidate of explicit) { const token=modelToken(candidate); if(token) return token; }
 
-  for (const candidate of candidates) {
-    const fromUrl = candidate.match(/(?:configurator|configuration)[^/?#]*[/?#=]([A-Z]{1,6}\d{2,5}[A-Z]{0,3}I)\b/i);
-    if (fromUrl?.[1]) return normalizeText(fromUrl[1]);
-    if (/^[A-Z]{1,8}\d{2,5}[A-Z]{0,4}I$/i.test(candidate)) return normalizeText(candidate);
-    // productModelName is sometimes repeated/qualified (e.g. ABC123I_ABC123I).
-    // Extract the configurable-material token instead of returning the whole
-    // qualified string as an ID.
-    const embedded = candidate.match(/(?:^|[^A-Z0-9])([A-Z]{1,8}\d{2,5}[A-Z]{0,4}I)(?=$|[^A-Z0-9])/i);
-    if (embedded?.[1]) return normalizeText(embedded[1]);
+  // materialName is weaker evidence: retain the historical I-suffix extraction
+  // only, so normal sellable materials are not accidentally treated as models.
+  const weak = recursiveFieldValues(item, /materialName|material_name/i).flatMap(asStrings).map(x=>x.trim()).filter(Boolean);
+  for (const candidate of weak) {
+    const normalized=normalizeText(candidate);
+    const embedded=normalized.match(/(?:^|[^A-Z0-9])([A-Z]{1,8}\d{2,5}[A-Z]{0,4}I)(?=$|[^A-Z0-9])/i);
+    if(embedded?.[1]) return embedded[1];
   }
   return "";
 }

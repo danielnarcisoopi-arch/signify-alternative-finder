@@ -77,7 +77,19 @@ export class QuoteMaterialConfiguratorClient {
       if (already.has(clean(feature))) continue; const matches=[];
       for (const variable of map.values()) {
         if (semanticRole(variable)==='CONTROL' || ['FAMILY','FLUX','COLOR'].includes(semanticRole(variable))) continue;
-        for (const o of variable.options) { if(!o.available) continue; const exact=clean(o.id)===clean(feature); const safeShort=/^(WH|BK|GR)$/i.test(feature) && /CLR|COL|MAT|COLOR/i.test(`${variable.id} ${variable.displayName}`) && clean(o.id).startsWith(clean(feature)); if(exact||safeShort) matches.push({variable,option:o}); }
+        for (const o of variable.options) {
+          if(!o.available) continue;
+          const exact=clean(o.id)===clean(feature);
+          const safeShort=/^(WH|BK|GR)$/i.test(feature) && /CLR|COL|MAT|COLOR/i.test(`${variable.id} ${variable.displayName}`) && clean(o.id).startsWith(clean(feature));
+          // Many outdoor models encode a commercial token inside a longer option
+          // label. Accept it only when the token occurs as a real boundary and the
+          // match is globally unique across the model. This preserves strictness
+          // while allowing codes such as DX10P, MDM, SRT, SRG10 and 60P to map to
+          // model-specific variables without family-specific code.
+          const escaped=normalizeText(feature).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+          const boundary=escaped.length>=3 && new RegExp(`(^|[^A-Z0-9])${escaped}([^A-Z0-9]|$)`).test(normalizeText(`${o.id} ${o.text}`));
+          if(exact||safeShort||boundary) matches.push({variable,option:o});
+        }
       }
       const unique=[...new Map(matches.map(m=>[m.variable.id+'\0'+m.option.id,m])).values()];
       if(unique.length!==1){ featureUnresolved.push(feature); continue; }
@@ -89,6 +101,6 @@ export class QuoteMaterialConfiguratorClient {
     assignments.push({variableName:control.id,valueName:target.id}); payload=await this.request(model,assignments); map=variableMap(payload);
     const status=payload?.bomStatus?.configurationStatus || {}; const root=payload?.materialBomConfiguration?.root?.configuration || {}; const finalControl=variableForRole(map,'CONTROL');
     const selected=finalControl?.options.some(o=>o.id===target.id && o.available); const conflict=Boolean(status.hasConflict||root.hasConflict); const valid=status.valid!==false && root.valid!==false && !conflict && selected;
-    return {validated:Boolean(valid),reason:valid?null:'CONFIGURATION_REJECTED',model,controlVariable:control.id,selectedControl:target.id,assignments,applied,unresolved,complete:Boolean(status.complete||root.complete),valid:Boolean(valid),hasConflict:conflict,availableControls:finalControl?.options.filter(o=>o.available).map(o=>o.id)||[],validationSource:'SIGNIFY_QUOTE_CONFIGIT_MODEL'};
+    return {validated:Boolean(valid),reason:valid?null:'CONFIGURATION_REJECTED',model,controlVariable:control.id,selectedControl:target.id,assignments,applied,unresolved,complete:Boolean(status.complete||root.complete),valid:Boolean(valid),hasConflict:conflict,familyProven:applied.some(a=>a.role==='FAMILY'),availableControls:finalControl?.options.filter(o=>o.available).map(o=>o.id)||[],validationSource:'SIGNIFY_QUOTE_CONFIGIT_MODEL'};
   }
 }

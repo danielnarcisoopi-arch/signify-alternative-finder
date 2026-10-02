@@ -99,3 +99,9 @@ V17 removes the Indoor/Outdoor split from the core resolution logic. Configit mo
 The model is inspected semantically from Configit metadata/display names, so different families may use different variable IDs for family/housing, flux or LED family, light-source color, optic, cover and control/driver. Original attributes are applied first; only then is control changed. Server-side validity/conflict state remains authoritative.
 
 Luminaire Configurator V2 remains optional corroborating evidence for supported Outdoor products, not a substitute for Configit discovery.
+
+## V18 - universal Configit discovery
+
+V18 removes the assumption that a configurable material must be named `<family>I`. Configurator discovery now accepts explicit configurable-material identifiers returned by Signify data even when the model code is different from the commercial family. The relationship is not trusted by name: the Configit model must prove it by exposing the source family and accepting the original technical attributes.
+
+This supports cases such as a commercial family being represented by a differently named configurable material, without adding a family-to-configurator lookup table. Outdoor tokens can also be matched to model-specific options when the match is unique, after which the control/driver variable is changed to an available DALI option and validated server-side.

@@ -17,3 +17,27 @@ test('discovers semantic Configit roles when an outdoor model uses different var
   assert.equal(r.validated,true); assert.equal(r.controlVariable,'DRIVERSEL'); assert.equal(r.selectedControl,'DALI');
   assert.deepEqual(r.assignments.map(x=>[x.variableName,x.valueName]),[['PFCODE','BVP656'],['LEDFAM','LED400-4S'],['LSCOLOR','730'],['OPTTYPE','A35-MB'],['DRIVERSEL','DALI']]);
 });
+
+test('proves a differently named outdoor configurator by reproducing BDS670 in the model', async()=>{
+  const fetchImpl=async(_u,o)=>{
+    const b=JSON.parse(o.body); const selected=new Map(b.rootConfiguration.existingAssignments.map(a=>[a.variableName,a.valueName]));
+    const vv=(id,label,vals)=>({fullyQualifiedName:id,required:true,valid:true,valueStates:vals.map(([name,text=name])=>({name,text,state:selected.get(id)===name?4:2}))});
+    const variableStates=[
+      vv('FAM','Product Family Code',[['BDS670','BDS670 City family']]),
+      vv('LEDS','LED family code',[['LED40','LED40']]),
+      vv('CCT','Light source color',[['730','730']]),
+      vv('OPT','Optic type',[['MDM','MDM optic']]),
+      vv('BODY','Housing colour',[['BK','BK black']]),
+      vv('MOUNT','Mounting',[['SRT','SRT mounting']]),
+      vv('SOCKET','Socket',[['SRG10','SRG10 socket']]),
+      vv('POLE','Pole interface',[['60P','60P interface']]),
+      vv('GEAR','Driver',[['PSU','Fixed output'],['PSD','DALI driver']]),
+    ];
+    const variableLinks=variableStates.map(v=>({reference:v.fullyQualifiedName,displayName:{FAM:'Product Family Code',LEDS:'LED family code',CCT:'Light source color',OPT:'Optic type',BODY:'Housing colour',MOUNT:'Mounting',SOCKET:'Socket',POLE:'Pole interface',GEAR:'Driver'}[v.fullyQualifiedName]}));
+    return {ok:true,json:async()=>({materialBomConfiguration:{root:{configuration:{valid:true,complete:selected.has('GEAR'),hasConflict:false,variableStates,variableLinks}}},bomStatus:{configurationStatus:{valid:true,complete:selected.has('GEAR'),hasConflict:false}}})};
+  };
+  const c=new QuoteMaterialConfiguratorClient({fetchImpl});
+  const r=await c.validate({model:'BDS650N',parsed:{family:'BDS670',package:'LED40',packageCanonical:'40',colorCode:'730',features:['MDM','BK','SRT','SRG10','60P'],driver:''},targetControlClass:'DALI'});
+  assert.equal(r.validated,true); assert.equal(r.familyProven,true); assert.equal(r.selectedControl,'PSD'); assert.equal(r.unresolved.length,0);
+  assert.ok(r.assignments.some(a=>a.variableName==='FAM'&&a.valueName==='BDS670'));
+});
