@@ -1,51 +1,94 @@
-# V26 - HAR exact Quote bootstrap
+# Signify Alternative Finder V46 - GitHub + Azure Static Web Apps
 
-This build fixes the live `template http error` observed in V25. The official Quote HAR proves that `getMaterialTemplateData` requires a `DIM_BUILDDATE` assignment with `fromAssignmentMapping: true`, while the following `getFromExistingConfigurationWithStatus` bootstrap starts with no assignments. V26 reproduces that sequence exactly, uses the delivering plant from `materialinfo`, and preserves the Configit-first family/configurator resolver.
+Versao preparada para publicar diretamente num repositorio GitHub e executar no Azure Static Web Apps com Azure Functions integradas.
 
-Validation performed before packaging:
-- 58/58 local API tests passed.
-- HAR replay bootstrap against the user's real Quote captures passed for BGP702I (PL02, valid=true, configurable=true).
-- HAR replay bootstrap passed for BDS650N (PL02, valid=true, configurable=true).
-- Real captured model domains contain BGP702 + LED90 + 730 + DX10P + LGR + 7035 + SRG10 + mounting token 42 and PSD.
-- Real captured BDS650N model domains contain BDS670 + LED50/LED40 + 730 + MDA/MDM + BK + SRT + SRG10 + 60P and PSD.
+## Estrutura
 
-The container cannot resolve www.quote.signify.com directly, so final live Azure validation still has to occur after deployment. The replay uses the exact responses captured from the user's authenticated Quote session, not synthetic product data.
+- `index.html` - frontend completo; mantem PSU <-> PSD/DALI, lifecycle, Quote DB e Alternativas Signify.
+- `selftest.html` - testes locais do motor frontend.
+- `staticwebapp.config.json` - configuracao do Azure Static Web Apps.
+- `api/function_app.py` - API Python Azure Functions para pesquisa/verificacao de concorrentes.
+- `api/requirements.txt` - dependencias da Function.
+- `api/host.json` - host Azure Functions.
+- `.github/workflows/azure-static-web-apps.yml` - deployment automatico GitHub -> Azure.
 
-# Signify Alternative Finder v22 — Progressive Prefix Configit Discovery
+## Arquitetura em Azure
 
-This version is focused on configurator discovery before control conversion.
+Browser -> Azure Static Web Apps (`index.html`) -> `/api/competitor/search` -> Azure Function -> fontes oficiais dos fabricantes / Brave Search opcional.
 
-## Discovery order
-1. Exact family search in the official Quote product service.
-2. If no configurable material is returned, progressively shorten the family query one character at a time (for example `BDS670 -> BDS67 -> BDS6`).
-3. A prefix hit is only a **candidate**. The Configit model must prove that it contains the original family before it is accepted.
-4. Only after model proof are the original attributes reconstructed and the control/driver changed to the requested DALI/On-Off class.
-5. Broad successor/catalog heuristics are last-resort fallback only.
+Nao existem API keys no frontend.
 
-This means there is no hardcoded `BDS670 -> BDS650N`, `BGP702 -> BGP702I`, or `BVP656 -> BVP656I` mapping.
+### Fontes externas implementadas
 
-## Grounding
-The exact BGP702 discovery shape was verified against the supplied Quote HAR: an exact `BGP702` search returns configurable material `BGP702I`. The BDS670 progressive-prefix strategy is implemented from the user's observed Quote workflow; it still requires live Configit model proof before a result can be presented as verified.
+- OPPLE: lookup oficial deterministico em `opple.eu` / `opple.com` e extracao da pagina oficial.
+- Brave Search API: opcional, usada como discovery adicional quando `BRAVE_SEARCH_API_KEY` estiver configurada.
+- LEDVANCE, TRILUX e ZUMTOBEL: dominios oficiais ja estao na whitelist, mas ainda nao possuem parser especifico equivalente ao parser OPPLE. Nesses casos o sistema nao inventa especificacoes.
 
-## Tests
-`cd api && npm test`
+## Publicar no GitHub
 
-The test suite is local/contract coverage only. It is not presented as live Signify validation.
+1. Cria um repositorio vazio no GitHub.
+2. Faz upload de **todo o conteudo desta pasta**, incluindo `.github`, `api` e `staticwebapp.config.json`.
+3. Usa a branch `main`.
 
-## v23 - HAR replay fixes
+## Criar o Azure Static Web App
 
-This release fixes configurator discovery using captured traffic from the real Signify Quote UI.
+No Azure Portal:
 
-- Product Search now sends `soldTo=null&shipTo=null`, matching the real Quote request exactly.
-- Exact discovery is authoritative only when Quote exposes a strong configurable-material field/item; weak model text no longer stops discovery too early.
-- Progressive prefix discovery uses a larger result page (`pageSize=56`) so a carrier such as `BDS650N` is not hidden beyond the first six BDS6 results.
-- Progressive discovery stops only on strong official configurable-material evidence, then Configit model proof remains mandatory.
-- Added sanitized HAR replay fixtures/tests for `BGP702 -> BGP702I` and `BDS670 -> BDS650N`.
+1. `Create resource` -> `Static Web App`.
+2. Seleciona a subscription/resource group pretendidos.
+3. Source: `GitHub`.
+4. Seleciona o repositorio e branch `main`.
+5. Build preset: `Custom`.
+6. App location: `/`
+7. API location: `api`
+8. Output location: deixar vazio.
 
-The HAR replay tests are integration-replay tests against captured Signify responses, not live authenticated tests. `BVP656` was not present in the captured HAR, so its live path is not claimed as replay-verified in this release.
+O Azure normalmente cria o deployment secret automaticamente quando o recurso e ligado ao GitHub. Se estiveres a usar o workflow incluido manualmente, cria no GitHub Actions secret:
 
-## V25 - Configit-first resolver fix
+`AZURE_STATIC_WEB_APPS_API_TOKEN`
 
-This build integrates family/configurator discovery into the main `/api/alternative` path before legacy successor fallbacks. It also retries Configit initialization with material-specific/observed plants (including PL02 and PL06) when `materialinfo` cannot be reached from the Azure worker. Exact-family `<family>I` is used only as a hypothesis and is never accepted without Configit model proof; non-lexical carriers such as BDS670 -> BDS650N still require progressive discovery + model proof.
+com o deployment token do teu Static Web App (`Manage deployment token` no Azure Portal).
 
-Validation note: local API suite passes 56/56. HAR replay proves BGP702 -> BGP702I discovery and BDS670 -> BDS650N discovery. The captured HAR does not contain a complete server-response sequence for every attribute assignment plus final PSD selection, so final live DALI validation still depends on the Signify endpoints being reachable from the deployed Azure Function.
+## Variaveis de ambiente
+
+No Azure Portal -> Static Web App -> Environment variables / Configuration:
+
+- `BRAVE_SEARCH_API_KEY` - **opcional**. Permite pesquisa web adicional. Sem esta key, OPPLE continua a usar lookup oficial deterministico quando a referencia permite construir/localizar a pagina oficial.
+- `CACHE_TTL_SECONDS` - opcional; default `86400`.
+
+Nao colocar estas keys no GitHub nem no `index.html`.
+
+## Endpoints
+
+- `GET /api/health`
+- `POST /api/competitor/search`
+
+Body:
+
+```json
+{"query":"OPPLE LED PostTop-P 50W-3000-W"}
+```
+
+## Cache
+
+A Function usa cache temporario no filesystem efemero (`/tmp`). Isto reduz chamadas repetidas dentro da mesma instancia, mas **nao e uma base persistente** e pode desaparecer quando a Function reinicia.
+
+As equivalencias humanas da V44/V45 continuam no `localStorage` do browser. Para partilhar feedback entre toda a equipa sera necessario acrescentar armazenamento persistente Azure (por exemplo Table Storage/Cosmos DB). A V46 nao finge que existe essa persistencia central.
+
+## Testar depois do deployment
+
+1. Abre `https://<teu-site>.azurestaticapps.net/api/health`.
+2. Deve devolver `"ok": true` e `"version": "46"`.
+3. Abre o site.
+4. Confirma que o Finder PSU/PSD continua funcional.
+5. Em `Alternativas Signify`, testa:
+   `OPPLE LED PostTop-P 50W-3000-W`
+6. O browser deve chamar `/api/competitor/search` no mesmo dominio, sem CORS externo no frontend.
+
+## Seguranca / comportamento
+
+- A Function so aceita pesquisa e leitura; nao altera dados do Quote.
+- API keys ficam apenas nas Application Settings do Azure.
+- O parser nao preenche campos tecnicos sem evidencia encontrada na fonte.
+- `UNKNOWN` nao e tratado como match.
+- A whitelist de dominios oficiais pode ser expandida em `OFFICIAL_DOMAINS` sem alterar o frontend.

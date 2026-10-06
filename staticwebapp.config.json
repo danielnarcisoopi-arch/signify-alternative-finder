@@ -1,1 +1,13 @@
-{"navigationFallback":{"rewrite":"/index.html","exclude":["/api/*","/assets/*"]}}
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/api/*", "*.html", "*.css", "*.js", "*.png", "*.svg", "*.ico"]
+  },
+  "platform": {
+    "apiRuntime": "python:3.10"
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+  }
+}
