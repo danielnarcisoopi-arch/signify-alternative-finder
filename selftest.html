@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset="utf-8"><title>V48 Self-test</title><style>body{font-family:Segoe UI,Arial;background:#f5f7fb;padding:30px;color:#14233c}.card{max-width:900px;margin:auto;background:#fff;padding:28px;border-radius:18px}.pass{color:#087a43}.fail{color:#b42318}code{background:#eef3f8;padding:2px 5px}</style></head><body><div class="card"><h1>V48 self-test</h1><div id="out"></div></div><script>
+<!doctype html><html><head><meta charset="utf-8"><title>V50 Self-test</title><style>body{font-family:Segoe UI,Arial;background:#f5f7fb;padding:30px;color:#14233c}.card{max-width:900px;margin:auto;background:#fff;padding:28px;border-radius:18px}.pass{color:#087a43}.fail{color:#b42318}code{background:#eef3f8;padding:2px 5px}</style></head><body><div class="card"><h1>V50 self-test</h1><div id="out"></div></div><script>
 const tests=[];function t(name,ok,detail=''){tests.push({name,ok,detail})}
 function parseInput(q){const p=(q.match(/(\d+(?:\.\d+)?)\s*W/i)||[])[1],c=(q.match(/(?<!\d)([2-6]\d{3})\s*K?\b/i)||[])[1];return {power:p?+p:null,cct:c?+c:null,family:/LED\s*Post\s*Top\s*-?\s*P/i.test(q)?'LEDPostTop-P':null}}
 const x=parseInput('OPPLE LED PostTop-P 50W-3000-W');t('USER_INPUT parses 50 W',x.power===50);t('USER_INPUT parses 3000 K',x.cct===3000);t('Family normalization LEDPostTop-P',x.family==='LEDPostTop-P');
@@ -6,5 +6,10 @@ function classify(title,url,text){if(/search\s*results?|searchresults/i.test(tit
 t('Searchresults cannot become product',classify('Searchresults | OPPLE Lighting','https://opple.eu/en/search','Products')==='SEARCH_PAGE');t('Technical OPPLE page becomes PRODUCT_PAGE',classify('LEDPostTop-P 50W-3000-W','https://opple.eu/en/product/x','Technical Specifications Product Code Max. system power Lumen Colour temperature Degree of protection Downloads')==='PRODUCT_PAGE');
 const total=100,known=15;t('15% coverage blocks numeric match',known/total<.4);t('UNKNOWN does not add match weight',known===15);
 const winner={family:'BDP260'};t('Golden family agreement',winner.family==='BDP260');
+function extractFamily(q){if(/LEDWP\s*-?\s*CLA\s*-?\s*P2/i.test(q))return 'LEDWP-CLA-P2';if(/LEDPorch\s*-?\s*E2\s*-?\s*Re120/i.test(q))return 'LEDPorch-E2-Re120';return null}
+t('Manufacturerless LEDWP family is parsed',extractFamily('LEDWP-CLA-P2 L1200-18W-840')==='LEDWP-CLA-P2');
+t('Manufacturerless Porch family is parsed',extractFamily('LEDPorch-E2-Re120-3/5W-840')==='LEDPorch-E2-Re120');
+t('Brand is not inferred from prefix in frontend test',!/^OPPLE$/i.test('UNKNOWN'));
+
 document.getElementById('out').innerHTML=`<h2>${tests.filter(x=>x.ok).length}/${tests.length} PASS</h2>`+tests.map(x=>`<p class="${x.ok?'pass':'fail'}">${x.ok?'✓':'✗'} ${x.name}${x.detail?' — '+x.detail:''}</p>`).join('');
 </script></body></html>

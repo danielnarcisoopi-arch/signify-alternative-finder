@@ -5,10 +5,10 @@ import azure.functions as func
 import httpx
 from bs4 import BeautifulSoup
 
-VERSION='48'
-CACHE_DIR=Path(os.getenv('TMPDIR','/tmp'))/'signify-alt-cache-v48'; CACHE_DIR.mkdir(parents=True,exist_ok=True)
+VERSION='50'
+CACHE_DIR=Path(os.getenv('TMPDIR','/tmp'))/'signify-alt-cache-v50'; CACHE_DIR.mkdir(parents=True,exist_ok=True)
 CACHE_TTL=int(os.getenv('CACHE_TTL_SECONDS','86400'))
-UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/48; quotation research)'
+UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/50; quotation research)'
 OFFICIAL_DOMAINS={'OPPLE':['opple.eu','opple.com','opple.pt'],'LEDVANCE':['ledvance.com'],'TRILUX':['trilux.com'],'ZUMTOBEL':['zumtobel.com']}
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -38,7 +38,12 @@ def parse_input(q,m):
   (r'(LEDPorch\s*-?\s*E2\s*-?\s*Re120)', 'LEDPorch-E2-Re120','Wall / ceiling luminaire','Outdoor / wall-ceiling','Surface')]
  for pat,f,t,a,mt in patterns:
   mm=re.search(pat,x,re.I)
-  if mm: fam,product_type,application,mounting=f,t,a,mt; ref=x[mm.start():].strip(' -:;,.'); break
+  if mm:
+   fam,product_type,application,mounting=f,t,a,mt
+   ref=x[mm.start():].strip(' -:;,.')
+   # Stop at RFQ prose. The technical reference is the compact model segment, not the full tender sentence.
+   ref=re.split(r'\s+(?:DA|DO|DE|BY)\s+(?:OPPLE|LEDVANCE|TRILUX|ZUMTOBEL)\b|\s+OU\s+EQUIVALENTE\b|\s+PARA\s+(?:APLICA|INSTALA|MONTAG|OS|AS|O|A)\w*\b',ref,1,flags=re.I)[0].strip(' -:;,.')
+   break
  # Capture explicit W including selectable ranges such as 3/5W. Use max system power as comparison value, preserve range separately.
  powers=[]
  for mm in re.finditer(r'(?<!\d)(\d+(?:[.,]\d+)?)(?:\s*/\s*(\d+(?:[.,]\d+)?))?\s*W\b',ref,re.I):
@@ -58,11 +63,10 @@ def parse_input(q,m):
  specs={}
  if power is not None: specs['power_w']=ev(power,'USER_INPUT','user_input')
  if cct is not None: specs['cct_k']=ev(cct,'USER_INPUT','user_input')
- if length is not None: specs['length_mm']=ev(length,'USER_INPUT','user_input')
  if product_type: specs['product_type']=ev(product_type,'USER_INPUT','user_input')
  if application: specs['application']=ev(application,'USER_INPUT','user_input')
  if mounting: specs['mounting']=ev(mounting,'USER_INPUT','user_input')
- return {'manufacturer':m,'raw':raw,'reference':reference,'family':fam,'power_w':power,'power_range_w':power_range,'cct_k':cct,'cct_values':cct_values,'length_mm':length,'variant':variant,'specs':specs}
+ return {'manufacturer':m,'raw':raw,'reference':reference,'family':fam,'power_w':power,'power_range_w':power_range,'cct_k':cct,'cct_values':cct_values,'length_mm':length,'nominal_length_mm':length,'variant':variant,'specs':specs}
 
 def progressive_refs(parsed):
  ref=parsed['reference']; fam=parsed.get('family'); out=[ref]
@@ -204,30 +208,53 @@ async def brave_search(q,m):
   if r.status_code!=200:return []
   return [x.get('url') for x in r.json().get('web',{}).get('results',[]) if x.get('url')]
 
+def host_manufacturer(url):
+ host=(urlparse(url).hostname or '').lower()
+ for brand,domains in OFFICIAL_DOMAINS.items():
+  if any(host==d or host.endswith('.'+d) for d in domains): return brand
+ return 'UNKNOWN'
+
 async def run_search(q):
  cached=cache_get(q)
  if cached:cached['cache_hit']=True;return cached
- m=manufacturer(q); parsed=parse_input(q,m); queries=search_queries(parsed); urls=candidate_urls(parsed); errors=[]; trace=[]
- for sq in queries:
-  try:urls += await brave_search(sq,m)
-  except Exception as e:errors.append('search '+type(e).__name__)
- queue=list(dict.fromkeys(urls)); seen=set(); products=[]; depth=0
- while queue and len(seen)<25:
+ detected=manufacturer(q)
+ base=parse_input(q,detected)
+ errors=[]; trace=[]; discovery=[]; queries=[]; urls=[]
+ # If the RFQ does not name a manufacturer, discover it from an official source.
+ # We do not map model prefixes to brands. Each supported official-domain adapter gets a chance
+ # and the manufacturer is accepted only after a real official PRODUCT_PAGE is found.
+ brands=[detected] if detected!='UNKNOWN' else list(OFFICIAL_DOMAINS)
+ for brand in brands:
+  probe=dict(base); probe['manufacturer']=brand
+  qs=search_queries(probe); queries += qs
+  if brand=='OPPLE': urls += candidate_urls(probe)
+  for sq in qs:
+   try: urls += await brave_search(sq,brand)
+   except Exception as e: errors.append('search '+type(e).__name__)
+ queue=list(dict.fromkeys(urls)); seen=set(); products=[]
+ while queue and len(seen)<40:
   u=queue.pop(0)
   if u in seen:continue
-  seen.add(u); host=urlparse(u).hostname or ''
-  if m in OFFICIAL_DOMAINS and not any(host==d or host.endswith('.'+d) for d in OFFICIAL_DOMAINS[m]):continue
+  seen.add(u); brand=host_manufacturer(u)
+  if brand=='UNKNOWN':continue
+  probe=dict(base); probe['manufacturer']=brand
   try:
    final,content,status,ctype=await fetch(u)
-   if status!=200:trace.append({'url':u,'status':status,'page_type':'IRRELEVANT'});continue
-   cls=page_classifier(final,content,ctype,parsed);trace.append({'url':final,'status':status,'page_type':cls['type'],'classifier_score':cls['score'],'signals':cls['signals']})
-   if cls['type']=='PRODUCT_PAGE' and m=='OPPLE':products.append(parse_opple(final,content,parsed));break
+   if status!=200:
+    trace.append({'url':u,'status':status,'page_type':'IRRELEVANT','manufacturer_probe':brand});continue
+   cls=page_classifier(final,content,ctype,probe)
+   trace.append({'url':final,'status':status,'page_type':cls['type'],'classifier_score':cls['score'],'signals':cls['signals'],'manufacturer_probe':brand})
+   if cls['type']=='PRODUCT_PAGE':
+    if brand=='OPPLE':
+     product=parse_opple(final,content,probe); products.append(product)
+     detected=brand; base=probe; discovery.append({'manufacturer':brand,'source':final,'evidence':'OFFICIAL_PRODUCT_PAGE'}); break
    if cls['type'] in ('SEARCH_PAGE','CATEGORY_PAGE'):
-    queue += [x for x in relevant_links(final,content,parsed) if x not in seen]
-   # DATASHEET is accepted evidence, but this POC only parses HTML product pages; never promote it without variant-safe parser.
+    queue += [x for x in relevant_links(final,content,probe) if x not in seen]
   except Exception as e:errors.append(f'{u}: {type(e).__name__}: {e}')
  product=products[0] if products else None
- out={'query':q,'manufacturer':m,'parsed_input':parsed,'queries':queries,'urls_attempted':list(seen),'page_trace':trace,'product':product,'related_products':[],'errors':errors,'search_provider':'Brave Search API + official crawl' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Official-domain deterministic crawl (Brave optional)','cache_hit':False}
+ # Keep UNKNOWN if no official product page actually established the brand.
+ if not product and manufacturer(q)=='UNKNOWN': detected='UNKNOWN'; base=parse_input(q,'UNKNOWN')
+ out={'query':q,'manufacturer':detected,'manufacturer_discovery':discovery,'parsed_input':base,'queries':list(dict.fromkeys(queries)),'urls_attempted':list(seen),'page_trace':trace,'product':product,'related_products':[],'errors':errors,'search_provider':'Brave Search API + official crawl' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Official-domain discovery + deterministic crawl (Brave optional)','cache_hit':False}
  cache_put(q,out);return out
 
 @app.route(route='competitor/search',methods=['POST'])
