@@ -93,7 +93,7 @@ As equivalencias humanas da V44/V45 continuam no `localStorage` do browser. Para
 - `UNKNOWN` nao e tratado como match.
 - A whitelist de dominios oficiais pode ser expandida em `OFFICIAL_DOMAINS` sem alterar o frontend.
 
-## V50 regression cases
+## V51 regression cases
 The Azure API should resolve these OPPLE references to official PRODUCT_PAGE results (not search pages):
 - OPPLE LED PostTop-P 50W-3000-W
 - OPPLE LEDPorch-E2-Re120-3/5W-840 (fuzzy official variant 3/5W-830/840)
@@ -103,7 +103,7 @@ The Azure API should resolve these OPPLE references to official PRODUCT_PAGE res
 The competitor matcher now includes verified concrete Signify products for post-top, waterproof and wall/ceiling categories. Unknown fields remain unknown and never add score.
 
 
-## V50 - automatic manufacturer discovery
+## V51 - automatic manufacturer discovery
 - A manufacturer name is no longer required in the RFQ input.
 - When the brand is absent, the backend probes supported official-domain adapters and only assigns a manufacturer after an official PRODUCT_PAGE is found.
 - No prefix-to-brand rule such as `LEDWP = OPPLE` is used.

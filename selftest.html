@@ -1,4 +1,4 @@
-<!doctype html><html><head><meta charset="utf-8"><title>V50 Self-test</title><style>body{font-family:Segoe UI,Arial;background:#f5f7fb;padding:30px;color:#14233c}.card{max-width:900px;margin:auto;background:#fff;padding:28px;border-radius:18px}.pass{color:#087a43}.fail{color:#b42318}code{background:#eef3f8;padding:2px 5px}</style></head><body><div class="card"><h1>V50 self-test</h1><div id="out"></div></div><script>
+<!doctype html><html><head><meta charset="utf-8"><title>V51 Self-test</title><style>body{font-family:Segoe UI,Arial;background:#f5f7fb;padding:30px;color:#14233c}.card{max-width:900px;margin:auto;background:#fff;padding:28px;border-radius:18px}.pass{color:#087a43}.fail{color:#b42318}code{background:#eef3f8;padding:2px 5px}</style></head><body><div class="card"><h1>V51 self-test</h1><div id="out"></div></div><script>
 const tests=[];function t(name,ok,detail=''){tests.push({name,ok,detail})}
 function parseInput(q){const p=(q.match(/(\d+(?:\.\d+)?)\s*W/i)||[])[1],c=(q.match(/(?<!\d)([2-6]\d{3})\s*K?\b/i)||[])[1];return {power:p?+p:null,cct:c?+c:null,family:/LED\s*Post\s*Top\s*-?\s*P/i.test(q)?'LEDPostTop-P':null}}
 const x=parseInput('OPPLE LED PostTop-P 50W-3000-W');t('USER_INPUT parses 50 W',x.power===50);t('USER_INPUT parses 3000 K',x.cct===3000);t('Family normalization LEDPostTop-P',x.family==='LEDPostTop-P');
@@ -12,4 +12,9 @@ t('Manufacturerless Porch family is parsed',extractFamily('LEDPorch-E2-Re120-3/5
 t('Brand is not inferred from prefix in frontend test',!/^OPPLE$/i.test('UNKNOWN'));
 
 document.getElementById('out').innerHTML=`<h2>${tests.filter(x=>x.ok).length}/${tests.length} PASS</h2>`+tests.map(x=>`<p class="${x.ok?'pass':'fail'}">${x.ok?'✓':'✗'} ${x.name}${x.detail?' — '+x.detail:''}</p>`).join('');
+
+// V51 regressions: manufacturer connector must not contaminate model; manufacturer may be omitted.
+const q1=parseInput('LED PostTop-P 50W-3000-W da OPPLE');t('RFQ brand connector stripped',q1.family==='LEDPostTop-P'&&q1.power===50&&q1.cct===3000);
+const q2=parseInput('LEDPorch-E2-Re120-3/5W-840');t('Manufacturer-free Porch parses 5W/4000K',q2.power===5&&q2.cct===4000);
+const q3=parseInput('LEDFlood-E3 Re115-20W-840-BL');t('Manufacturer-free Flood parses 20W/4000K',q3.power===20&&q3.cct===4000);
 </script></body></html>

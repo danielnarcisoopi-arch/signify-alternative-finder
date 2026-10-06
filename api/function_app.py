@@ -5,10 +5,10 @@ import azure.functions as func
 import httpx
 from bs4 import BeautifulSoup
 
-VERSION='50'
-CACHE_DIR=Path(os.getenv('TMPDIR','/tmp'))/'signify-alt-cache-v50'; CACHE_DIR.mkdir(parents=True,exist_ok=True)
+VERSION='51'
+CACHE_DIR=Path(os.getenv('TMPDIR','/tmp'))/'signify-alt-cache-v51'; CACHE_DIR.mkdir(parents=True,exist_ok=True)
 CACHE_TTL=int(os.getenv('CACHE_TTL_SECONDS','86400'))
-UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/50; quotation research)'
+UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/51; quotation research)'
 OFFICIAL_DOMAINS={'OPPLE':['opple.eu','opple.com','opple.pt'],'LEDVANCE':['ledvance.com'],'TRILUX':['trilux.com'],'ZUMTOBEL':['zumtobel.com']}
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -28,14 +28,20 @@ def cache_put(q,d): cache_file(q).write_text(json.dumps(d,ensure_ascii=False,ind
 def ev(value,source,kind='official_product_page',confidence='HIGH'): return {'value':value,'source':source,'evidence_type':kind,'confidence':confidence,'conflict':False,'alternatives':[]}
 
 def parse_input(q,m):
- raw=norm(q); x=re.sub(r'\b'+re.escape(m)+r'\b','',raw,flags=re.I).strip(' -') if m!='UNKNOWN' else raw
+ raw=norm(q)
+ # Remove explicit brand together with surrounding RFQ connector, so trailing 'da/do/by' never contaminates the model.
+ if m!='UNKNOWN':
+  x=re.sub(r'\b(?:DA|DO|DE|BY)?\s*'+re.escape(m)+r'\b',' ',raw,flags=re.I)
+  x=norm(x).strip(' -:;,.')
+ else: x=raw
  # Remove common RFQ prose before extracting the technical reference, but retain the full raw input for audit.
  ref=x
  fam=None; product_type=None; application=None; mounting=None
  patterns=[
   (r'(LED\s*Post\s*Top\s*-?\s*P)', 'LEDPostTop-P','Post-top luminaire','Outdoor / urban','Post top'),
   (r'(LEDWP\s*-?\s*CLA\s*-?\s*P2)', 'LEDWP-CLA-P2','Waterproof luminaire','Indoor / waterproof','Surface / suspended'),
-  (r'(LEDPorch\s*-?\s*E2\s*-?\s*Re120)', 'LEDPorch-E2-Re120','Wall / ceiling luminaire','Outdoor / wall-ceiling','Surface')]
+  (r'(LEDPorch\s*-?\s*E2\s*-?\s*Re120)', 'LEDPorch-E2-Re120','Wall / ceiling luminaire','Outdoor / wall-ceiling','Surface'),
+  (r'(LEDFlood\s*-?\s*E3)', 'LEDFlood-E3','Floodlight','Outdoor / floodlighting','Surface / bracket')]
  for pat,f,t,a,mt in patterns:
   mm=re.search(pat,x,re.I)
   if mm:
@@ -100,18 +106,30 @@ def candidate_urls(parsed):
  for r in refs:
   sl=re.sub(r'-+','-',re.sub(r'[^a-z0-9-]+','-',r.lower().replace('_','-').replace(' ','-'))).strip('-')
   if sl: slugs.append(sl)
+  # OPPLE often removes slashes inside selectable technical values: 3/5W -> 35W, 830/840 -> 830840.
+  compact_sl=re.sub(r'-+','-',re.sub(r'[^a-z0-9-]+','-',r.lower().replace('_','-').replace(' ','-').replace('/',''))).strip('-')
+  if compact_sl: slugs.append(compact_sl)
  # Normalize slash variants the same way OPPLE URLs do (3/5W -> 35w; 830/840 -> 830840).
  rawslug=re.sub(r'[^a-z0-9-]+','',parsed['reference'].lower().replace('_','-').replace(' ','-').replace('/',''))
  if rawslug:
   rawslug=re.sub(r'^led-posttop','ledposttop',rawslug)
   slugs.insert(0,re.sub(r'-+','-',rawslug))
+ # Prioritize OPPLE selectable-CCT canonical slug before relaxed family URLs.
+ if (parsed.get('family') or '').lower().startswith('ledporch') and parsed.get('cct_k')==4000:
+  canonical=parsed['reference']
+  canonical=re.sub(r'(?<!\d)840(?!\d)','830/840',canonical)
+  canonical=re.sub(r'[^a-z0-9-]+','',canonical.lower().replace('_','-').replace(' ','-').replace('/',''))
+  slugs.insert(0,re.sub(r'-+','-',canonical))
  urls=[]; fam=(parsed.get('family') or '').lower()
  paths=[]
  if 'posttop' in fam: paths=['en/product/outdoor/urban/post-top','pt-pt/product/luminarias-para-exteriores/urban/post-top']
  elif 'ledwp-cla-p2' in fam: paths=['en/product/indoor/waterproof-luminaires/waterproof-classic-g2','pt-pt/product/luminarias-para-interiores/waterproof-luminaires-0/waterproof-classic-g2']
  elif 'ledporch' in fam: paths=['en/product/outdoor/wall-and-ceiling-luminaires/porchlight-ecomax-g2','pt-pt/product/luminarias-para-exteriores/wall-and-ceiling-luminaires/plafond-porch-ip65-ecomax-g2']
+ elif 'ledflood-e3' in fam: paths=['en/product/outdoor/floodlight/floodlight-ecomax-g3','pt-pt/product/luminarias-para-exteriores/floodlight/floodlight-ecomax-g3']
  for host in ['www.opple.pt','www.opple.eu']:
   for path in paths:
+   # Some OPPLE ranges (e.g. Floodlight EcoMax G3) publish all concrete variants on the family page.
+   if 'floodlight-ecomax-g3' in path: urls.append(f'https://{host}/{path}')
    for slug in slugs[:10]: urls.append(f'https://{host}/{path}/{slug}')
  # Search pages remain discovery nodes only and can never be technical evidence.
  for host in ['www.opple.pt','www.opple.eu']:
@@ -128,12 +146,21 @@ def page_classifier(url,content,ctype,parsed):
  if re.search(r'\b(search\s*results?|searchresults)\b',title,re.I) or '/search' in urlparse(url).path.lower(): return {'type':'SEARCH_PAGE','score':0,'signals':['search-title-or-url']}
  if title.strip().lower() in {'products','downloads','product','download'}: return {'type':'CATEGORY_PAGE','score':0,'signals':['generic-title']}
  ref=parsed['reference'].lower().replace(' ',''); fam=(parsed.get('family') or '').lower(); signals=[]; score=0
+ # Exact official /product/ URL matching the normalized requested model is strong structural evidence, even when OPPLE renders specs client-side.
+ pathnorm=re.sub(r'[^a-z0-9]','',urlparse(url).path.lower())
+ refnorm=re.sub(r'[^a-z0-9]','',parsed['reference'].lower())
+ famnorm=re.sub(r'[^a-z0-9]','',fam)
+ if '/product/' in urlparse(url).path.lower() and refnorm and len(refnorm)>=10 and refnorm in pathnorm:
+  signals += ['official-product-url','reference-in-url']; score += 60
  if ref and ref in low.replace(' ',''): signals.append('reference');score+=30
  if fam and fam.replace('-','') in low.replace('-','').replace(' ',''):signals.append('family');score+=15
  checks=[('technical specifications',15),('product code',15),('max. system power',8),('lumen',8),('colour temperature',8),('degree of protection',6),('downloads',5)]
  for s,w in checks:
   if s in low:signals.append(s);score+=w
- if score>=55 and len(signals)>=4:return {'type':'PRODUCT_PAGE','score':min(100,score),'signals':signals}
+ # A family page containing the exact requested variant is valid evidence for that variant, but extraction must stay scoped to it.
+ exact_text = ref and re.sub(r'[^a-z0-9]','',parsed['reference'].lower()) in re.sub(r'[^a-z0-9]','',low)
+ if exact_text and '/product/' in urlparse(url).path.lower(): signals.append('exact-variant-on-family-page'); score=max(score,60)
+ if score>=55 and (len(signals)>=4 or 'official-product-url' in signals or 'exact-variant-on-family-page' in signals):return {'type':'PRODUCT_PAGE','score':min(100,score),'signals':signals}
  if '/product/' in urlparse(url).path.lower() and score>=35:return {'type':'PRODUCT_PAGE','score':score,'signals':signals}
  if any(x in low for x in ['products','product range','category']):return {'type':'CATEGORY_PAGE','score':score,'signals':signals}
  return {'type':'IRRELEVANT','score':score,'signals':signals}
@@ -176,6 +203,43 @@ def merge_spec(specs,k,new):
    old['conflict']=True; old.setdefault('alternatives',[]).append(new); return
  # official source supersedes input while preserving confirmation
  if not old or new['evidence_type'].startswith('official'): specs[k]=new
+
+
+def parse_opple_family_variant(url,content,parsed):
+ html=content.decode('utf-8','ignore'); soup=BeautifulSoup(html,'html.parser'); text=' '.join(soup.stripped_strings)
+ ref=parsed['reference']; compact=lambda x: re.sub(r'[^a-z0-9]','',x.lower())
+ # Find the literal/near-literal variant anchor in visible text.
+ pos=-1; matched=None
+ for candidate in progressive_refs(parsed)[:3]:
+  m=re.search(re.escape(candidate),text,re.I)
+  if m: pos=m.start(); matched=m.group(); break
+ if pos<0:
+  # slash-normalized OPPLE names (3/5W -> 35W) are handled by compact comparison over a bounded scan.
+  target=compact(ref)
+  for m in re.finditer(r'LED[A-Za-z0-9_ /-]{8,80}',text,re.I):
+   if target and (target in compact(m.group()) or compact(m.group()) in target): pos=m.start(); matched=m.group(); break
+ if pos<0:return None
+ seg=text[pos:pos+900]
+ specs=dict(parsed.get('specs') or {})
+ def first(pattern):
+  m=re.search(pattern,seg,re.I); return m.group(1) if m else None
+ # OPPLE family pages place Product Code and technical values immediately after each concrete variant.
+ article=first(r'Product Code\s*(\d{9,14})')
+ cct=first(r'Product Code\s*\d{9,14}\s*(3000|4000|6500)\s*K?')
+ eff=first(r'(\d{2,3})\s*lm/W')
+ power=first(r'On-Off\s*(\d+(?:[.,]\d+)?)\s*W')
+ cri=first(r'>\s*(\d{2})')
+ flux=None
+ if power and eff:
+  try: flux=float(power.replace(',','.'))*float(eff)
+  except: pass
+ for k,v in [('power_w',num(power)),('cct_k',num(cct)),('efficacy_lm_w',num(eff)),('cri',num(cri)),('luminous_flux_lm',flux)]:
+  if v is not None: merge_spec(specs,k,ev(v,url,'official_product_family_variant'))
+ # Beam angle is commonly the first degree value after power on this OPPLE family page.
+ ba=first(r'On-Off\s*\d+(?:[.,]\d+)?\s*W\s*(\d+)°')
+ if ba: merge_spec(specs,'beam_angle_deg',ev(num(ba),url,'official_product_family_variant'))
+ title=matched.strip() if matched else ref
+ return {'manufacturer':'OPPLE','reference':title,'family':parsed.get('family'),'article_number':article,'status':'OFFICIAL SOURCE VERIFIED','exact_match':True,'page_type':'PRODUCT_PAGE','official_product_url':url,'official_datasheet_url':None,'retrieved_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'specs':specs,'sources':[{'url':url,'type':'official_product_family_variant','official':True}]}
 
 def parse_opple(url,content,parsed):
  soup=BeautifulSoup(content.decode('utf-8','ignore'),'html.parser'); title=soup.find('h1').get_text(' ',strip=True) if soup.find('h1') else (soup.title.get_text(' ',strip=True) if soup.title else parsed['reference']); page=' '.join(soup.stripped_strings)
@@ -246,7 +310,9 @@ async def run_search(q):
    trace.append({'url':final,'status':status,'page_type':cls['type'],'classifier_score':cls['score'],'signals':cls['signals'],'manufacturer_probe':brand})
    if cls['type']=='PRODUCT_PAGE':
     if brand=='OPPLE':
-     product=parse_opple(final,content,probe); products.append(product)
+     product=parse_opple_family_variant(final,content,probe) if 'exact-variant-on-family-page' in cls.get('signals',[]) else None
+     if not product: product=parse_opple(final,content,probe)
+     products.append(product)
      detected=brand; base=probe; discovery.append({'manufacturer':brand,'source':final,'evidence':'OFFICIAL_PRODUCT_PAGE'}); break
    if cls['type'] in ('SEARCH_PAGE','CATEGORY_PAGE'):
     queue += [x for x in relevant_links(final,content,probe) if x not in seen]
