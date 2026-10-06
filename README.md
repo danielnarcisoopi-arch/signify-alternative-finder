@@ -1,111 +1,45 @@
-# Signify Alternative Finder V46 - GitHub + Azure Static Web Apps
+# Signify Alternative Finder V52
 
-Versao preparada para publicar diretamente num repositorio GitHub e executar no Azure Static Web Apps com Azure Functions integradas.
+## Universal Competitor Engine
 
-## Estrutura
+V52 keeps the existing Signify PSU/PSD finder and replaces the competitor discovery layer with a universal pipeline.
 
-- `index.html` - frontend completo; mantem PSU <-> PSD/DALI, lifecycle, Quote DB e Alternativas Signify.
-- `selftest.html` - testes locais do motor frontend.
-- `staticwebapp.config.json` - configuracao do Azure Static Web Apps.
-- `api/function_app.py` - API Python Azure Functions para pesquisa/verificacao de concorrentes.
-- `api/requirements.txt` - dependencias da Function.
-- `api/host.json` - host Azure Functions.
-- `.github/workflows/azure-static-web-apps.yml` - deployment automatico GitHub -> Azure.
+### Runtime architecture
+- Static frontend: `index.html`
+- Azure Functions API: `api/function_app.py`
+- Endpoint: `POST /api/competitor/search`
+- Health: `GET /api/health`
 
-## Arquitetura em Azure
+### Universal pipeline
+1. Extract a likely product reference from noisy RFQ prose.
+2. Parse technical tokens already present in the input (W, CCT/840, IP/IK, nominal length).
+3. Detect an explicitly named manufacturer when present.
+4. If no manufacturer is written, discover it from official-domain results.
+5. Search exact and progressively relaxed reference variants.
+6. Treat SEARCH/CATEGORY pages only as navigation nodes.
+7. Follow relevant official links up to two levels.
+8. Accept only PRODUCT_PAGE/DATASHEET as high-confidence evidence.
+9. Extract structured HTML tables, definition lists, JSON-LD and technical text with per-field provenance.
+10. Preserve conflicting source values instead of silently selecting one.
+11. Frontend applies hard filters, coverage-aware scoring and human-vs-algorithm audit.
 
-Browser -> Azure Static Web Apps (`index.html`) -> `/api/competitor/search` -> Azure Function -> fontes oficiais dos fabricantes / Brave Search opcional.
+### Manufacturer configuration
+Adding a manufacturer should normally require only an entry in `MANUFACTURERS`: aliases, official domains and optional official-site search URL patterns. The crawler, classifier and extractor are shared.
 
-Nao existem API keys no frontend.
+Current configured manufacturers: OPPLE, LEDVANCE, TRILUX, ZUMTOBEL, THORN, SCHREDER, DISANO, GEWISS.
 
-### Fontes externas implementadas
+### Important production setting
+For robust discovery across arbitrary products, configure Azure Static Web App environment variable:
 
-- OPPLE: lookup oficial deterministico em `opple.eu` / `opple.com` e extracao da pagina oficial.
-- Brave Search API: opcional, usada como discovery adicional quando `BRAVE_SEARCH_API_KEY` estiver configurada.
-- LEDVANCE, TRILUX e ZUMTOBEL: dominios oficiais ja estao na whitelist, mas ainda nao possuem parser especifico equivalente ao parser OPPLE. Nesses casos o sistema nao inventa especificacoes.
+`BRAVE_SEARCH_API_KEY=<your key>`
 
-## Publicar no GitHub
+Without it, V52 still crawls configured manufacturers' official site-search endpoints, but coverage depends on each manufacturer's search implementation. A web search provider is required for genuinely broad, brand-agnostic discovery.
 
-1. Cria um repositorio vazio no GitHub.
-2. Faz upload de **todo o conteudo desta pasta**, incluindo `.github`, `api` e `staticwebapp.config.json`.
-3. Usa a branch `main`.
+No API key is placed in `index.html`.
 
-## Criar o Azure Static Web App
+### Azure deployment
+App location: `/`
+API location: `api`
+Output location: empty
 
-No Azure Portal:
-
-1. `Create resource` -> `Static Web App`.
-2. Seleciona a subscription/resource group pretendidos.
-3. Source: `GitHub`.
-4. Seleciona o repositorio e branch `main`.
-5. Build preset: `Custom`.
-6. App location: `/`
-7. API location: `api`
-8. Output location: deixar vazio.
-
-O Azure normalmente cria o deployment secret automaticamente quando o recurso e ligado ao GitHub. Se estiveres a usar o workflow incluido manualmente, cria no GitHub Actions secret:
-
-`AZURE_STATIC_WEB_APPS_API_TOKEN`
-
-com o deployment token do teu Static Web App (`Manage deployment token` no Azure Portal).
-
-## Variaveis de ambiente
-
-No Azure Portal -> Static Web App -> Environment variables / Configuration:
-
-- `BRAVE_SEARCH_API_KEY` - **opcional**. Permite pesquisa web adicional. Sem esta key, OPPLE continua a usar lookup oficial deterministico quando a referencia permite construir/localizar a pagina oficial.
-- `CACHE_TTL_SECONDS` - opcional; default `86400`.
-
-Nao colocar estas keys no GitHub nem no `index.html`.
-
-## Endpoints
-
-- `GET /api/health`
-- `POST /api/competitor/search`
-
-Body:
-
-```json
-{"query":"OPPLE LED PostTop-P 50W-3000-W"}
-```
-
-## Cache
-
-A Function usa cache temporario no filesystem efemero (`/tmp`). Isto reduz chamadas repetidas dentro da mesma instancia, mas **nao e uma base persistente** e pode desaparecer quando a Function reinicia.
-
-As equivalencias humanas da V44/V45 continuam no `localStorage` do browser. Para partilhar feedback entre toda a equipa sera necessario acrescentar armazenamento persistente Azure (por exemplo Table Storage/Cosmos DB). A V46 nao finge que existe essa persistencia central.
-
-## Testar depois do deployment
-
-1. Abre `https://<teu-site>.azurestaticapps.net/api/health`.
-2. Deve devolver `"ok": true` e `"version": "46"`.
-3. Abre o site.
-4. Confirma que o Finder PSU/PSD continua funcional.
-5. Em `Alternativas Signify`, testa:
-   `OPPLE LED PostTop-P 50W-3000-W`
-6. O browser deve chamar `/api/competitor/search` no mesmo dominio, sem CORS externo no frontend.
-
-## Seguranca / comportamento
-
-- A Function so aceita pesquisa e leitura; nao altera dados do Quote.
-- API keys ficam apenas nas Application Settings do Azure.
-- O parser nao preenche campos tecnicos sem evidencia encontrada na fonte.
-- `UNKNOWN` nao e tratado como match.
-- A whitelist de dominios oficiais pode ser expandida em `OFFICIAL_DOMAINS` sem alterar o frontend.
-
-## V51 regression cases
-The Azure API should resolve these OPPLE references to official PRODUCT_PAGE results (not search pages):
-- OPPLE LED PostTop-P 50W-3000-W
-- OPPLE LEDPorch-E2-Re120-3/5W-840 (fuzzy official variant 3/5W-830/840)
-- OPPLE LEDWP-CLA-P2 L1200-18W-840
-- OPPLE LEDWP-CLA-P2 L1500-24W-840
-
-The competitor matcher now includes verified concrete Signify products for post-top, waterproof and wall/ceiling categories. Unknown fields remain unknown and never add score.
-
-
-## V51 - automatic manufacturer discovery
-- A manufacturer name is no longer required in the RFQ input.
-- When the brand is absent, the backend probes supported official-domain adapters and only assigns a manufacturer after an official PRODUCT_PAGE is found.
-- No prefix-to-brand rule such as `LEDWP = OPPLE` is used.
-- The API response includes `manufacturer_discovery` with the official URL that established the brand.
-- Regression inputs include `LEDWP-CLA-P2 L1200-18W-840` without `OPPLE`.
+After deployment, `/api/health` must return version `52` and engine `UNIVERSAL_COMPETITOR_ENGINE`.

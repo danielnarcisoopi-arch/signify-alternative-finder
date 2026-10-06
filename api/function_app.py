@@ -1,335 +1,388 @@
-import os,re,json,hashlib,time,asyncio
-from pathlib import Path
-from urllib.parse import quote,urljoin,urlparse
 import azure.functions as func
+import asyncio, hashlib, json, os, re, time
+from pathlib import Path
+from urllib.parse import quote, urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup
 
-VERSION='51'
-CACHE_DIR=Path(os.getenv('TMPDIR','/tmp'))/'signify-alt-cache-v51'; CACHE_DIR.mkdir(parents=True,exist_ok=True)
-CACHE_TTL=int(os.getenv('CACHE_TTL_SECONDS','86400'))
-UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/51; quotation research)'
-OFFICIAL_DOMAINS={'OPPLE':['opple.eu','opple.com','opple.pt'],'LEDVANCE':['ledvance.com'],'TRILUX':['trilux.com'],'ZUMTOBEL':['zumtobel.com']}
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
+VERSION='52'
+UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/52; quotation research)'
+CACHE_DIR=Path('/tmp/signify_competitor_cache_v52'); CACHE_DIR.mkdir(exist_ok=True)
 
-def norm(s): return re.sub(r'\s+',' ',re.sub(r'[_–—]+','-',str(s).strip())).strip()
-def manufacturer(q):
- u=q.upper()
- for m in OFFICIAL_DOMAINS:
-  if m in u:return m
- return 'UNKNOWN'
-def cache_file(q): return CACHE_DIR/(hashlib.sha256(norm(q).lower().encode()).hexdigest()+'.json')
-def cache_get(q):
- p=cache_file(q)
- if p.exists() and time.time()-p.stat().st_mtime<CACHE_TTL:
-  try:return json.loads(p.read_text('utf-8'))
-  except Exception:pass
-def cache_put(q,d): cache_file(q).write_text(json.dumps(d,ensure_ascii=False,indent=2),'utf-8')
-def ev(value,source,kind='official_product_page',confidence='HIGH'): return {'value':value,'source':source,'evidence_type':kind,'confidence':confidence,'conflict':False,'alternatives':[]}
+# Manufacturer data is configuration only. The crawler/extractor below is shared by every brand.
+MANUFACTURERS={
+ 'OPPLE':{'aliases':['opple'],'domains':['opple.eu','opple.com','opple.pt'],'search_paths':['/en/search?search={q}','/pt-pt/search?search={q}']},
+ 'LEDVANCE':{'aliases':['ledvance','osram'],'domains':['ledvance.com'],'search_paths':['/consumer/search?query={q}','/professional/search?query={q}']},
+ 'TRILUX':{'aliases':['trilux'],'domains':['trilux.com'],'search_paths':['/en/search/?q={q}','/search/?q={q}']},
+ 'ZUMTOBEL':{'aliases':['zumtobel'],'domains':['zumtobel.com'],'search_paths':['/com-en/search.html?query={q}','/search?query={q}']},
+ 'THORN':{'aliases':['thorn'],'domains':['thornlighting.com'],'search_paths':['/en/search?q={q}']},
+ 'SCHREDER':{'aliases':['schreder','schréder'],'domains':['schreder.com'],'search_paths':['/en/search?search={q}']},
+ 'DISANO':{'aliases':['disano'],'domains':['disano.it'],'search_paths':['/en/search?search={q}']},
+ 'GEWISS':{'aliases':['gewiss'],'domains':['gewiss.com'],'search_paths':['/ww/en/search?q={q}']},
+}
+OFFICIAL_DOMAINS={k:v['domains'] for k,v in MANUFACTURERS.items()}
 
-def parse_input(q,m):
- raw=norm(q)
- # Remove explicit brand together with surrounding RFQ connector, so trailing 'da/do/by' never contaminates the model.
- if m!='UNKNOWN':
-  x=re.sub(r'\b(?:DA|DO|DE|BY)?\s*'+re.escape(m)+r'\b',' ',raw,flags=re.I)
-  x=norm(x).strip(' -:;,.')
- else: x=raw
- # Remove common RFQ prose before extracting the technical reference, but retain the full raw input for audit.
- ref=x
- fam=None; product_type=None; application=None; mounting=None
- patterns=[
-  (r'(LED\s*Post\s*Top\s*-?\s*P)', 'LEDPostTop-P','Post-top luminaire','Outdoor / urban','Post top'),
-  (r'(LEDWP\s*-?\s*CLA\s*-?\s*P2)', 'LEDWP-CLA-P2','Waterproof luminaire','Indoor / waterproof','Surface / suspended'),
-  (r'(LEDPorch\s*-?\s*E2\s*-?\s*Re120)', 'LEDPorch-E2-Re120','Wall / ceiling luminaire','Outdoor / wall-ceiling','Surface'),
-  (r'(LEDFlood\s*-?\s*E3)', 'LEDFlood-E3','Floodlight','Outdoor / floodlighting','Surface / bracket')]
- for pat,f,t,a,mt in patterns:
-  mm=re.search(pat,x,re.I)
-  if mm:
-   fam,product_type,application,mounting=f,t,a,mt
-   ref=x[mm.start():].strip(' -:;,.')
-   # Stop at RFQ prose. The technical reference is the compact model segment, not the full tender sentence.
-   ref=re.split(r'\s+(?:DA|DO|DE|BY)\s+(?:OPPLE|LEDVANCE|TRILUX|ZUMTOBEL)\b|\s+OU\s+EQUIVALENTE\b|\s+PARA\s+(?:APLICA|INSTALA|MONTAG|OS|AS|O|A)\w*\b',ref,1,flags=re.I)[0].strip(' -:;,.')
-   break
- # Capture explicit W including selectable ranges such as 3/5W. Use max system power as comparison value, preserve range separately.
+EXPECTED_FIELDS=['application','type','power','flux','eff','cct','cri','optics','angle','ip','ik','length','width','height','diameter','pole','mount','control','voltage','lifetime','emergency','controls']
+LABELS={
+ 'power':['power','wattage','system power','input power','potência','potencia','leistung'],
+ 'flux':['luminous flux','lumen output','lumens','flux','fluxo luminoso','lichtstrom'],
+ 'eff':['luminous efficacy','efficacy','lm/w','eficiência','efficiency'],
+ 'cct':['colour temperature','color temperature','cct','temperatura de cor','farbtemperatur'],
+ 'cri':['cri','colour rendering index','color rendering index','ra','índice de restituição cromática'],
+ 'angle':['beam angle','ângulo de abertura','beam','abstrahlwinkel'],
+ 'ip':['ip rating','ingress protection','ip class','grau de proteção','protection class'],
+ 'ik':['ik rating','impact resistance','ik class','resistência ao impacto'],
+ 'voltage':['voltage','input voltage','nominal voltage','tensão','spannung'],
+ 'lifetime':['lifetime','rated life','service life','vida útil','lifetime l70','lifetime l80'],
+ 'mount':['mounting','installation','mounting type','instalação','montage'],
+ 'control':['dimming','dimmable','control gear','driver','regulação','control'],
+ 'dimensions':['dimensions','dimension','size','dimensões','abmessungen'],
+ 'colour':['housing colour','housing color','colour','color','cor'],
+ 'optics':['optics','light distribution','distribution','ótica','optic'],
+ 'emergency':['emergency','emergency lighting','emergência'],
+ 'controls':['sensor','controls','control system','sensor/control'],
+}
+
+def norm(s):
+ return re.sub(r'\s+',' ',re.sub(r'[–—_]+','-',str(s or '').strip())).strip()
+
+def compact(s): return re.sub(r'[^a-z0-9]+','',norm(s).lower())
+def numeric(v):
+ if v is None:return None
+ m=re.search(r'-?\d+(?:[.,]\d+)?',str(v).replace(' ',''))
+ return float(m.group().replace(',','.')) if m else None
+
+def explicit_manufacturer(q):
+ low=norm(q).lower()
+ for brand,cfg in MANUFACTURERS.items():
+  if any(re.search(r'\b'+re.escape(a)+r'\b',low) for a in cfg['aliases']): return brand
+ return None
+
+def strip_manufacturer(q):
+ x=norm(q)
+ aliases=sorted({a for c in MANUFACTURERS.values() for a in c['aliases']},key=len,reverse=True)
+ x=re.sub(r'\b(?:da|do|de|by|marca|fabricante)?\s*(?:'+ '|'.join(map(re.escape,aliases)) +r')\b',' ',x,flags=re.I)
+ x=re.sub(r'\b(?:ou\s+equivalente|or\s+equivalent)\b.*$',' ',x,flags=re.I)
+ return norm(x).strip(' -:;,.')
+
+def extract_reference(q):
+ x=strip_manufacturer(q)
+ # Remove common RFQ prose before a likely product token.
+ starters=[r'LED[A-Z0-9][A-Z0-9/_-]*',r'[A-Z]{2,6}\d{2,}[A-Z0-9/_-]*']
+ starts=[]
+ for p in starters:
+  m=re.search(p,x,re.I)
+  if m: starts.append(m.start())
+ if starts and min(starts)>0:x=x[min(starts):]
+ # Stop at common prose boundaries, not at technical words.
+ x=re.split(r'\s+(?:para\s+(?:aplica|instala|montag)|destinad[oa]|fornecimento|incluindo|com\s+fornecimento)\w*\b',x,1,flags=re.I)[0]
+ return norm(x).strip(' -:;,.')
+
+def parse_input(q,brand=None):
+ ref=extract_reference(q)
+ def one(p):
+  m=re.search(p,ref,re.I); return m.group(1) if m else None
+ # power supports 3/5W; preserve min/max and nominal nearest literal first
  powers=[]
- for mm in re.finditer(r'(?<!\d)(\d+(?:[.,]\d+)?)(?:\s*/\s*(\d+(?:[.,]\d+)?))?\s*W\b',ref,re.I):
-  vals=[float(mm.group(1).replace(',','.'))]
-  if mm.group(2): vals.append(float(mm.group(2).replace(',','.')))
-  powers.extend(vals)
- power=max(powers) if powers else None; power_range=powers[:2] if len(powers)>=2 else None
- # Explicit Kelvin or Philips-style colour code 830/840/865 in the reference.
- cct=None; cct_values=[]
- for mm in re.finditer(r'(?<!\d)([2-6]\d{3})\s*K?\b',ref,re.I): cct_values.append(int(mm.group(1)))
- if not cct_values:
-  for mm in re.finditer(r'(?<!\d)(8|9)(27|30|40|65)(?!\d)',ref): cct_values.append(int(mm.group(2))*100)
- if cct_values: cct=cct_values[-1]
- mv=re.search(r'(?:^|[-\s])(W|AS)(?:$|[-\s])',ref,re.I); variant=mv.group(1).upper() if mv else None
- length=None; ml=re.search(r'\bL\s*(600|900|1200|1500|1800)\b',ref,re.I); length=float(ml.group(1)) if ml else None
- reference=norm(ref)
- specs={}
- if power is not None: specs['power_w']=ev(power,'USER_INPUT','user_input')
- if cct is not None: specs['cct_k']=ev(cct,'USER_INPUT','user_input')
- if product_type: specs['product_type']=ev(product_type,'USER_INPUT','user_input')
- if application: specs['application']=ev(application,'USER_INPUT','user_input')
- if mounting: specs['mounting']=ev(mounting,'USER_INPUT','user_input')
- return {'manufacturer':m,'raw':raw,'reference':reference,'family':fam,'power_w':power,'power_range_w':power_range,'cct_k':cct,'cct_values':cct_values,'length_mm':length,'nominal_length_mm':length,'variant':variant,'specs':specs}
+ for a,b in re.findall(r'(?<!\d)(\d+(?:[.,]\d+)?)\s*/\s*(\d+(?:[.,]\d+)?)\s*W\b',ref,re.I): powers += [float(a.replace(',','.')),float(b.replace(',','.'))]
+ for a in re.findall(r'(?<![/\d])(\d+(?:[.,]\d+)?)\s*W\b',ref,re.I): powers.append(float(a.replace(',','.')))
+ ccts=[]
+ for c in re.findall(r'(?<!\d)([2-6]\d{3})\s*K?\b',ref,re.I):
+  n=int(c)
+  if 1800<=n<=6500:ccts.append(n)
+ for code in re.findall(r'(?<!\d)(8[237456][0-9])\b',ref):
+  ccts.append(int(code[-2:])*100)
+ # e.g. 830/840 means 3000/4000
+ for a,b in re.findall(r'\b(8\d{2})\s*/\s*(8\d{2})\b',ref): ccts += [int(a[-2:])*100,int(b[-2:])*100]
+ length=one(r'\bL\s*(600|900|1200|1500|1800)\b')
+ ip=one(r'\bIP\s*(\d{2})\b'); ik=one(r'\bIK\s*(\d{2})\b')
+ family=re.split(r'\s+',ref)[0] if ref else ''
+ return {'raw':q,'manufacturer':brand,'reference':ref,'family':family,'power_values':sorted(set(powers)),'power':powers[0] if powers else None,'cct_values':sorted(set(ccts)),'cct':ccts[-1] if ccts else None,'length_nominal':float(length) if length else None,'ip':ip,'ik':ik}
 
 def progressive_refs(parsed):
- ref=parsed['reference']; fam=parsed.get('family'); out=[ref]
- # Progressively relax only technical suffixes, never replace them with guessed values.
+ r=parsed['reference']; out=[r]
+ # canonical separators and selectable-CCT variants
+ out += [r.replace('_','-'), re.sub(r'\s*[-/]\s*','-',r)]
+ if re.search(r'(?<!\d)840(?!\d)',r): out.append(re.sub(r'(?<!\d)840(?!\d)','830/840',r))
+ # progressively remove weak tail tokens while preserving family + key technical tokens
+ toks=r.split()
+ for n in range(len(toks)-1,max(0,len(toks)-4),-1): out.append(' '.join(toks[:n]))
+ fam=parsed.get('family')
  if fam:
   out.append(fam)
-  if parsed.get('length_mm'): out.append(f'{fam} L{int(parsed["length_mm"])}')
-  if parsed.get('power_w'): out.append(f'{fam} {parsed["power_w"]:g}W')
-  if parsed.get('cct_k'): out.append(f'{fam} {parsed["cct_k"]}')
- # OPPLE 840 can be one position of a selectable 830/840 product.
- if re.search(r'(?<!\d)840(?!\d)',ref): out.append(re.sub(r'(?<!\d)840(?!\d)','830/840',ref))
- # Strip final option groups one at a time.
- parts=re.split(r'[-\s]+',ref)
- for cut in range(len(parts)-1,max(1,len(parts)-4),-1): out.append('-'.join(parts[:cut]))
- return list(dict.fromkeys(norm(x) for x in out if x and len(x)>3))
+  if parsed.get('power') is not None: out.append(f"{fam} {parsed['power']:g}W")
+  if parsed.get('cct') is not None: out.append(f"{fam} {int(parsed['cct'])}K")
+  if parsed.get('length_nominal'): out.append(f"{fam} L{int(parsed['length_nominal'])}")
+ return list(dict.fromkeys(norm(x) for x in out if x and len(norm(x))>2))
 
-def search_queries(parsed):
- m=parsed['manufacturer']; refs=progressive_refs(parsed); qs=[]
- for r in refs[:6]: qs += [f'"{r}"',f'"{r}" {m}']
- for d in OFFICIAL_DOMAINS.get(m,[]):
-  for r in refs[:4]: qs.append(f'site:{d} "{r}"')
+def search_queries(parsed,brand=None):
+ refs=progressive_refs(parsed); qs=[]
+ for r in refs[:7]:
+  qs += [f'"{r}"',r]
+  if brand: qs += [f'"{r}" {brand}']
+ if brand:
+  for d in MANUFACTURERS[brand]['domains']:
+   for r in refs[:4]:qs.append(f'site:{d} "{r}"')
  return list(dict.fromkeys(qs))
 
-def opple_slug(parsed):
- fam=(parsed.get('family') or '').lower(); p=parsed.get('power_w'); c=parsed.get('cct_k'); v=parsed.get('variant')
- if fam=='ledposttop-p' and p and c and v:return f'ledposttop-p-{p:g}w-{c}-{v.lower()}'
- s=parsed['reference'].lower().replace('_','-').replace(' ','-'); return re.sub(r'-+','-',re.sub(r'[^a-z0-9-]+','-',s)).strip('-')
-def candidate_urls(parsed):
- if parsed['manufacturer']!='OPPLE':return []
- refs=progressive_refs(parsed); slugs=[]
- for r in refs:
-  sl=re.sub(r'-+','-',re.sub(r'[^a-z0-9-]+','-',r.lower().replace('_','-').replace(' ','-'))).strip('-')
-  if sl: slugs.append(sl)
-  # OPPLE often removes slashes inside selectable technical values: 3/5W -> 35W, 830/840 -> 830840.
-  compact_sl=re.sub(r'-+','-',re.sub(r'[^a-z0-9-]+','-',r.lower().replace('_','-').replace(' ','-').replace('/',''))).strip('-')
-  if compact_sl: slugs.append(compact_sl)
- # Normalize slash variants the same way OPPLE URLs do (3/5W -> 35w; 830/840 -> 830840).
- rawslug=re.sub(r'[^a-z0-9-]+','',parsed['reference'].lower().replace('_','-').replace(' ','-').replace('/',''))
- if rawslug:
-  rawslug=re.sub(r'^led-posttop','ledposttop',rawslug)
-  slugs.insert(0,re.sub(r'-+','-',rawslug))
- # Prioritize OPPLE selectable-CCT canonical slug before relaxed family URLs.
- if (parsed.get('family') or '').lower().startswith('ledporch') and parsed.get('cct_k')==4000:
-  canonical=parsed['reference']
-  canonical=re.sub(r'(?<!\d)840(?!\d)','830/840',canonical)
-  canonical=re.sub(r'[^a-z0-9-]+','',canonical.lower().replace('_','-').replace(' ','-').replace('/',''))
-  slugs.insert(0,re.sub(r'-+','-',canonical))
- urls=[]; fam=(parsed.get('family') or '').lower()
- paths=[]
- if 'posttop' in fam: paths=['en/product/outdoor/urban/post-top','pt-pt/product/luminarias-para-exteriores/urban/post-top']
- elif 'ledwp-cla-p2' in fam: paths=['en/product/indoor/waterproof-luminaires/waterproof-classic-g2','pt-pt/product/luminarias-para-interiores/waterproof-luminaires-0/waterproof-classic-g2']
- elif 'ledporch' in fam: paths=['en/product/outdoor/wall-and-ceiling-luminaires/porchlight-ecomax-g2','pt-pt/product/luminarias-para-exteriores/wall-and-ceiling-luminaires/plafond-porch-ip65-ecomax-g2']
- elif 'ledflood-e3' in fam: paths=['en/product/outdoor/floodlight/floodlight-ecomax-g3','pt-pt/product/luminarias-para-exteriores/floodlight/floodlight-ecomax-g3']
- for host in ['www.opple.pt','www.opple.eu']:
-  for path in paths:
-   # Some OPPLE ranges (e.g. Floodlight EcoMax G3) publish all concrete variants on the family page.
-   if 'floodlight-ecomax-g3' in path: urls.append(f'https://{host}/{path}')
-   for slug in slugs[:10]: urls.append(f'https://{host}/{path}/{slug}')
- # Search pages remain discovery nodes only and can never be technical evidence.
- for host in ['www.opple.pt','www.opple.eu']:
-  for r in refs[:4]: urls.append(f'https://{host}/en/search?search={quote(r)}')
- return list(dict.fromkeys(urls))
+def host_brand(url):
+ h=urlparse(url).netloc.lower().split(':')[0]
+ for brand,cfg in MANUFACTURERS.items():
+  if any(h==d or h.endswith('.'+d) for d in cfg['domains']):return brand
+ return None
+
+def official(url,brand=None):
+ b=host_brand(url); return bool(b and (not brand or b==brand))
+
+def cache_file(q):return CACHE_DIR/(hashlib.sha256(norm(q).lower().encode()).hexdigest()+'.json')
+def cache_get(q):
+ p=cache_file(q)
+ if p.exists() and time.time()-p.stat().st_mtime<86400:
+  try:return json.loads(p.read_text('utf-8'))
+  except:pass
+ return None
+def cache_put(q,d):cache_file(q).write_text(json.dumps(d,ensure_ascii=False,indent=2),'utf-8')
+
+def user_evidence(parsed):
+ s={}
+ if parsed.get('power') is not None:s['power']={'value':parsed['power'],'source':'USER_INPUT','evidence_type':'user_input','confidence':'HIGH'}
+ if parsed.get('cct') is not None:s['cct']={'value':parsed['cct'],'source':'USER_INPUT','evidence_type':'user_input','confidence':'HIGH'}
+ if parsed.get('ip'):s['ip']={'value':'IP'+parsed['ip'],'source':'USER_INPUT','evidence_type':'user_input','confidence':'HIGH'}
+ if parsed.get('ik'):s['ik']={'value':'IK'+parsed['ik'],'source':'USER_INPUT','evidence_type':'user_input','confidence':'HIGH'}
+ if parsed.get('length_nominal'):s['length_nominal']={'value':parsed['length_nominal'],'source':'USER_INPUT','evidence_type':'user_input','confidence':'HIGH'}
+ return s
 
 async def fetch(url):
- async with httpx.AsyncClient(headers={'User-Agent':UA,'Accept':'text/html,application/xhtml+xml,application/pdf'},follow_redirects=True,timeout=25) as c:
-  r=await c.get(url); return str(r.url),r.content,r.status_code,r.headers.get('content-type','')
+ async with httpx.AsyncClient(timeout=13,follow_redirects=True,headers={'User-Agent':UA,'Accept':'text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8'}) as c:
+  r=await c.get(url); return str(r.url),r.status_code,r.headers.get('content-type',''),r.content
 
-def page_classifier(url,content,ctype,parsed):
- if 'pdf' in ctype.lower() or url.lower().split('?')[0].endswith('.pdf'): return {'type':'DATASHEET','score':100,'signals':['pdf']}
- html=content.decode('utf-8','ignore'); soup=BeautifulSoup(html,'html.parser'); title=' '.join((soup.title.get_text(' ',strip=True) if soup.title else '').split()); text=' '.join(soup.stripped_strings); low=(title+' '+text[:8000]).lower()
- if re.search(r'\b(search\s*results?|searchresults)\b',title,re.I) or '/search' in urlparse(url).path.lower(): return {'type':'SEARCH_PAGE','score':0,'signals':['search-title-or-url']}
- if title.strip().lower() in {'products','downloads','product','download'}: return {'type':'CATEGORY_PAGE','score':0,'signals':['generic-title']}
- ref=parsed['reference'].lower().replace(' ',''); fam=(parsed.get('family') or '').lower(); signals=[]; score=0
- # Exact official /product/ URL matching the normalized requested model is strong structural evidence, even when OPPLE renders specs client-side.
- pathnorm=re.sub(r'[^a-z0-9]','',urlparse(url).path.lower())
- refnorm=re.sub(r'[^a-z0-9]','',parsed['reference'].lower())
- famnorm=re.sub(r'[^a-z0-9]','',fam)
- if '/product/' in urlparse(url).path.lower() and refnorm and len(refnorm)>=10 and refnorm in pathnorm:
-  signals += ['official-product-url','reference-in-url']; score += 60
- if ref and ref in low.replace(' ',''): signals.append('reference');score+=30
- if fam and fam.replace('-','') in low.replace('-','').replace(' ',''):signals.append('family');score+=15
- checks=[('technical specifications',15),('product code',15),('max. system power',8),('lumen',8),('colour temperature',8),('degree of protection',6),('downloads',5)]
- for s,w in checks:
-  if s in low:signals.append(s);score+=w
- # A family page containing the exact requested variant is valid evidence for that variant, but extraction must stay scoped to it.
- exact_text = ref and re.sub(r'[^a-z0-9]','',parsed['reference'].lower()) in re.sub(r'[^a-z0-9]','',low)
- if exact_text and '/product/' in urlparse(url).path.lower(): signals.append('exact-variant-on-family-page'); score=max(score,60)
- if score>=55 and (len(signals)>=4 or 'official-product-url' in signals or 'exact-variant-on-family-page' in signals):return {'type':'PRODUCT_PAGE','score':min(100,score),'signals':signals}
- if '/product/' in urlparse(url).path.lower() and score>=35:return {'type':'PRODUCT_PAGE','score':score,'signals':signals}
- if any(x in low for x in ['products','product range','category']):return {'type':'CATEGORY_PAGE','score':score,'signals':signals}
- return {'type':'IRRELEVANT','score':score,'signals':signals}
-
-def relevant_links(base,content,parsed):
- soup=BeautifulSoup(content.decode('utf-8','ignore'),'html.parser'); fam=(parsed.get('family') or '').lower().replace('-',''); p=parsed.get('power_w'); c=parsed.get('cct_k'); L=parsed.get('length_mm'); out=[]
- for a in soup.find_all('a',href=True):
-  label=' '.join(a.stripped_strings); href=urljoin(base,a['href']); blob=(label+' '+href).lower().replace('-','').replace(' ','')
-  score=0
-  if fam and fam in blob:score+=4
-  if p and f'{p:g}w'.replace('.0','') in blob:score+=2
-  if c and (str(c) in blob or (c==4000 and '840' in blob)):score+=2
-  if L and str(int(L)) in blob:score+=2
-  if score>=4:out.append((score,href))
- return [u for _,u in sorted(out,reverse=True)[:12]]
-
-def text_value(soup,label):
- node=soup.find(string=re.compile(r'^\s*'+re.escape(label)+r'\s*$',re.I))
- if node:
-  for anc in [node.parent,node.parent.parent if node.parent else None,node.parent.parent.parent if node.parent and node.parent.parent else None]:
-   if anc:
-    txt=' '.join(anc.stripped_strings); txt=re.sub(r'^\s*'+re.escape(label)+r'\s*','',txt,flags=re.I).strip(' :|')
-    if txt and len(txt)<180:return txt
- txt='\n'.join(soup.stripped_strings); mm=re.search(re.escape(label)+r'\s*[|:]?\s*([^\n]{1,100})',txt,re.I); return mm.group(1).strip() if mm else None
-def num(v):
- if not v:return None
- mm=re.search(r'-?\d+(?:[.,]\d+)?',str(v).replace(' ','')); return float(mm.group().replace(',','.')) if mm else None
-def code(v,prefix):
- if not v:return None
- mm=re.search(prefix+r'\s*([0-9]{2})',str(v),re.I); return prefix.upper()+mm.group(1) if mm else None
-
-def merge_spec(specs,k,new):
- if new is None or new.get('value') is None:return
- old=specs.get(k)
- if old and old['value']!=new['value']:
-  # official confirms user input when numerically equal after normalization; otherwise preserve conflict.
-  try:eq=abs(float(old['value'])-float(new['value']))<1e-6
-  except: eq=str(old['value']).lower()==str(new['value']).lower()
-  if not eq:
-   old['conflict']=True; old.setdefault('alternatives',[]).append(new); return
- # official source supersedes input while preserving confirmation
- if not old or new['evidence_type'].startswith('official'): specs[k]=new
-
-
-def parse_opple_family_variant(url,content,parsed):
- html=content.decode('utf-8','ignore'); soup=BeautifulSoup(html,'html.parser'); text=' '.join(soup.stripped_strings)
- ref=parsed['reference']; compact=lambda x: re.sub(r'[^a-z0-9]','',x.lower())
- # Find the literal/near-literal variant anchor in visible text.
- pos=-1; matched=None
- for candidate in progressive_refs(parsed)[:3]:
-  m=re.search(re.escape(candidate),text,re.I)
-  if m: pos=m.start(); matched=m.group(); break
- if pos<0:
-  # slash-normalized OPPLE names (3/5W -> 35W) are handled by compact comparison over a bounded scan.
-  target=compact(ref)
-  for m in re.finditer(r'LED[A-Za-z0-9_ /-]{8,80}',text,re.I):
-   if target and (target in compact(m.group()) or compact(m.group()) in target): pos=m.start(); matched=m.group(); break
- if pos<0:return None
- seg=text[pos:pos+900]
- specs=dict(parsed.get('specs') or {})
- def first(pattern):
-  m=re.search(pattern,seg,re.I); return m.group(1) if m else None
- # OPPLE family pages place Product Code and technical values immediately after each concrete variant.
- article=first(r'Product Code\s*(\d{9,14})')
- cct=first(r'Product Code\s*\d{9,14}\s*(3000|4000|6500)\s*K?')
- eff=first(r'(\d{2,3})\s*lm/W')
- power=first(r'On-Off\s*(\d+(?:[.,]\d+)?)\s*W')
- cri=first(r'>\s*(\d{2})')
- flux=None
- if power and eff:
-  try: flux=float(power.replace(',','.'))*float(eff)
-  except: pass
- for k,v in [('power_w',num(power)),('cct_k',num(cct)),('efficacy_lm_w',num(eff)),('cri',num(cri)),('luminous_flux_lm',flux)]:
-  if v is not None: merge_spec(specs,k,ev(v,url,'official_product_family_variant'))
- # Beam angle is commonly the first degree value after power on this OPPLE family page.
- ba=first(r'On-Off\s*\d+(?:[.,]\d+)?\s*W\s*(\d+)°')
- if ba: merge_spec(specs,'beam_angle_deg',ev(num(ba),url,'official_product_family_variant'))
- title=matched.strip() if matched else ref
- return {'manufacturer':'OPPLE','reference':title,'family':parsed.get('family'),'article_number':article,'status':'OFFICIAL SOURCE VERIFIED','exact_match':True,'page_type':'PRODUCT_PAGE','official_product_url':url,'official_datasheet_url':None,'retrieved_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'specs':specs,'sources':[{'url':url,'type':'official_product_family_variant','official':True}]}
-
-def parse_opple(url,content,parsed):
- soup=BeautifulSoup(content.decode('utf-8','ignore'),'html.parser'); title=soup.find('h1').get_text(' ',strip=True) if soup.find('h1') else (soup.title.get_text(' ',strip=True) if soup.title else parsed['reference']); page=' '.join(soup.stripped_strings)
- specs=dict(parsed.get('specs') or {})
- labels={'power_w':['Max. system power','System power'],'luminous_flux_lm':['Lumen'],'efficacy_lm_w':['Luminaire efficacy'],'cct_k':['Colour temperature'],'cri':['Colour rendering index (CRI)'],'beam_angle_deg':['Beam angle'],'ip':['Degree of protection (IP)'],'ik':['Impact strength'],'width_mm':['Width'],'length_mm':['Length'],'height_mm':['Height/depth','Height'],'diameter_mm':['Diameter'],'mounting':['Mounting method'],'colour':['Housing colour'],'driver':['Type of control gear'],'dimming':['Dimmability'],'voltage':['Nominal voltage'],'lifetime':['Lifetime (L70)']}
- numeric={'power_w','luminous_flux_lm','efficacy_lm_w','cct_k','cri','beam_angle_deg','width_mm','length_mm','height_mm','diameter_mm','lifetime'}
- for k,ls in labels.items():
-  raw=None
-  for lab in ls:
-   raw=text_value(soup,lab)
-   if raw:break
-  if not raw:continue
-  val=num(raw) if k in numeric else (code(raw,'IP') if k=='ip' else code(raw,'IK') if k=='ik' else raw)
-  merge_spec(specs,k,ev(val,url,'official_product_page'))
- if 'post top' in page.lower() or 'post-top' in page.lower():
-  merge_spec(specs,'product_type',ev('Post-top luminaire',url)); merge_spec(specs,'application',ev('Outdoor / urban',url)); merge_spec(specs,'mounting',ev('Post top',url))
- pole=text_value(soup,'Compatible pole Ø (mm)') or text_value(soup,'Compatible pole Ø')
- if pole: merge_spec(specs,'pole_diameter_mm',ev(num(pole),url))
- mm=re.search(r'Product Code\s*(\d{9,14})',page,re.I); article=mm.group(1) if mm else None
- ds=None
- for a in soup.find_all('a',href=True):
-  if 'Product Sheet' in ' '.join(a.stripped_strings) or re.search(r'ProductSheet.*\.pdf',a['href'],re.I):ds=urljoin(url,a['href']);break
- return {'manufacturer':'OPPLE','reference':title,'family':parsed.get('family') or 'LEDPostTop-P','article_number':article,'status':'OFFICIAL SOURCE VERIFIED','exact_match':True,'page_type':'PRODUCT_PAGE','official_product_url':url,'official_datasheet_url':ds,'retrieved_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'specs':specs,'sources':[{'url':url,'type':'official_product_page','official':True}]}
-
-async def brave_search(q,m):
+async def brave_search(query):
  key=os.getenv('BRAVE_SEARCH_API_KEY')
  if not key:return []
- async with httpx.AsyncClient(timeout=20) as c:
-  r=await c.get('https://api.search.brave.com/res/v1/web/search',params={'q':q,'count':10},headers={'X-Subscription-Token':key,'Accept':'application/json'})
-  if r.status_code!=200:return []
+ async with httpx.AsyncClient(timeout=12,headers={'X-Subscription-Token':key,'Accept':'application/json','User-Agent':UA}) as c:
+  r=await c.get('https://api.search.brave.com/res/v1/web/search',params={'q':query,'count':12});r.raise_for_status()
   return [x.get('url') for x in r.json().get('web',{}).get('results',[]) if x.get('url')]
 
-def host_manufacturer(url):
- host=(urlparse(url).hostname or '').lower()
- for brand,domains in OFFICIAL_DOMAINS.items():
-  if any(host==d or host.endswith('.'+d) for d in domains): return brand
- return 'UNKNOWN'
+def official_search_urls(parsed,brand):
+ cfg=MANUFACTURERS[brand]; refs=progressive_refs(parsed); out=[]
+ for domain in cfg['domains']:
+  for path in cfg['search_paths']:
+   for r in refs[:5]:out.append('https://'+domain+path.format(q=quote(r)))
+ return out
+
+def text_tokens(parsed):
+ vals=[parsed.get('family') or '']
+ if parsed.get('power') is not None:vals.append(f"{parsed['power']:g}w")
+ if parsed.get('cct') is not None:vals += [str(int(parsed['cct'])), '8'+str(int(parsed['cct']//100)).zfill(2)]
+ if parsed.get('length_nominal'):vals.append(str(int(parsed['length_nominal'])))
+ return [compact(x) for x in vals if x]
+
+def page_classifier(url,content,ctype,parsed):
+ path=urlparse(url).path.lower(); lowurl=url.lower()
+ if 'pdf' in ctype.lower() or path.endswith('.pdf'):return {'type':'DATASHEET','score':100,'signals':['pdf']}
+ try:soup=BeautifulSoup(content,'html.parser')
+ except:return {'type':'IRRELEVANT','score':0,'signals':['parse-error']}
+ title=soup.title.get_text(' ',strip=True) if soup.title else ''
+ text=' '.join(soup.stripped_strings)[:350000]; low=text.lower(); signals=[];score=0
+ if re.search(r'\b(search\s*results?|searchresults)\b',title,re.I) or '/search' in path:return {'type':'SEARCH_PAGE','score':0,'signals':['search']}
+ if re.search(r'\b(downloads?|products?|product range|catalogue|catalog)\b',title,re.I) and not any(x in low for x in ['product code','technical data','technical specifications']):return {'type':'CATEGORY_PAGE','score':5,'signals':['generic-category']}
+ cref=compact(parsed['reference']); ctext=compact(text); cpath=compact(path)
+ if cref and (cref in ctext or cref in cpath):signals.append('exact-reference');score+=45
+ fam=compact(parsed.get('family'))
+ if fam and (fam in ctext or fam in cpath):signals.append('family');score+=12
+ # product evidence signals
+ checks=[('product code',15),('article number',15),('technical specifications',15),('technical data',15),('luminous flux',8),('power',6),('wattage',6),('colour temperature',6),('color temperature',6),('ip rating',5),('downloads',3),('datasheet',5)]
+ for term,w in checks:
+  if term in low:signals.append(term);score+=w
+ # technical input tokens improve variant confidence
+ for tok in text_tokens(parsed):
+  if tok and tok in ctext:score+=4;signals.append('token:'+tok)
+ productish=('/product/' in path or '/products/' in path or 'product code' in low or 'article number' in low)
+ if productish and score>=42 and ('exact-reference' in signals or len(signals)>=5):return {'type':'PRODUCT_PAGE','score':min(100,score),'signals':signals}
+ if productish:return {'type':'CATEGORY_PAGE','score':score,'signals':signals}
+ return {'type':'IRRELEVANT','score':score,'signals':signals}
+
+def relevant_links(base,content,parsed,brand):
+ try:soup=BeautifulSoup(content,'html.parser')
+ except:return []
+ out=[]; fam=compact(parsed.get('family')); cref=compact(parsed.get('reference')); toks=text_tokens(parsed)
+ for a in soup.find_all('a',href=True):
+  href=urljoin(base,a['href']);
+  if not official(href,brand):continue
+  blob=compact(' '.join(a.stripped_strings)+' '+a['href']);score=0
+  if cref and cref in blob:score+=20
+  if fam and fam in blob:score+=8
+  for t in toks:
+   if t and t in blob:score+=3
+  if re.search(r'\.pdf(?:$|\?)',href,re.I):score+=4
+  if '/product' in href.lower():score+=2
+  if score>=6:out.append((score,href))
+ return [u for _,u in sorted(out,reverse=True)[:25]]
+
+def parse_pairs(soup):
+ pairs=[]
+ for tr in soup.find_all('tr'):
+  cells=[' '.join(c.stripped_strings) for c in tr.find_all(['th','td'])]
+  if len(cells)>=2:pairs.append((cells[0], ' '.join(cells[1:])))
+ for dl in soup.find_all('dl'):
+  dts=dl.find_all('dt');dds=dl.find_all('dd')
+  for a,b in zip(dts,dds):pairs.append((' '.join(a.stripped_strings),' '.join(b.stripped_strings)))
+ # common label/value divs
+ for el in soup.find_all(['li','p','div']):
+  t=' '.join(el.stripped_strings)
+  if ':' in t and len(t)<220:
+   a,b=t.split(':',1);pairs.append((a.strip(),b.strip()))
+ return pairs
+
+def field_for_label(label):
+ l=label.lower().strip()
+ best=None
+ for k,aliases in LABELS.items():
+  for a in aliases:
+   if a in l:
+    if best is None or len(a)>best[0]:best=(len(a),k)
+ return best[1] if best else None
+
+def normalize_field(k,v):
+ if not v:return None
+ if k in ['power','flux','eff','cct','cri','angle','length','width','height','diameter','pole','lifetime']:
+  return numeric(v)
+ if k=='ip':
+  m=re.search(r'IP\s*(\d{2})',v,re.I);return 'IP'+m.group(1) if m else None
+ if k=='ik':
+  m=re.search(r'IK\s*(\d{2})',v,re.I);return 'IK'+m.group(1) if m else None
+ return norm(v)[:180]
+
+def extract_dimensions(text):
+ # Accept 1210 x 78 x 72 mm and map largest->length, remaining->width/height in order.
+ m=re.search(r'(\d{2,5}(?:[.,]\d+)?)\s*[x×]\s*(\d{2,5}(?:[.,]\d+)?)\s*[x×]\s*(\d{2,5}(?:[.,]\d+)?)\s*mm',text,re.I)
+ if not m:return {}
+ a=[float(x.replace(',','.')) for x in m.groups()];return {'length':a[0],'width':a[1],'height':a[2]}
+
+def extract_product(url,content,parsed,brand,page_type='PRODUCT_PAGE'):
+ soup=BeautifulSoup(content,'html.parser');text='\n'.join(soup.stripped_strings)
+ title=soup.find('h1').get_text(' ',strip=True) if soup.find('h1') else (soup.title.get_text(' ',strip=True) if soup.title else parsed['reference'])
+ specs=user_evidence(parsed); conflicts=[]
+ # JSON-LD often contains exact product name/model/sku.
+ article=None
+ for sc in soup.find_all('script',type='application/ld+json'):
+  try:
+   obj=json.loads(sc.string or '{}'); objs=obj if isinstance(obj,list) else [obj]
+   for o in objs:
+    if isinstance(o,dict):
+     article=article or o.get('sku') or o.get('mpn') or o.get('productID')
+     if o.get('name') and compact(parsed['family']) in compact(o.get('name')):title=o.get('name')
+  except:pass
+ for label,val in parse_pairs(soup):
+  k=field_for_label(label)
+  if not k:continue
+  nv=normalize_field(k,val)
+  if nv is None:continue
+  old=specs.get(k)
+  ev={'value':nv,'source':url,'evidence_type':'official_product_page','confidence':'HIGH'}
+  if old and old['value']!=nv and old['source']!='USER_INPUT':conflicts.append({'field':k,'values':[old,ev]})
+  # Official source confirms/overrides USER_INPUT only when same; conflicts remain explicit.
+  if old and old['source']=='USER_INPUT' and str(old['value']).lower()!=str(nv).lower():conflicts.append({'field':k,'values':[old,ev]})
+  else:specs[k]=ev
+ for k,v in extract_dimensions(text).items():
+  if k not in specs:specs[k]={'value':v,'source':url,'evidence_type':'official_product_page','confidence':'HIGH'}
+ # robust fallbacks over full text
+ patterns={
+  'power':r'(?i)(?:power|wattage|pot[eê]ncia)[^\d]{0,20}(\d+(?:[.,]\d+)?)\s*W',
+  'flux':r'(?i)(?:luminous flux|fluxo luminoso|lumen output)[^\d]{0,20}(\d+(?:[.,]\d+)?)\s*lm',
+  'eff':r'(?i)(?:efficacy|efici[eê]ncia)[^\d]{0,20}(\d+(?:[.,]\d+)?)\s*lm\s*/\s*W',
+  'cct':r'(?i)(?:colour temperature|color temperature|temperatura de cor|CCT)[^\d]{0,20}(\d{4})\s*K',
+  'cri':r'(?i)(?:CRI|colour rendering index|color rendering index)[^\d>]{0,20}>?\s*(\d{2})',
+  'angle':r'(?i)(?:beam angle|[aâ]ngulo)[^\d]{0,20}(\d+(?:[.,]\d+)?)\s*[°º]',
+  'ip':r'\b(IP\s*\d{2})\b','ik':r'\b(IK\s*\d{2})\b'
+ }
+ for k,p in patterns.items():
+  if k in specs:continue
+  m=re.search(p,text)
+  if m:
+   nv=normalize_field(k,m.group(1));specs[k]={'value':nv,'source':url,'evidence_type':'official_product_page','confidence':'HIGH'}
+ # article/product code
+ if not article:
+  m=re.search(r'(?i)(?:product code|article number|article no\.?|sku)\s*[:#]?\s*([A-Z0-9-]{5,20})',text);article=m.group(1) if m else None
+ ds=None
+ for a in soup.find_all('a',href=True):
+  blob=(' '.join(a.stripped_strings)+' '+a['href']).lower()
+  if '.pdf' in blob and any(x in blob for x in ['datasheet','data sheet','product sheet','technical','family sheet']):ds=urljoin(url,a['href']);break
+ return {'manufacturer':brand,'reference':norm(title),'family':parsed.get('family'),'article_number':article,'status':'OFFICIAL SOURCE VERIFIED','exact_match':compact(parsed['family']) in compact(title+' '+text[:5000]),'page_type':page_type,'official_product_url':url,'official_datasheet_url':ds,'retrieved_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'specs':specs,'conflicts':conflicts,'sources':[{'url':url,'type':'official_product_page','official':True}]}
+
+def product_quality(p,parsed):
+ if not p:return -1
+ score=0; specs=p.get('specs',{})
+ if compact(parsed.get('family')) and compact(parsed.get('family')) in compact(p.get('reference')):score+=25
+ score+=min(45,len([k for k in EXPECTED_FIELDS if k in specs])*4)
+ if p.get('article_number'):score+=10
+ if p.get('official_datasheet_url'):score+=8
+ if not p.get('conflicts'):score+=5
+ # exact input attributes
+ if parsed.get('power') is not None and specs.get('power') and abs(float(specs['power']['value'])-parsed['power'])<=0.2:score+=5
+ if parsed.get('cct') is not None and specs.get('cct') and float(specs['cct']['value'])==parsed['cct']:score+=5
+ return score
 
 async def run_search(q):
  cached=cache_get(q)
- if cached:cached['cache_hit']=True;return cached
- detected=manufacturer(q)
- base=parse_input(q,detected)
- errors=[]; trace=[]; discovery=[]; queries=[]; urls=[]
- # If the RFQ does not name a manufacturer, discover it from an official source.
- # We do not map model prefixes to brands. Each supported official-domain adapter gets a chance
- # and the manufacturer is accepted only after a real official PRODUCT_PAGE is found.
- brands=[detected] if detected!='UNKNOWN' else list(OFFICIAL_DOMAINS)
+ if cached:
+  cached['cache_hit']=True;return cached
+ explicit=explicit_manufacturer(q); base=parse_input(q,explicit)
+ brands=[explicit] if explicit else list(MANUFACTURERS.keys())
+ queries=[];trace=[];errors=[];best=None;bestq=-1;discovery=None;seen=set()
+ # Global web search first when configured; it is the only truly scalable discovery for unknown brands/products.
+ web_urls=[]
+ if os.getenv('BRAVE_SEARCH_API_KEY'):
+  for sq in search_queries(base,explicit)[:12]:
+   queries.append(sq)
+   try:web_urls += await brave_search(sq)
+   except Exception as e:errors.append('web-search:'+type(e).__name__)
+  # infer brand from official result if not explicit
+  if not explicit:
+   counts={}
+   for u in web_urls:
+    b=host_brand(u)
+    if b:counts[b]=counts.get(b,0)+1
+   if counts:brands=[max(counts,key=counts.get)]+[b for b in brands if b!=max(counts,key=counts.get)]
  for brand in brands:
-  probe=dict(base); probe['manufacturer']=brand
-  qs=search_queries(probe); queries += qs
-  if brand=='OPPLE': urls += candidate_urls(probe)
-  for sq in qs:
-   try: urls += await brave_search(sq,brand)
-   except Exception as e: errors.append('search '+type(e).__name__)
- queue=list(dict.fromkeys(urls)); seen=set(); products=[]
- while queue and len(seen)<40:
-  u=queue.pop(0)
-  if u in seen:continue
-  seen.add(u); brand=host_manufacturer(u)
-  if brand=='UNKNOWN':continue
-  probe=dict(base); probe['manufacturer']=brand
-  try:
-   final,content,status,ctype=await fetch(u)
-   if status!=200:
-    trace.append({'url':u,'status':status,'page_type':'IRRELEVANT','manufacturer_probe':brand});continue
-   cls=page_classifier(final,content,ctype,probe)
-   trace.append({'url':final,'status':status,'page_type':cls['type'],'classifier_score':cls['score'],'signals':cls['signals'],'manufacturer_probe':brand})
-   if cls['type']=='PRODUCT_PAGE':
-    if brand=='OPPLE':
-     product=parse_opple_family_variant(final,content,probe) if 'exact-variant-on-family-page' in cls.get('signals',[]) else None
-     if not product: product=parse_opple(final,content,probe)
-     products.append(product)
-     detected=brand; base=probe; discovery.append({'manufacturer':brand,'source':final,'evidence':'OFFICIAL_PRODUCT_PAGE'}); break
-   if cls['type'] in ('SEARCH_PAGE','CATEGORY_PAGE'):
-    queue += [x for x in relevant_links(final,content,probe) if x not in seen]
-  except Exception as e:errors.append(f'{u}: {type(e).__name__}: {e}')
- product=products[0] if products else None
- # Keep UNKNOWN if no official product page actually established the brand.
- if not product and manufacturer(q)=='UNKNOWN': detected='UNKNOWN'; base=parse_input(q,'UNKNOWN')
- out={'query':q,'manufacturer':detected,'manufacturer_discovery':discovery,'parsed_input':base,'queries':list(dict.fromkeys(queries)),'urls_attempted':list(seen),'page_trace':trace,'product':product,'related_products':[],'errors':errors,'search_provider':'Brave Search API + official crawl' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Official-domain discovery + deterministic crawl (Brave optional)','cache_hit':False}
+  probe=parse_input(q,brand); local_urls=[]
+  local_urls += [u for u in web_urls if official(u,brand)]
+  local_urls += official_search_urls(probe,brand)
+  # BFS: search/category pages are navigation nodes, not evidence.
+  queue=[(u,0) for u in dict.fromkeys(local_urls)]; visited=0
+  while queue and visited<70:
+   url,depth=queue.pop(0)
+   if url in seen:continue
+   seen.add(url);visited+=1
+   try:
+    final,status,ctype,content=await fetch(url)
+    if status>=400:trace.append({'url':final,'status':status,'page_type':'HTTP_ERROR','manufacturer_probe':brand});continue
+    cls=page_classifier(final,content,ctype,probe);trace.append({'url':final,'status':status,'page_type':cls['type'],'classifier_score':cls['score'],'signals':cls['signals'],'manufacturer_probe':brand})
+    if cls['type']=='PRODUCT_PAGE':
+     p=extract_product(final,content,probe,brand);qual=product_quality(p,probe)
+     if qual>bestq:best,bestq=p,qual;discovery={'manufacturer':brand,'source':'OFFICIAL_DOMAIN_PRODUCT_PAGE','url':final,'confidence':'HIGH'}
+     if qual>=65:break
+    elif cls['type']=='DATASHEET':
+     # PDF extraction is intentionally not guessed in Azure Function without a PDF parser; retain source for follow-up.
+     pass
+    if depth<2 and cls['type'] in ('SEARCH_PAGE','CATEGORY_PAGE','IRRELEVANT'):
+     for link in relevant_links(final,content,probe,brand):
+      if link not in seen:queue.append((link,depth+1))
+   except Exception as e:errors.append(type(e).__name__+':'+url[:100])
+  if bestq>=65:break
+ detected=best.get('manufacturer') if best else explicit
+ out={'query':q,'manufacturer':detected,'manufacturer_discovery':discovery,'parsed_input':base,'queries':list(dict.fromkeys(queries)),'page_trace':trace,'product':best,'related_products':[],'errors':errors,'search_provider':'Brave Search API + universal official crawler' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Universal official-site crawler (Brave Search not configured)','cache_hit':False,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V52'}
  cache_put(q,out);return out
 
 @app.route(route='competitor/search',methods=['POST'])
 def competitor_search(req):
- try:body=req.get_json();q=norm(str((body or {}).get('query','')))
- except Exception:return func.HttpResponse(json.dumps({'error':'invalid JSON'}),status_code=400,mimetype='application/json')
+ try:data=req.get_json();q=norm(data.get('query',''))
+ except:return func.HttpResponse(json.dumps({'error':'invalid json'}),status_code=400,mimetype='application/json')
  if not q:return func.HttpResponse(json.dumps({'error':'query required'}),status_code=400,mimetype='application/json')
  try:return func.HttpResponse(json.dumps(asyncio.run(run_search(q)),ensure_ascii=False),mimetype='application/json')
- except Exception as e:return func.HttpResponse(json.dumps({'error':type(e).__name__,'message':str(e)}),status_code=500,mimetype='application/json')
+ except Exception as e:return func.HttpResponse(json.dumps({'error':type(e).__name__,'detail':str(e)[:500]}),status_code=500,mimetype='application/json')
 
 @app.route(route='health',methods=['GET'])
-def health(req):return func.HttpResponse(json.dumps({'ok':True,'version':VERSION,'brave_search':bool(os.getenv('BRAVE_SEARCH_API_KEY')),'page_classifier':True,'official_domains':OFFICIAL_DOMAINS}),mimetype='application/json')
+def health(req):
+ return func.HttpResponse(json.dumps({'ok':True,'version':VERSION,'engine':'UNIVERSAL_COMPETITOR_ENGINE','brave_search':bool(os.getenv('BRAVE_SEARCH_API_KEY')),'page_classifier':True,'official_domains':OFFICIAL_DOMAINS}),mimetype='application/json')
