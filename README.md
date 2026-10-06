@@ -92,3 +92,12 @@ As equivalencias humanas da V44/V45 continuam no `localStorage` do browser. Para
 - O parser nao preenche campos tecnicos sem evidencia encontrada na fonte.
 - `UNKNOWN` nao e tratado como match.
 - A whitelist de dominios oficiais pode ser expandida em `OFFICIAL_DOMAINS` sem alterar o frontend.
+
+## V48 regression cases
+The Azure API should resolve these OPPLE references to official PRODUCT_PAGE results (not search pages):
+- OPPLE LED PostTop-P 50W-3000-W
+- OPPLE LEDPorch-E2-Re120-3/5W-840 (fuzzy official variant 3/5W-830/840)
+- OPPLE LEDWP-CLA-P2 L1200-18W-840
+- OPPLE LEDWP-CLA-P2 L1500-24W-840
+
+The competitor matcher now includes verified concrete Signify products for post-top, waterproof and wall/ceiling categories. Unknown fields remain unknown and never add score.

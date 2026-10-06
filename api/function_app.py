@@ -5,10 +5,10 @@ import azure.functions as func
 import httpx
 from bs4 import BeautifulSoup
 
-VERSION='47'
-CACHE_DIR=Path(os.getenv('TMPDIR','/tmp'))/'signify-alt-cache-v47'; CACHE_DIR.mkdir(parents=True,exist_ok=True)
+VERSION='48'
+CACHE_DIR=Path(os.getenv('TMPDIR','/tmp'))/'signify-alt-cache-v48'; CACHE_DIR.mkdir(parents=True,exist_ok=True)
 CACHE_TTL=int(os.getenv('CACHE_TTL_SECONDS','86400'))
-UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/47; quotation research)'
+UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/48; quotation research)'
 OFFICIAL_DOMAINS={'OPPLE':['opple.eu','opple.com','opple.pt'],'LEDVANCE':['ledvance.com'],'TRILUX':['trilux.com'],'ZUMTOBEL':['zumtobel.com']}
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -29,31 +29,61 @@ def ev(value,source,kind='official_product_page',confidence='HIGH'): return {'va
 
 def parse_input(q,m):
  raw=norm(q); x=re.sub(r'\b'+re.escape(m)+r'\b','',raw,flags=re.I).strip(' -') if m!='UNKNOWN' else raw
- compact=re.sub(r'\s+','',x)
- fam=None
- mm=re.search(r'(LED\s*Post\s*Top\s*-?\s*P)',x,re.I)
- if mm:fam='LEDPostTop-P'
- power=None;cct=None;variant=None
- mp=re.search(r'(?<!\d)(\d+(?:[.,]\d+)?)\s*W\b',x,re.I)
- if mp:power=float(mp.group(1).replace(',','.'))
- mc=re.search(r'(?<!\d)([2-6]\d{3})\s*K?\b',x,re.I)
- if mc:cct=int(mc.group(1))
- mv=re.search(r'(?:^|[-\s])(W|AS)(?:$|[-\s])',x,re.I)
- if mv:variant=mv.group(1).upper()
- reference=norm(x)
- if fam and power and cct and variant: reference=f'{fam} {power:g}W-{cct}-{variant}'
+ # Remove common RFQ prose before extracting the technical reference, but retain the full raw input for audit.
+ ref=x
+ fam=None; product_type=None; application=None; mounting=None
+ patterns=[
+  (r'(LED\s*Post\s*Top\s*-?\s*P)', 'LEDPostTop-P','Post-top luminaire','Outdoor / urban','Post top'),
+  (r'(LEDWP\s*-?\s*CLA\s*-?\s*P2)', 'LEDWP-CLA-P2','Waterproof luminaire','Indoor / waterproof','Surface / suspended'),
+  (r'(LEDPorch\s*-?\s*E2\s*-?\s*Re120)', 'LEDPorch-E2-Re120','Wall / ceiling luminaire','Outdoor / wall-ceiling','Surface')]
+ for pat,f,t,a,mt in patterns:
+  mm=re.search(pat,x,re.I)
+  if mm: fam,product_type,application,mounting=f,t,a,mt; ref=x[mm.start():].strip(' -:;,.'); break
+ # Capture explicit W including selectable ranges such as 3/5W. Use max system power as comparison value, preserve range separately.
+ powers=[]
+ for mm in re.finditer(r'(?<!\d)(\d+(?:[.,]\d+)?)(?:\s*/\s*(\d+(?:[.,]\d+)?))?\s*W\b',ref,re.I):
+  vals=[float(mm.group(1).replace(',','.'))]
+  if mm.group(2): vals.append(float(mm.group(2).replace(',','.')))
+  powers.extend(vals)
+ power=max(powers) if powers else None; power_range=powers[:2] if len(powers)>=2 else None
+ # Explicit Kelvin or Philips-style colour code 830/840/865 in the reference.
+ cct=None; cct_values=[]
+ for mm in re.finditer(r'(?<!\d)([2-6]\d{3})\s*K?\b',ref,re.I): cct_values.append(int(mm.group(1)))
+ if not cct_values:
+  for mm in re.finditer(r'(?<!\d)(8|9)(27|30|40|65)(?!\d)',ref): cct_values.append(int(mm.group(2))*100)
+ if cct_values: cct=cct_values[-1]
+ mv=re.search(r'(?:^|[-\s])(W|AS)(?:$|[-\s])',ref,re.I); variant=mv.group(1).upper() if mv else None
+ length=None; ml=re.search(r'\bL\s*(600|900|1200|1500|1800)\b',ref,re.I); length=float(ml.group(1)) if ml else None
+ reference=norm(ref)
  specs={}
  if power is not None: specs['power_w']=ev(power,'USER_INPUT','user_input')
  if cct is not None: specs['cct_k']=ev(cct,'USER_INPUT','user_input')
- return {'manufacturer':m,'raw':raw,'reference':reference,'family':fam,'power_w':power,'cct_k':cct,'variant':variant,'specs':specs}
+ if length is not None: specs['length_mm']=ev(length,'USER_INPUT','user_input')
+ if product_type: specs['product_type']=ev(product_type,'USER_INPUT','user_input')
+ if application: specs['application']=ev(application,'USER_INPUT','user_input')
+ if mounting: specs['mounting']=ev(mounting,'USER_INPUT','user_input')
+ return {'manufacturer':m,'raw':raw,'reference':reference,'family':fam,'power_w':power,'power_range_w':power_range,'cct_k':cct,'cct_values':cct_values,'length_mm':length,'variant':variant,'specs':specs}
+
+def progressive_refs(parsed):
+ ref=parsed['reference']; fam=parsed.get('family'); out=[ref]
+ # Progressively relax only technical suffixes, never replace them with guessed values.
+ if fam:
+  out.append(fam)
+  if parsed.get('length_mm'): out.append(f'{fam} L{int(parsed["length_mm"])}')
+  if parsed.get('power_w'): out.append(f'{fam} {parsed["power_w"]:g}W')
+  if parsed.get('cct_k'): out.append(f'{fam} {parsed["cct_k"]}')
+ # OPPLE 840 can be one position of a selectable 830/840 product.
+ if re.search(r'(?<!\d)840(?!\d)',ref): out.append(re.sub(r'(?<!\d)840(?!\d)','830/840',ref))
+ # Strip final option groups one at a time.
+ parts=re.split(r'[-\s]+',ref)
+ for cut in range(len(parts)-1,max(1,len(parts)-4),-1): out.append('-'.join(parts[:cut]))
+ return list(dict.fromkeys(norm(x) for x in out if x and len(x)>3))
 
 def search_queries(parsed):
- m=parsed['manufacturer']; fam=parsed.get('family'); p=parsed.get('power_w'); c=parsed.get('cct_k'); v=parsed.get('variant'); ref=parsed['reference']
- qs=[]
- if fam and p and c and v:
-  exact=f'{fam} {p:g}W-{c}-{v}'; qs += [f'"{exact}"',f'"{fam} {p:g}W-{c}"',f'"{fam}" "{p:g}W" "{c}"']
- else: qs += [f'"{ref}"',f'"{ref}" {m}']
- for d in OFFICIAL_DOMAINS.get(m,[]): qs.append(f'site:{d} "{fam or ref}"'+(f' "{p:g}W" "{c}"' if fam and p and c else ''))
+ m=parsed['manufacturer']; refs=progressive_refs(parsed); qs=[]
+ for r in refs[:6]: qs += [f'"{r}"',f'"{r}" {m}']
+ for d in OFFICIAL_DOMAINS.get(m,[]):
+  for r in refs[:4]: qs.append(f'site:{d} "{r}"')
  return list(dict.fromkeys(qs))
 
 def opple_slug(parsed):
@@ -62,11 +92,27 @@ def opple_slug(parsed):
  s=parsed['reference'].lower().replace('_','-').replace(' ','-'); return re.sub(r'-+','-',re.sub(r'[^a-z0-9-]+','-',s)).strip('-')
 def candidate_urls(parsed):
  if parsed['manufacturer']!='OPPLE':return []
- slug=opple_slug(parsed)
- urls=[]
- if 'posttop' in slug: urls += [f'https://www.opple.eu/en/product/outdoor/urban/post-top/{slug}',f'https://www.opple.com/en/product/outdoor/urban/post-top/{slug}']
- urls.append(f'https://www.opple.eu/en/search?search={quote(parsed["reference"])}')
- return urls
+ refs=progressive_refs(parsed); slugs=[]
+ for r in refs:
+  sl=re.sub(r'-+','-',re.sub(r'[^a-z0-9-]+','-',r.lower().replace('_','-').replace(' ','-'))).strip('-')
+  if sl: slugs.append(sl)
+ # Normalize slash variants the same way OPPLE URLs do (3/5W -> 35w; 830/840 -> 830840).
+ rawslug=re.sub(r'[^a-z0-9-]+','',parsed['reference'].lower().replace('_','-').replace(' ','-').replace('/',''))
+ if rawslug:
+  rawslug=re.sub(r'^led-posttop','ledposttop',rawslug)
+  slugs.insert(0,re.sub(r'-+','-',rawslug))
+ urls=[]; fam=(parsed.get('family') or '').lower()
+ paths=[]
+ if 'posttop' in fam: paths=['en/product/outdoor/urban/post-top','pt-pt/product/luminarias-para-exteriores/urban/post-top']
+ elif 'ledwp-cla-p2' in fam: paths=['en/product/indoor/waterproof-luminaires/waterproof-classic-g2','pt-pt/product/luminarias-para-interiores/waterproof-luminaires-0/waterproof-classic-g2']
+ elif 'ledporch' in fam: paths=['en/product/outdoor/wall-and-ceiling-luminaires/porchlight-ecomax-g2','pt-pt/product/luminarias-para-exteriores/wall-and-ceiling-luminaires/plafond-porch-ip65-ecomax-g2']
+ for host in ['www.opple.pt','www.opple.eu']:
+  for path in paths:
+   for slug in slugs[:10]: urls.append(f'https://{host}/{path}/{slug}')
+ # Search pages remain discovery nodes only and can never be technical evidence.
+ for host in ['www.opple.pt','www.opple.eu']:
+  for r in refs[:4]: urls.append(f'https://{host}/en/search?search={quote(r)}')
+ return list(dict.fromkeys(urls))
 
 async def fetch(url):
  async with httpx.AsyncClient(headers={'User-Agent':UA,'Accept':'text/html,application/xhtml+xml,application/pdf'},follow_redirects=True,timeout=25) as c:
@@ -89,13 +135,14 @@ def page_classifier(url,content,ctype,parsed):
  return {'type':'IRRELEVANT','score':score,'signals':signals}
 
 def relevant_links(base,content,parsed):
- soup=BeautifulSoup(content.decode('utf-8','ignore'),'html.parser'); fam=(parsed.get('family') or '').lower().replace('-',''); p=parsed.get('power_w'); c=parsed.get('cct_k'); out=[]
+ soup=BeautifulSoup(content.decode('utf-8','ignore'),'html.parser'); fam=(parsed.get('family') or '').lower().replace('-',''); p=parsed.get('power_w'); c=parsed.get('cct_k'); L=parsed.get('length_mm'); out=[]
  for a in soup.find_all('a',href=True):
   label=' '.join(a.stripped_strings); href=urljoin(base,a['href']); blob=(label+' '+href).lower().replace('-','').replace(' ','')
   score=0
   if fam and fam in blob:score+=4
   if p and f'{p:g}w'.replace('.0','') in blob:score+=2
-  if c and str(c) in blob:score+=2
+  if c and (str(c) in blob or (c==4000 and '840' in blob)):score+=2
+  if L and str(int(L)) in blob:score+=2
   if score>=4:out.append((score,href))
  return [u for _,u in sorted(out,reverse=True)[:12]]
 
