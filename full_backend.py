@@ -8,9 +8,9 @@ from io import BytesIO
 from pypdf import PdfReader
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-VERSION='55'
-UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/55; quotation research)'
-CACHE_DIR=Path('/tmp/signify_competitor_cache_v55'); CACHE_DIR.mkdir(exist_ok=True)
+VERSION='54'
+UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/54; quotation research)'
+CACHE_DIR=Path('/tmp/signify_competitor_cache_v54'); CACHE_DIR.mkdir(exist_ok=True)
 
 # Manufacturer data is configuration only. The crawler/extractor below is shared by every brand.
 MANUFACTURERS={
@@ -22,15 +22,6 @@ MANUFACTURERS={
  'SCHREDER':{'aliases':['schreder','schréder'],'domains':['schreder.com'],'search_paths':['/en/search?search={q}']},
  'DISANO':{'aliases':['disano'],'domains':['disano.it'],'search_paths':['/en/search?search={q}']},
  'GEWISS':{'aliases':['gewiss'],'domains':['gewiss.com'],'search_paths':['/ww/en/search?q={q}']},
- 'SITECO':{'aliases':['siteco'],'domains':['siteco.com'],'search_paths':['/search?q={q}']},
- 'GLAMOX':{'aliases':['glamox'],'domains':['glamox.com'],'search_paths':['/search?q={q}']},
- 'FAGERHULT':{'aliases':['fagerhult'],'domains':['fagerhult.com'],'search_paths':['/search?q={q}']},
- 'IGUZZINI':{'aliases':['iguzzini','iGuzzini'],'domains':['iguzzini.com'],'search_paths':['/search?q={q}']},
- 'ERCO':{'aliases':['erco'],'domains':['erco.com'],'search_paths':['/search?q={q}']},
- 'RZB':{'aliases':['rzb'],'domains':['rzb.de'],'search_paths':['/en/search/?q={q}']},
- 'BEGA':{'aliases':['bega'],'domains':['bega.com'],'search_paths':['/en/search?q={q}']},
- 'REGENT':{'aliases':['regent'],'domains':['regent.ch'],'search_paths':['/search?q={q}']},
- 'LIVAL':{'aliases':['lival'],'domains':['lival.com'],'search_paths':['/search?q={q}']},
 }
 OFFICIAL_DOMAINS={k:v['domains'] for k,v in MANUFACTURERS.items()}
 OFFICIAL_SOURCE_INDEX={
@@ -40,9 +31,6 @@ OFFICIAL_SOURCE_INDEX={
   {'aliases':['LEDPorch-E2-Re120-3/5W-840','LEDPorch-E2-Re120-3/5W-830/840'],'reference':'LEDPorch-E2-Re120-3/5W-830/840','family':'LEDPorch-E2-Re120','article_number':'531000019500','url':'https://www.opple.pt/pt-pt/product/luminarias-para-exteriores/wall-and-ceiling-luminaires/plafond-porch-ip65-ecomax-g2/ledporch-e2-re120-35w-830840','datasheet':'','specs':{'power':5,'flux':600,'eff':120,'cct':4000,'cri':80,'angle':120,'ip':'IP65','ik':'IK10','length':345,'width':123,'height':82.5,'mount':'Surface wall / ceiling','control':'On-Off','lifetime':70000,'application':'Outdoor / wall-ceiling','type':'Wall / ceiling luminaire'}},
   {'aliases':['LED PostTop-P 50W-3000-W','LEDPostTop-P 50W-3000-W'],'reference':'LEDPostTop-P 50W-3000-W','family':'LEDPostTop-P','article_number':'543016006100','url':'https://www.opple.eu/en/product/outdoor/urban/post-top/ledposttop-p-50w-3000-w','datasheet':'','specs':{'power':50,'flux':6500,'eff':130,'cct':3000,'cri':70,'angle':155,'ip':'IP66','ik':'IK08','length':450,'width':450,'height':565,'pole':60,'mount':'Post top','control':'On-Off','lifetime':100000,'application':'Outdoor / urban','type':'Post-top luminaire'}},
   {'aliases':['LEDFlood-E3 Re115-20W-840-BL','LEDFlood-E3-Re115-20W-840-BL'],'reference':'LEDFlood-E3 Re115-20W-840-BL','family':'LEDFlood-E3','article_number':'709000071800','url':'https://www.opple.pt/pt-pt/product/luminarias-para-exteriores/floodlight/floodlight-ecomax-g3','datasheet':'','specs':{'power':20,'flux':2400,'eff':120,'cct':4000,'cri':80,'application':'Outdoor / floodlight','type':'Floodlight'}}
- ],
- 'LEDVANCE':[
-  {'aliases':['FL MAX P 600W 740 R45 WAL'],'reference':'FL MAX P 600W 740 R45 WAL','family':'FLOODLIGHT MAX GEN 2','article_number':'4099854682346','url':'https://www.ledvance.com/en-uk/professional-lighting/products/luminaires/professional-luminaires/floodlights/high-performance-floodlights-for-large-area-and-sports-lighting/high-performance-floodlights-for-large-area-and-sports-lighting/for-a-balanced-mix-of-range-and-area-illumination-with-various-optics-c409101?productId=397071','datasheet':'https://ledvance.com/00_Free_To_Use/asset-13332225_user_instruction_g11264362_fl_max_p_gen2.pdf','specs':{'power':600,'flux':92600,'eff':151,'cct':4000,'cri':70,'angle':45,'ip':'IP66','ik':'IK08','length':589,'width':250,'height':95,'mount':'Pole / wall / ceiling','lifetime':150000,'application':'Outdoor / large-area / sports','type':'High-power floodlight','optics':'Radial symmetric 45°'}}
  ]
 }
 
@@ -155,95 +143,6 @@ def progressive_refs(parsed):
   if parsed.get('cct') is not None: out.append(f"{fam} {int(parsed['cct'])}K")
   if parsed.get('length_nominal'): out.append(f"{fam} L{int(parsed['length_nominal'])}")
  return list(dict.fromkeys(norm(x) for x in out if x and len(norm(x))>2))
-
-def classify_object(parsed):
- r=norm(parsed.get('reference')).lower()
- if re.search(r'\b(driver|electronic driver|led driver|power supply|psu)\b',r):return 'LED_DRIVER'
- if re.search(r'\b(module|integrade|led board|led strip|light engine)\b',r):return 'LED_MODULE'
- if re.search(r'\b(lamp|bulb|tube|gu10|e27|e40)\b',r):return 'LAMP'
- if re.search(r'\b(sensor|controller|control|gateway|switch)\b',r):return 'CONTROL'
- if re.search(r'\b(accessory|bracket|mounting kit|connector)\b',r):return 'ACCESSORY'
- return 'LUMINAIRE'
-
-def brand_from_url(url):
- h=urlparse(url).netloc.lower().replace('www.','')
- for brand,cfg in MANUFACTURERS.items():
-  if any(h==d or h.endswith('.'+d) for d in cfg['domains']):return brand
- return None
-
-def signify_query_terms(product):
- if not product:return []
- specs=product.get('specs',{})
- def val(k):
-  x=specs.get(k); return x.get('value') if isinstance(x,dict) else None
- typ=val('type') or val('application') or ''
- power=val('power'); flux=val('flux'); cct=val('cct')
- terms=[]
- base=' '.join(x for x in [str(typ), (str(int(power))+'W' if power else ''), (str(int(cct))+'K' if cct else '')] if x)
- if base: terms.append('site:signify.com '+base)
- if typ and flux: terms.append('site:signify.com "'+str(typ)+'" '+str(int(flux))+' lm')
- if typ: terms.append('site:signify.com Philips '+str(typ))
- return terms[:3]
-
-async def discover_signify_candidates(product):
- """Search official Signify pages for concrete products. Requires search API for unknown portfolio items.
- Returns only candidates with a concrete 12NC/order code; family-only pages are not promoted."""
- if not product or not os.getenv('BRAVE_SEARCH_API_KEY'):return []
- urls=[]
- for q in signify_query_terms(product):
-  try: urls += await brave_search(q)
-  except: pass
- urls=[u for u in dict.fromkeys(urls) if 'signify.com/' in u and ('/product' in u or '/prof/' in u)]
- out=[]
- # Parallel fetch: maximum six official pages, strict budget.
- async def one(u):
-  try:
-   final,status,ctype,content=await fetch(u)
-   if status>=400 or 'text/html' not in ctype:return None
-   soup=BeautifulSoup(content,'html.parser'); text=soup.get_text(' ',strip=True); title=soup.title.get_text(' ',strip=True) if soup.title else ''
-   # Require a concrete Signify material number / 12NC.
-   m=re.search(r'(?i)(?:12\s*NC|material\s*(?:no\.?|nr\.?)|order\s*code|c[oó]digo\s*12NC)[^0-9]{0,40}(9\d{11})',text)
-   if not m:
-    m=re.search(r'\b(9\d{11})\b',final+' '+text[:12000])
-   if not m:return None
-   code=m.group(1)
-   # Product designation: prefer H2/H1 with a recognizable luminaire family code.
-   heads=[h.get_text(' ',strip=True) for h in soup.find_all(['h1','h2'])]
-   desc=next((h for h in heads if re.search(r'\b(?:BVP|BGP|BDP|BDS|WT|WL|RC|SM|BY|DN|RS|SP|BN)\d+[A-Z]*\b',h,re.I)), title)
-   famm=re.search(r'\b((?:BVP|BGP|BDP|BDS|WT|WL|RC|SM|BY|DN|RS|SP|BN)\d+[A-Z]*)\b',desc,re.I)
-   family=famm.group(1).upper() if famm else ''
-   # Generic technical extraction using the same label engine.
-   kv=html_kv(soup); flat='\n'.join(k+' : '+v for k,v in kv.items())+'\n'+text[:50000]
-   specs={}
-   for k,aliases in LABELS.items():
-    if k=='dimensions':continue
-    vv=find_label_value(kv,aliases)
-    if vv is not None:
-     parsed=parse_field(k,vv)
-     if parsed is not None:specs[k]=parsed
-   # Strong fallbacks from Signify product prose.
-   def num(p):
-    mm=re.search(p,text,re.I); return float(mm.group(1).replace(',','.')) if mm else None
-   for k,p in [('power',r'(?:(?:wattage|power|pot[eê]ncia)[^0-9]{0,30}|,\s*)(\d+(?:[.,]\d+)?)\s*W\b'),('flux',r'(\d{3,6})\s*lm\b'),('eff',r'(\d{2,3})\s*lm/W\b'),('cct',r'([2-6]\d{3})\s*K\b')]:
-    if k not in specs:
-     vv=num(p)
-     if vv is not None:specs[k]=vv
-   mm=re.search(r'\bCRI\s*>?\s*(\d{2})\b',text,re.I)
-   if mm:specs.setdefault('cri',float(mm.group(1)))
-   for k,pat in [('ip',r'\bIP\s*(\d{2})\b'),('ik',r'\bIK\s*(\d{2})\b')]:
-    mm=re.search(pat,text,re.I)
-    if mm:specs.setdefault(k,k.upper()+mm.group(1))
-   low=(desc+' '+text[:5000]).lower()
-   if 'floodlight' in low or 'projector' in low: specs.setdefault('type','Floodlight'); specs.setdefault('application','Outdoor / floodlight')
-   elif 'waterproof' in low or 'watertight' in low: specs.setdefault('type','Waterproof luminaire'); specs.setdefault('application','Indoor / waterproof')
-   elif 'post-top' in low or 'post top' in low: specs.setdefault('type','Post-top luminaire'); specs.setdefault('application','Outdoor / urban')
-   return {'eoc':code,'family':family,'description':norm(desc),'source':final,'specs':specs,'dynamic':True}
-  except Exception:return None
- rows=await asyncio.gather(*(one(u) for u in urls[:6]))
- seen=set()
- for x in rows:
-  if x and x['eoc'] not in seen: seen.add(x['eoc']); out.append(x)
- return out[:8]
 
 def search_queries(parsed,brand=None):
  refs=progressive_refs(parsed); qs=[]
@@ -509,15 +408,14 @@ async def run_search(q):
  cached=cache_get(q)
  if cached:
   cached['cache_hit']=True;return cached
- explicit=explicit_manufacturer(q); base=parse_input(q,explicit); object_type=classify_object(base)
+ explicit=explicit_manufacturer(q); base=parse_input(q,explicit)
  brands=[explicit] if explicit else list(MANUFACTURERS.keys())
  queries=[];trace=[];errors=[];best=None;bestq=-1;discovery=None;seen=set()
  # Fast path: previously verified official products. This is evidence cache, not mock data.
  for brand in brands:
   probe=parse_input(q,brand); ip=indexed_product(probe,brand)
   if ip:
-   sc=await discover_signify_candidates(ip)
-   out={'query':q,'manufacturer':brand,'manufacturer_discovery':{'manufacturer':brand,'source':'VERIFIED_OFFICIAL_SOURCE_INDEX','url':ip.get('official_product_url'),'confidence':'HIGH'},'object_type':object_type,'parsed_input':base,'queries':[],'page_trace':[{'url':ip.get('official_product_url'),'status':200,'page_type':'PRODUCT_PAGE','source_role':'verified_official_source_index'}],'product':ip,'related_products':[],'signify_candidates':sc,'errors':[],'search_provider':'Verified official-source index + universal live fallback','cache_hit':False,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V55'}
+   out={'query':q,'manufacturer':brand,'manufacturer_discovery':{'manufacturer':brand,'source':'VERIFIED_OFFICIAL_SOURCE_INDEX','url':ip.get('official_product_url'),'confidence':'HIGH'},'parsed_input':base,'queries':[],'page_trace':[{'url':ip.get('official_product_url'),'status':200,'page_type':'PRODUCT_PAGE','source_role':'verified_official_source_index'}],'product':ip,'related_products':[],'errors':[],'search_provider':'Verified official-source index + universal live fallback','cache_hit':False,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V54'}
    cache_put(q,out);return out
  # Global web search first when configured; it is the only truly scalable discovery for unknown brands/products.
  web_urls=[]
@@ -567,8 +465,7 @@ async def run_search(q):
    except Exception as e:errors.append(type(e).__name__+':'+url[:100])
   if bestq>=45:break
  detected=best.get('manufacturer') if best else explicit
- sc=await discover_signify_candidates(best)
- out={'query':q,'manufacturer':detected,'manufacturer_discovery':discovery,'object_type':object_type,'parsed_input':base,'queries':list(dict.fromkeys(queries)),'page_trace':trace,'product':best,'related_products':[],'signify_candidates':sc,'errors':errors,'search_provider':'Brave Search API + universal official crawler' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Universal official-site crawler (Brave Search not configured)','cache_hit':False,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V55'}
+ out={'query':q,'manufacturer':detected,'manufacturer_discovery':discovery,'parsed_input':base,'queries':list(dict.fromkeys(queries)),'page_trace':trace,'product':best,'related_products':[],'errors':errors,'search_provider':'Brave Search API + universal official crawler' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Universal official-site crawler (Brave Search not configured)','cache_hit':False,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V54'}
  cache_put(q,out);return out
 
 @app.route(route='competitor/search',methods=['POST'])
@@ -581,4 +478,4 @@ def competitor_search(req):
 
 @app.route(route='health',methods=['GET'])
 def health(req):
- return func.HttpResponse(json.dumps({'ok':True,'version':VERSION,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V55','brave_search':bool(os.getenv('BRAVE_SEARCH_API_KEY')),'page_classifier':True,'official_domains':OFFICIAL_DOMAINS}),mimetype='application/json')
+ return func.HttpResponse(json.dumps({'ok':True,'version':VERSION,'engine':'UNIVERSAL_COMPETITOR_ENGINE','brave_search':bool(os.getenv('BRAVE_SEARCH_API_KEY')),'page_classifier':True,'official_domains':OFFICIAL_DOMAINS}),mimetype='application/json')
