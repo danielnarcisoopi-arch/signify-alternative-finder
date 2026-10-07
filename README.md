@@ -1,7 +1,7 @@
-# Signify Alternative Finder V53
+# Signify Alternative Finder V54
 
 ## Main change
-V53 fixes the slow/failed competitor discovery seen in V52.
+V54 fixes the slow/failed competitor discovery seen in V52.
 
 The crawler no longer checks up to 70 pages serially. The search budget is capped and official manufacturer documents are used as a fast exact-reference fallback when configured. Search/category pages remain navigation-only and are never promoted to technical product evidence.
 
