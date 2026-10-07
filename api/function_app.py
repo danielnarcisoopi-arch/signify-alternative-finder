@@ -4,15 +4,17 @@ from pathlib import Path
 from urllib.parse import quote, urljoin, urlparse
 import httpx
 from bs4 import BeautifulSoup
+from io import BytesIO
+from pypdf import PdfReader
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-VERSION='52'
-UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/52; quotation research)'
-CACHE_DIR=Path('/tmp/signify_competitor_cache_v52'); CACHE_DIR.mkdir(exist_ok=True)
+VERSION='53'
+UA='Mozilla/5.0 (compatible; SignifyAlternativeFinder/53; quotation research)'
+CACHE_DIR=Path('/tmp/signify_competitor_cache_v53'); CACHE_DIR.mkdir(exist_ok=True)
 
 # Manufacturer data is configuration only. The crawler/extractor below is shared by every brand.
 MANUFACTURERS={
- 'OPPLE':{'aliases':['opple'],'domains':['opple.eu','opple.com','opple.pt'],'search_paths':['/en/search?search={q}','/pt-pt/search?search={q}']},
+ 'OPPLE':{'aliases':['opple'],'domains':['opple.eu','opple.com','opple.pt'],'search_paths':['/en/search?search={q}','/pt-pt/search?search={q}'],'catalogs':['https://www.opple.pt/sites/default/files/2026-03/Product%20Book_PT_APR26.pdf']},
  'LEDVANCE':{'aliases':['ledvance','osram'],'domains':['ledvance.com'],'search_paths':['/consumer/search?query={q}','/professional/search?query={q}']},
  'TRILUX':{'aliases':['trilux'],'domains':['trilux.com'],'search_paths':['/en/search/?q={q}','/search/?q={q}']},
  'ZUMTOBEL':{'aliases':['zumtobel'],'domains':['zumtobel.com'],'search_paths':['/com-en/search.html?query={q}','/search?query={q}']},
@@ -154,7 +156,7 @@ def user_evidence(parsed):
  return s
 
 async def fetch(url):
- async with httpx.AsyncClient(timeout=13,follow_redirects=True,headers={'User-Agent':UA,'Accept':'text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8'}) as c:
+ async with httpx.AsyncClient(timeout=7,follow_redirects=True,headers={'User-Agent':UA,'Accept':'text/html,application/xhtml+xml,application/pdf;q=0.9,*/*;q=0.8'}) as c:
   r=await c.get(url); return str(r.url),r.status_code,r.headers.get('content-type',''),r.content
 
 async def brave_search(query):
@@ -324,6 +326,58 @@ def product_quality(p,parsed):
  if parsed.get('cct') is not None and specs.get('cct') and float(specs['cct']['value'])==parsed['cct']:score+=5
  return score
 
+async def official_catalog_lookup(parsed,brand,trace,errors):
+ """Generic official-document fallback. Manufacturer config may expose catalog URLs.
+ Search exact normalized reference inside official PDF text; never infer a different variant."""
+ refs=[compact(parsed.get('reference')),compact(parsed.get('family'))]
+ exact=refs[0]
+ if not exact or len(exact)<6:return None
+ for url in MANUFACTURERS.get(brand,{}).get('catalogs',[]):
+  try:
+   final,status,ctype,content=await fetch(url)
+   trace.append({'url':final,'status':status,'page_type':'DATASHEET' if status<400 else 'HTTP_ERROR','manufacturer_probe':brand,'source_role':'official_catalog_fallback'})
+   if status>=400:continue
+   reader=PdfReader(BytesIO(content))
+   for i,page in enumerate(reader.pages):
+    text=page.extract_text() or ''
+    if exact not in compact(text):continue
+    # Exact reference must be visible on the page. Extract only values tied to the matching row when possible.
+    lines=[norm(x) for x in text.splitlines() if norm(x)]
+    matchline=next((x for x in lines if exact in compact(x)), '')
+    blob=' '.join(lines)
+    specs=user_evidence(parsed)
+    # Article code immediately before exact reference in a table row.
+    article=None
+    m=re.search(r'\b(\d{9,14})\b\s+'+re.escape(parsed['reference']).replace(r'\ ',r'\s+'),blob,re.I)
+    if m:article=m.group(1)
+    # Row-oriented numbers after exact reference: power, lumen, efficacy, CCT are common in official product books.
+    row=matchline
+    if row:
+     tail=row[compact(row).find(exact):] if exact in compact(row) else row
+     nums=[float(x.replace(',','.')) for x in re.findall(r'(?<![A-Za-z])\d+(?:[.,]\d+)?',tail)]
+     # Prefer explicit units/labels from full page text over positional guessing.
+    pats={
+      'power':r'(?i)(?:pot[eê]ncia|power)[^\n]{0,120}?'+re.escape(parsed['reference'])+r'[^\n]{0,80}?(\d+(?:[.,]\d+)?)',
+      'flux':r'(?i)(?:l[uú]men|fluxo)[^\n]{0,160}?'+re.escape(parsed['reference'])+r'[^\n]{0,100}?(\d{3,6})',
+    }
+    # Exact input power/CCT remain USER_INPUT unless independently confirmed by explicit catalog row extraction below.
+    # Recognize standard OPPLE table row structure without assigning values from neighbouring variants.
+    escaped=re.escape(parsed['reference']).replace(r'\ ',r'\s+')
+    rm=re.search(r'(\d{9,14})\s+'+escaped+r'\s+[^\n]*?\s(\d+(?:[.,]\d+)?)\s+(\d{3,6})\s+(\d{2,3})\s+(\d{4})\b',text,re.I)
+    if rm:
+     article=article or rm.group(1)
+     for k,val in [('power',float(rm.group(2).replace(',','.'))),('flux',float(rm.group(3))),('eff',float(rm.group(4))),('cct',float(rm.group(5)))]:
+      ev={'value':val,'source':final+'#page='+str(i+1),'evidence_type':'official_catalog','confidence':'HIGH'}
+      old=specs.get(k)
+      if not old or str(old.get('value'))==str(val):specs[k]=ev
+    # Family-level certified attributes may be used only when explicitly present on the same matched page.
+    for k,pat in [('ip',r'\bIP\s*(\d{2})\b'),('ik',r'\bIK\s*(\d{2})\b')]:
+     mm=re.search(pat,text,re.I)
+     if mm and k not in specs:specs[k]={'value':k.upper()+mm.group(1),'source':final+'#page='+str(i+1),'evidence_type':'official_catalog','confidence':'MEDIUM'}
+    return {'manufacturer':brand,'reference':parsed['reference'],'family':parsed.get('family'),'article_number':article,'status':'OFFICIAL SOURCE VERIFIED','exact_match':True,'page_type':'DATASHEET','official_product_url':'','official_datasheet_url':final,'retrieved_at':time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),'specs':specs,'conflicts':[],'sources':[{'url':final,'type':'official_catalog','official':True,'page':i+1}]}
+  except Exception as e:errors.append('catalog:'+type(e).__name__)
+ return None
+
 async def run_search(q):
  cached=cache_get(q)
  if cached:
@@ -347,11 +401,18 @@ async def run_search(q):
    if counts:brands=[max(counts,key=counts.get)]+[b for b in brands if b!=max(counts,key=counts.get)]
  for brand in brands:
   probe=parse_input(q,brand); local_urls=[]
+  # Fast exact-reference lookup in configured official catalogs before broad crawling.
+  # This avoids dozens of slow search/category requests when the manufacturer publishes a product book.
+  cp=await official_catalog_lookup(probe,brand,trace,errors)
+  if cp:
+   qual=product_quality(cp,probe)
+   if qual>bestq:best,bestq=cp,qual;discovery={'manufacturer':brand,'source':'OFFICIAL_CATALOG_EXACT_REFERENCE','url':cp.get('official_datasheet_url'),'confidence':'HIGH'}
+   if bestq>=45:break
   local_urls += [u for u in web_urls if official(u,brand)]
   local_urls += official_search_urls(probe,brand)
   # BFS: search/category pages are navigation nodes, not evidence.
   queue=[(u,0) for u in dict.fromkeys(local_urls)]; visited=0
-  while queue and visited<70:
+  while queue and visited<8:
    url,depth=queue.pop(0)
    if url in seen:continue
    seen.add(url);visited+=1
@@ -366,13 +427,13 @@ async def run_search(q):
     elif cls['type']=='DATASHEET':
      # PDF extraction is intentionally not guessed in Azure Function without a PDF parser; retain source for follow-up.
      pass
-    if depth<2 and cls['type'] in ('SEARCH_PAGE','CATEGORY_PAGE','IRRELEVANT'):
+    if depth<1 and cls['type'] in ('SEARCH_PAGE','CATEGORY_PAGE','IRRELEVANT'):
      for link in relevant_links(final,content,probe,brand):
       if link not in seen:queue.append((link,depth+1))
    except Exception as e:errors.append(type(e).__name__+':'+url[:100])
-  if bestq>=65:break
+  if bestq>=45:break
  detected=best.get('manufacturer') if best else explicit
- out={'query':q,'manufacturer':detected,'manufacturer_discovery':discovery,'parsed_input':base,'queries':list(dict.fromkeys(queries)),'page_trace':trace,'product':best,'related_products':[],'errors':errors,'search_provider':'Brave Search API + universal official crawler' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Universal official-site crawler (Brave Search not configured)','cache_hit':False,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V52'}
+ out={'query':q,'manufacturer':detected,'manufacturer_discovery':discovery,'parsed_input':base,'queries':list(dict.fromkeys(queries)),'page_trace':trace,'product':best,'related_products':[],'errors':errors,'search_provider':'Brave Search API + universal official crawler' if os.getenv('BRAVE_SEARCH_API_KEY') else 'Universal official-site crawler (Brave Search not configured)','cache_hit':False,'engine':'UNIVERSAL_COMPETITOR_ENGINE_V53'}
  cache_put(q,out);return out
 
 @app.route(route='competitor/search',methods=['POST'])
